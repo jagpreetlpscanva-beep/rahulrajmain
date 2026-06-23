@@ -1,0 +1,109 @@
+import type { Metadata, Viewport } from "next";
+import { Playfair_Display, Poppins } from "next/font/google";
+import "./globals.css";
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
+});
+
+const SITE_URL = "https://rahulrajastrologer.com";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "Rahul Raj — Vedic Astrologer | Find Clarity. Create a Better Life.",
+    template: "%s | Rahul Raj — Vedic Astrologer",
+  },
+  description:
+    "Personalized Vedic guidance for your relationships, career, business, finances and overall well-being. 20+ years of experience, 5000+ consultations, 4.9/5 client rating.",
+  keywords: [
+    "Vedic astrologer",
+    "astrology consultation",
+    "Kundli",
+    "Janam Kundli",
+    "marriage astrology",
+    "career astrology",
+    "numerology",
+    "horoscope",
+    "Rahul Raj astrologer",
+  ],
+  authors: [{ name: "Rahul Raj" }],
+  creator: "Rahul Raj",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "en_IN",
+    url: SITE_URL,
+    siteName: "Rahul Raj — Vedic Astrologer",
+    title: "Rahul Raj — Vedic Astrologer | Find Clarity. Create a Better Life.",
+    description:
+      "Personalized Vedic guidance for relationships, career, business, finances and well-being.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Rahul Raj — Vedic Astrologer",
+    description:
+      "Personalized Vedic guidance for relationships, career, business, finances and well-being.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#1a0f06",
+  width: "device-width",
+  initialScale: 1,
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  name: "Rahul Raj — Vedic Astrologer",
+  description:
+    "Personalized Vedic guidance for relationships, career, business, finances and overall well-being.",
+  url: SITE_URL,
+  priceRange: "$$",
+  aggregateRating: {
+    "@type": "AggregateRating",
+    ratingValue: "4.9",
+    reviewCount: "5000",
+    bestRating: "5",
+  },
+  areaServed: "IN",
+  knowsAbout: [
+    "Vedic Astrology",
+    "Numerology",
+    "Marriage Compatibility",
+    "Career Guidance",
+  ],
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html lang="en" className={`${playfair.variable} ${poppins.variable}`}>
+      <body>
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        {children}
+      </body>
+    </html>
+  );
+}
