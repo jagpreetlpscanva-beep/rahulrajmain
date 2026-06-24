@@ -110,9 +110,9 @@ export function Hero() {
                   {slide.image && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
+                      key={slide.image}
                       src={slide.image}
                       alt="Astro Rahul Raj"
-                      onError={(e) => (e.currentTarget.style.display = "none")}
                       className="absolute bottom-0 left-1/2 h-[94%] -translate-x-1/2 object-contain drop-shadow-[0_30px_40px_rgba(40,20,5,0.45)]"
                     />
                   )}
@@ -127,9 +127,9 @@ export function Hero() {
                 slide.image && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
+                    key={slide.image}
                     src={slide.image}
                     alt={slide.title}
-                    onError={(e) => (e.currentTarget.style.display = "none")}
                     className="absolute left-1/2 top-1/2 max-h-[92%] w-auto max-w-[78%] -translate-x-1/2 -translate-y-1/2 animate-float object-contain drop-shadow-[0_34px_44px_rgba(40,20,5,0.5)]"
                   />
                 )

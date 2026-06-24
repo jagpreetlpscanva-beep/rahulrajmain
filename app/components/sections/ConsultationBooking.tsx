@@ -102,9 +102,9 @@ export function ConsultationBooking() {
               <ZodiacWheel className="absolute inset-0 m-auto h-[115%] w-[115%] text-gold-600/15" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
+                key={astro}
                 src={astro}
                 alt="Astro Rahul Raj"
-                onError={(e) => (e.currentTarget.style.display = "none")}
                 className="absolute bottom-0 left-1/2 h-[98%] -translate-x-1/2 object-contain"
               />
               <div className="absolute bottom-3 left-3 right-3 flex items-center gap-3 rounded-2xl bg-white/90 px-4 py-3 shadow-card backdrop-blur-sm">

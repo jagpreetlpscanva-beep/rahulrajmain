@@ -114,9 +114,9 @@ export function ConsultationHero() {
             <ZodiacWheel className="absolute inset-0 h-full w-full animate-spin-slower text-[#F7EAD0]/80" />
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              key={astro}
               src={astro}
               alt="Astro Rahul Raj"
-              onError={(e) => (e.currentTarget.style.display = "none")}
               className="absolute bottom-0 left-1/2 h-[96%] -translate-x-1/2 object-contain drop-shadow-[0_30px_40px_rgba(40,20,5,0.45)]"
             />
             <div className="absolute bottom-[12%] right-[-2%] flex items-center gap-2.5 rounded-xl border border-luxe-gold/30 bg-espresso/90 px-4 py-3 text-cream shadow-lg backdrop-blur-sm">

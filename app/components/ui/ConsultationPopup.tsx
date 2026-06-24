@@ -144,9 +144,9 @@ export function ConsultationPopup() {
                   <ZodiacWheel className="absolute inset-0 m-auto h-[92%] w-[92%] text-gold-600/15" />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
+                    key={astro}
                     src={astro}
                     alt="Astro Rahul Raj"
-                    onError={(e) => (e.currentTarget.style.display = "none")}
                     className="absolute bottom-0 left-1/2 h-[108%] -translate-x-1/2 object-contain drop-shadow-[0_20px_30px_rgba(40,20,5,0.35)]"
                   />
                 </div>
