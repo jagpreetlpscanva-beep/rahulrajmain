@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
+import { get } from "@vercel/blob";
 
 /**
  * Serves uploaded files saved by /api/upload (stored outside /public so they
@@ -32,6 +33,28 @@ export async function GET(req: Request, ctx: { params: Promise<{ name: string }>
   if (name.includes("/") || name.includes("..") || name.includes("\\")) {
     return new NextResponse("Bad request", { status: 400 });
   }
+
+  const type = MIME[path.extname(name).toLowerCase()] || "application/octet-stream";
+
+  // Production / Vercel: stream the file from the (private) Blob store.
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    try {
+      const result = await get(`uploads/${name}`, { access: "private" });
+      if (!result || !result.stream) {
+        return new NextResponse("Not found", { status: 404 });
+      }
+      return new NextResponse(result.stream, {
+        status: 200,
+        headers: {
+          "Content-Type": result.blob.contentType || type,
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    } catch {
+      return new NextResponse("Not found", { status: 404 });
+    }
+  }
+
   const filePath = path.join(UPLOAD_DIR, name);
 
   let stat;
@@ -41,7 +64,6 @@ export async function GET(req: Request, ctx: { params: Promise<{ name: string }>
     return new NextResponse("Not found", { status: 404 });
   }
 
-  const type = MIME[path.extname(name).toLowerCase()] || "application/octet-stream";
   const range = req.headers.get("range");
 
   if (range) {

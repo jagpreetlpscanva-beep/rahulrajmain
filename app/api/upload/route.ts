@@ -51,13 +51,14 @@ export async function POST(req: Request) {
   const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${base}${ext}`;
 
   try {
-    // Production / Vercel: store in Blob
+    // Production / Vercel: store in Blob (private store), serve via /api/uploads
     if (process.env.BLOB_READ_WRITE_TOKEN) {
-      const blob = await put(`uploads/${name}`, file, {
-        access: "public",
+      await put(`uploads/${name}`, file, {
+        access: "private",
         contentType: file.type || undefined,
       });
-      return NextResponse.json({ ok: true, url: blob.url });
+      // The blob is private; it's streamed publicly through our own route below.
+      return NextResponse.json({ ok: true, url: `/api/uploads/${name}` });
     }
 
     // On Vercel without a Blob store, the disk is read-only — fail clearly.
