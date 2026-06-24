@@ -4,8 +4,7 @@ import { useCollection, DEFAULT_HERO_SLIDES, type HeroSlide } from "@/lib/adminS
 import { ZodiacWheel } from "../ui/ZodiacWheel";
 import { WhatsAppIcon, CalendarIcon } from "../icons";
 
-// No real number provided yet — placeholder matches the footer. Change later.
-const WHATSAPP_HREF = "https://wa.me/919999999999";
+const WHATSAPP_HREF = "https://wa.me/919415312590";
 const BOOK_HREF = "/book/consultation/quick";
 
 const STATS = [

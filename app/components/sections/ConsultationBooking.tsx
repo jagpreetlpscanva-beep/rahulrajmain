@@ -1,27 +1,30 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import Image from "next/image";
-import { Icon } from "../icons";
-import type { IconName } from "@/lib/content";
-import type { Slot, Consultation } from "@/lib/adminStore";
+import { useEffect, useMemo, useState } from "react";
+import { useCollection, DEFAULT_HERO_SLIDES, type HeroSlide, type Slot, type Consultation } from "@/lib/adminStore";
+import { ZodiacWheel } from "../ui/ZodiacWheel";
 
-const TOPICS: { label: string; icon: IconName }[] = [
-  { label: "Career & Business", icon: "briefcase" },
-  { label: "Health & Family", icon: "lotus-person" },
-  { label: "Marriage & Relationships", icon: "couple" },
-  { label: "Property & Investments", icon: "wealth" },
-  { label: "Finance & Wealth", icon: "magnet" },
-  { label: "Spiritual Guidance", icon: "om" },
+const BOOK_HREF = "/book/consultation/quick";
+
+const STATS = [
+  { value: "4.9/5", label: "Rating", icon: <StarSvg /> },
+  { value: "40,000+", label: "Consultations", icon: <UsersSvg /> },
+  { value: "15+", label: "Years Experience", icon: <ShieldSvg /> },
 ];
 
-const MODES = ["WhatsApp", "Audio Call", "Video Call", "In-Person"];
-
 const TRUST = [
-  { icon: "shield" as IconName, label: "100% Confidential" },
-  { icon: "medal" as IconName, label: "15+ Years Experience" },
-  { icon: "users" as IconName, label: "40,000+ Consultations" },
-  { icon: "star" as IconName, label: "4.9/5 Client Rating" },
+  { icon: <ShieldSvg />, title: "100% Confidential", body: "Your privacy is our highest priority." },
+  { icon: <UsersSvg />, title: "40,000+ Consultations", body: "Trusted by thousands across the world." },
+  { icon: <TrophySvg />, title: "15+ Years Experience", body: "Authentic Vedic guidance with proven expertise." },
+  { icon: <HeadsetSvg />, title: "Multiple Modes", body: "Chat • Call • Video Call. Choose your comfort." },
+];
+
+const FALLBACK_TOPICS = [
+  "Complete Life Reading",
+  "Career & Business Consultation",
+  "Marriage & Relationship Consultation",
+  "Health & Wellness Consultation",
+  "Wealth & Finance Consultation",
 ];
 
 function fmtDate(d: string) {
@@ -32,22 +35,19 @@ function fmtDate(d: string) {
   }
 }
 
-const FALLBACK_TYPES = ["Personal Consultation", "Career Guidance", "Marriage Matching", "Business Astrology"];
-
 export function ConsultationBooking() {
+  const { items: heroSlides } = useCollection<HeroSlide>("hero", DEFAULT_HERO_SLIDES);
+  const astro =
+    heroSlides.find((s) => s.visual === "astrologer" && s.image)?.image ||
+    heroSlides.find((s) => s.image)?.image ||
+    "/hero-astrologer.png";
+
   const [slots, setSlots] = useState<Slot[]>([]);
-  const [types, setTypes] = useState<string[]>(FALLBACK_TYPES);
+  const [topics, setTopics] = useState<string[]>(FALLBACK_TOPICS);
 
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [ctype, setCtype] = useState(FALLBACK_TYPES[0]);
+  const [topic, setTopic] = useState("");
   const [date, setDate] = useState("");
-  const [slot, setSlot] = useState<Slot | null>(null);
-  const [mode, setMode] = useState(MODES[2]);
-
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [done, setDone] = useState(false);
+  const [time, setTime] = useState("");
 
   useEffect(() => {
     fetch("/api/content/slots", { cache: "no-store" })
@@ -57,232 +57,150 @@ export function ConsultationBooking() {
     fetch("/api/content/consultations", { cache: "no-store" })
       .then((r) => r.json())
       .then((c: Consultation[]) => {
-        if (Array.isArray(c) && c.length) {
-          const t = c.map((x) => x.title).filter(Boolean);
-          setTypes(t);
-          setCtype(t[0]);
-        }
+        if (Array.isArray(c) && c.length) setTopics(c.map((x) => x.title).filter(Boolean));
       })
       .catch(() => {});
   }, []);
 
   const dates = useMemo(() => Array.from(new Set(slots.map((s) => s.date))).sort(), [slots]);
-  const daySlots = useMemo(() => slots.filter((s) => s.date === (date || dates[0])), [slots, date, dates]);
-  const todaySlots = useMemo(() => slots.slice(0, 4), [slots]);
+  const times = useMemo(() => slots.filter((s) => s.date === date).map((s) => s.time), [slots, date]);
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !phone.trim()) {
-      setError("Please enter your name and mobile number.");
-      return;
-    }
-    setBusy(true);
-    setError("");
-    try {
-      const res = await fetch("/api/bookings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          itemType: "consultation",
-          itemId: "quick",
-          itemTitle: `${ctype} (${mode})`,
-          amount: "₹999",
-          slotId: slot?.id,
-          slotDate: slot?.date,
-          slotTime: slot?.time,
-          name,
-          phone,
-          email: "",
-          paid: "true",
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) setDone(true);
-      else setError(data.error || "Could not complete booking.");
-    } catch {
-      setError("Network error — please try again.");
-    } finally {
-      setBusy(false);
-    }
-  };
+  const bookHref = `${BOOK_HREF}?topic=${encodeURIComponent(topic)}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
 
   return (
-    <section className="relative overflow-hidden bg-night py-16 lg:py-24">
-      <div className="amber-radial pointer-events-none absolute inset-0 opacity-60" />
+    <section className="relative overflow-hidden bg-paper-bg py-16 lg:py-24">
+      <div className="amber-radial pointer-events-none absolute inset-0 opacity-30" />
       <div className="container-px relative">
-        <div className="mx-auto grid max-w-6xl items-stretch gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-          {/* ---- left: pitch ---- */}
-          <div className="text-ivory">
-            <span className="eyebrow inline-block rounded-full border border-luxe-gold/40 px-3 py-1 text-luxe-gold">
-              Personal Consultation
+        <div className="mx-auto grid max-w-6xl items-start gap-10 lg:grid-cols-2">
+          {/* ---------- left: pitch + photo ---------- */}
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-gold-500/40 bg-gold-50 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-gold-700">
+              <StarSvg className="h-3.5 w-3.5" /> Personal Consultation
             </span>
-            <h2 className="mt-4 font-serif text-3xl font-bold leading-tight sm:text-4xl">
-              Book Your Personal Consultation
+            <h2 className="mt-4 font-serif text-3xl font-bold leading-tight text-ink sm:text-4xl lg:text-5xl">
+              Speak Directly With Rahul Raj
             </h2>
-            <p className="mt-2 text-ivory/70">Get direct guidance from Astro Rahul Raj.</p>
+            <p className="mt-3 max-w-md text-ink/65">
+              Get clear answers and right guidance for a better tomorrow.
+            </p>
 
-            <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {TOPICS.map((t) => (
-                <div
-                  key={t.label}
-                  className="flex items-center gap-2.5 rounded-xl border border-luxe-gold/15 bg-white/5 p-3"
-                >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-luxe-gold/40 text-luxe-gold">
-                    <Icon name={t.icon} className="h-5 w-5" />
-                  </span>
-                  <span className="text-xs font-semibold leading-tight text-ivory/90">{t.label}</span>
+            {/* stats */}
+            <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
+              {STATS.map((s) => (
+                <div key={s.label} className="flex items-center gap-2.5">
+                  <span className="text-gold-600">{s.icon}</span>
+                  <div>
+                    <p className="font-serif text-lg font-bold leading-none text-ink">{s.value}</p>
+                    <p className="mt-0.5 text-[0.7rem] uppercase tracking-wide text-ink/55">{s.label}</p>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <div className="mt-7 flex items-center gap-4 rounded-2xl border border-luxe-gold/20 bg-white/5 p-4">
-              <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-full border-2 border-luxe-gold/50">
-                <Image src="/hero-astrologer.png" alt="Astro Rahul Raj" fill className="object-cover object-top" />
-              </div>
-              <div>
-                <p className="font-serif text-lg font-bold text-ivory">Astro Rahul Raj</p>
-                <p className="flex items-center gap-1 text-sm text-luxe-gold">
-                  <span>★★★★★</span>
-                  <span className="text-ivory/70">4.9/5 · 40,000+ consultations</span>
-                </p>
+            {/* photo */}
+            <div className="relative mt-7 aspect-square w-full max-w-md overflow-hidden rounded-3xl bg-gradient-to-br from-[#F4E7CB] to-[#ECDab1]">
+              <ZodiacWheel className="absolute inset-0 m-auto h-[115%] w-[115%] text-gold-600/15" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={astro}
+                alt="Astro Rahul Raj"
+                onError={(e) => (e.currentTarget.style.display = "none")}
+                className="absolute bottom-0 left-1/2 h-[98%] -translate-x-1/2 object-contain"
+              />
+              <div className="absolute bottom-3 left-3 right-3 flex items-center gap-3 rounded-2xl bg-white/90 px-4 py-3 shadow-card backdrop-blur-sm">
+                <div className="flex -space-x-2">
+                  {["#C08A2E", "#7A5212", "#D4A24C", "#9C6B1E"].map((c) => (
+                    <span key={c} className="h-7 w-7 rounded-full border-2 border-white" style={{ background: c }} />
+                  ))}
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-ink">Trusted by thousands</p>
+                  <p className="text-xs text-ink/55">Real people. Real stories. Real guidance.</p>
+                </div>
               </div>
             </div>
-
-            {todaySlots.length > 0 && (
-              <div className="mt-5 rounded-2xl border border-luxe-gold/20 bg-white/5 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-luxe-gold">Today&rsquo;s available slots</p>
-                <div className="mt-2.5 flex flex-wrap gap-2">
-                  {todaySlots.map((s) => (
-                    <span key={s.id} className="rounded-lg border border-luxe-gold/25 px-3 py-1.5 text-xs text-ivory/85">
-                      {fmtDate(s.date)} · {s.time}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* ---- right: form ---- */}
-          <div className="rounded-3xl border border-luxe-gold/25 bg-paper-bg p-6 shadow-card sm:p-7">
-            {done ? (
-              <div className="py-10 text-center">
-                <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-gold-gradient text-night">
-                  <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                </span>
-                <h3 className="mt-5 font-serif text-2xl font-bold text-ink">Consultation Booked!</h3>
-                <p className="mt-2 text-sm text-ink/70">
-                  Thank you, {name.split(" ")[0]}. We&rsquo;ll reach out on {phone} to confirm your {ctype.toLowerCase()}
-                  {slot ? <> for <strong>{fmtDate(slot.date)}, {slot.time}</strong></> : null}.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={submit}>
-                <h3 className="font-serif text-xl font-bold uppercase tracking-wide text-ink">Schedule Consultation</h3>
+          {/* ---------- right: 4-step form ---------- */}
+          <div className="rounded-3xl border border-gold-500/25 bg-white p-6 shadow-card sm:p-8">
+            <h3 className="text-center font-serif text-2xl font-bold text-ink">Book Your Personal Consultation</h3>
+            <p className="mt-1 text-center text-sm text-ink/55">Simple 4-step booking process</p>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <input
-                    className={fieldCls}
-                    placeholder="Full Name *"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                  <input
-                    className={fieldCls}
-                    placeholder="Mobile Number *"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
+            <div className="mt-6 space-y-5">
+              {/* 1 topic */}
+              <Step n={1} label="Select Consultation Topic">
+                <div className="relative">
+                  <select value={topic} onChange={(e) => setTopic(e.target.value)} className={selectCls}>
+                    <option value="">Choose a topic</option>
+                    {topics.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
                 </div>
+                <p className="mt-1.5 text-xs text-ink/45">Career, Marriage, Business, Health, Finance, etc.</p>
+              </Step>
 
-                <p className="mt-4 mb-2 text-xs font-semibold uppercase tracking-wide text-ink/60">Consultation Type</p>
-                <div className="flex flex-wrap gap-2">
-                  {types.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setCtype(t)}
-                      className={chip(ctype === t)}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-
-                <p className="mt-4 mb-2 text-xs font-semibold uppercase tracking-wide text-ink/60">Select Date</p>
+              {/* 2 date */}
+              <Step n={2} label="Select Date">
                 {dates.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
+                  <select value={date} onChange={(e) => { setDate(e.target.value); setTime(""); }} className={selectCls}>
+                    <option value="">Choose a date</option>
                     {dates.map((d) => (
-                      <button
-                        key={d}
-                        type="button"
-                        onClick={() => { setDate(d); setSlot(null); }}
-                        className={chip((date || dates[0]) === d)}
-                      >
-                        {fmtDate(d)}
-                      </button>
+                      <option key={d} value={d}>{fmtDate(d)}</option>
                     ))}
-                  </div>
+                  </select>
                 ) : (
-                  <input type="date" className={fieldCls} value={date} onChange={(e) => setDate(e.target.value)} />
+                  <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={selectCls} />
                 )}
+              </Step>
 
-                <p className="mt-4 mb-2 text-xs font-semibold uppercase tracking-wide text-ink/60">Available Time Slots</p>
-                {daySlots.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {daySlots.map((s) => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => setSlot(s)}
-                        className={chip(slot?.id === s.id)}
-                      >
-                        {s.time}
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-ink/55">No open slots right now — we&rsquo;ll call you to schedule.</p>
-                )}
-
-                <p className="mt-4 mb-2 text-xs font-semibold uppercase tracking-wide text-ink/60">Consultation Mode</p>
-                <div className="flex flex-wrap gap-2">
-                  {MODES.map((m) => (
-                    <button key={m} type="button" onClick={() => setMode(m)} className={chip(mode === m)}>
-                      {m}
-                    </button>
+              {/* 3 time */}
+              <Step n={3} label="Select Time">
+                <select value={time} onChange={(e) => setTime(e.target.value)} className={selectCls} disabled={!date && dates.length > 0}>
+                  <option value="">Choose a time</option>
+                  {(times.length ? times : ["10:30 AM", "12:30 PM", "04:00 PM", "06:00 PM"]).map((t) => (
+                    <option key={t} value={t}>{t}</option>
                   ))}
+                </select>
+              </Step>
+
+              {/* 4 fee */}
+              <Step n={4} label="Consultation Fee">
+                <div className="flex items-center gap-3 rounded-xl border border-gold-500/25 bg-gold-50/60 px-4 py-3">
+                  <span className="text-lg text-ink/40 line-through">₹999</span>
+                  <span className="font-serif text-3xl font-bold text-gold-700">₹499</span>
+                  <span className="ml-auto rounded-lg bg-emerald-100 px-3 py-1.5 text-center text-xs font-bold leading-tight text-emerald-700">
+                    50% OFF<br /><span className="font-medium">Limited Time Offer</span>
+                  </span>
                 </div>
+              </Step>
+            </div>
 
-                <div className="mt-5 flex items-center justify-between rounded-xl border border-gold-500/25 bg-gold-50/60 px-4 py-3">
-                  <span className="text-sm text-ink/65">Consultation Fee</span>
-                  <span className="font-serif text-2xl font-bold text-gold-700">₹999</span>
-                </div>
-
-                {error && <p className="mt-3 text-sm font-medium text-rose-600">{error}</p>}
-
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="mt-4 w-full rounded-lg bg-gold-gradient px-6 py-3.5 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn disabled:opacity-50"
-                >
-                  {busy ? "Processing…" : "Proceed to Payment"}
-                </button>
-                <p className="mt-2 text-center text-xs text-ink/40">Demo payment — connect Razorpay/Stripe for live payments.</p>
-              </form>
-            )}
+            <a
+              href={bookHref}
+              className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-gold-gradient px-6 py-4 text-sm font-bold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5"
+            >
+              <CalendarSvg className="h-5 w-5" /> Book Consultation Now ₹499
+            </a>
+            <div className="mt-3 flex items-center justify-center gap-4 text-xs text-ink/55">
+              <span className="inline-flex items-center gap-1.5"><LockSvg className="h-3.5 w-3.5" /> Secure Payment</span>
+              <span className="text-ink/25">|</span>
+              <span className="inline-flex items-center gap-1.5"><ShieldSvg className="h-3.5 w-3.5" /> 100% Confidential</span>
+            </div>
           </div>
         </div>
 
-        {/* ---- trust badges ---- */}
-        <div className="mx-auto mt-10 grid max-w-6xl grid-cols-2 gap-3 sm:grid-cols-4">
+        {/* ---------- trust badges ---------- */}
+        <div className="mx-auto mt-10 grid max-w-6xl gap-5 rounded-2xl border border-gold-500/15 bg-white/70 p-6 sm:grid-cols-2 lg:grid-cols-4">
           {TRUST.map((t) => (
-            <div key={t.label} className="flex items-center gap-2.5 rounded-xl border border-luxe-gold/20 bg-white/5 px-4 py-3 text-ivory">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-luxe-gold/40 text-luxe-gold">
-                <Icon name={t.icon} className="h-5 w-5" />
+            <div key={t.title} className="flex items-start gap-3">
+              <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gold-500/40 text-gold-600">
+                {t.icon}
               </span>
-              <span className="text-xs font-semibold leading-tight text-ivory/90">{t.label}</span>
+              <div>
+                <p className="text-sm font-bold leading-tight text-ink">{t.title}</p>
+                <p className="mt-0.5 text-xs text-ink/55">{t.body}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -291,11 +209,68 @@ export function ConsultationBooking() {
   );
 }
 
-const fieldCls =
-  "w-full rounded-xl border border-ink/15 bg-white px-4 py-3 text-sm text-ink outline-none focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20";
+const selectCls =
+  "w-full appearance-none rounded-xl border border-ink/15 bg-[#fbf7ee] px-4 py-3 text-sm text-ink outline-none focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20";
 
-function chip(active: boolean) {
-  return `rounded-lg border px-3.5 py-2 text-xs font-medium transition-colors ${
-    active ? "border-gold-600 bg-gold-gradient text-night" : "border-ink/15 text-ink/75 hover:border-gold-500"
-  }`;
+function Step({ n, label, children }: { n: number; label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex gap-3">
+      <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gold-gradient text-xs font-bold text-night">{n}</span>
+      <div className="min-w-0 flex-1">
+        <p className="mb-1.5 text-sm font-semibold text-ink">{label}</p>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- inline icons ---------------- */
+function StarSvg({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden="true">
+      <path d="M12 2l2.6 6.3L21 9l-5 4.2L17.5 21 12 17.3 6.5 21 8 13.2 3 9l6.4-.7L12 2Z" />
+    </svg>
+  );
+}
+function UsersSvg({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  );
+}
+function ShieldSvg({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 2l8 3v6c0 5-3.4 9-8 11-4.6-2-8-6-8-11V5l8-3Z" /><path d="M9 12l2 2 4-4" />
+    </svg>
+  );
+}
+function TrophySvg({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 22v-3.5M14 22v-3.5M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </svg>
+  );
+}
+function HeadsetSvg({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14a2 2 0 0 0 2 2h1v-5H6a2 2 0 0 0-2 2v1Zm16 0a2 2 0 0 1-2 2h-1v-5h1a2 2 0 0 1 2 2v1Zm0 2v1a4 4 0 0 1-4 4h-4" />
+    </svg>
+  );
+}
+function LockSvg({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
+  );
+}
+function CalendarSvg({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" />
+    </svg>
+  );
 }

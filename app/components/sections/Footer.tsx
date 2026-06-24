@@ -32,7 +32,9 @@ export function Footer() {
                 Book Consultation
               </a>
               <a
-                href="#contact"
+                href="https://wa.me/919415312590"
+                target="_blank"
+                rel="noreferrer"
                 className="inline-flex items-center gap-2 rounded-lg border border-gold-400/40 px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-cream transition-colors hover:bg-gold-400/10"
               >
                 <WhatsAppIcon className="h-4 w-4" />
@@ -70,7 +72,7 @@ export function Footer() {
               </li>
               <li>
                 <span className="block text-xs uppercase tracking-wider text-gold-400">Phone</span>
-                <a href="tel:+919999999999" className="hover:text-gold-300">+91 99999 99999</a>
+                <a href="tel:+919415312590" className="hover:text-gold-300">+91 94153 12590</a>
               </li>
               <li>
                 <span className="block text-xs uppercase tracking-wider text-gold-400">Hours</span>
