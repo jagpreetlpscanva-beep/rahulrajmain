@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
-import { get } from "@vercel/blob";
+import { head } from "@vercel/blob";
 
 /**
  * Serves uploaded files saved by /api/upload (stored outside /public so they
@@ -36,20 +36,12 @@ export async function GET(req: Request, ctx: { params: Promise<{ name: string }>
 
   const type = MIME[path.extname(name).toLowerCase()] || "application/octet-stream";
 
-  // Production / Vercel: stream the file from the (private) Blob store.
+  // Production / Vercel: redirect to the blob's CDN URL (fast — browser loads
+  // bytes directly from the CDN instead of streaming them through this function).
   if (process.env.BLOB_READ_WRITE_TOKEN) {
     try {
-      const result = await get(`uploads/${name}`, { access: "private" });
-      if (!result || !result.stream) {
-        return new NextResponse("Not found", { status: 404 });
-      }
-      return new NextResponse(result.stream, {
-        status: 200,
-        headers: {
-          "Content-Type": result.blob.contentType || type,
-          "Cache-Control": "public, max-age=31536000, immutable",
-        },
-      });
+      const meta = await head(`uploads/${name}`);
+      return NextResponse.redirect(meta.downloadUrl, 302);
     } catch {
       return new NextResponse("Not found", { status: 404 });
     }

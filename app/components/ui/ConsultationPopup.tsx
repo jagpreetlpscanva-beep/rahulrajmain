@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCollection, DEFAULT_HERO_SLIDES, type HeroSlide } from "@/lib/adminStore";
+import { ZodiacWheel } from "./ZodiacWheel";
 import { CalendarIcon, CloseIcon, WhatsAppIcon } from "../icons";
 
 const WHATSAPP_HREF = "https://wa.me/919415312590";
@@ -138,16 +139,19 @@ export function ConsultationPopup() {
 
               {/* ---------- right ---------- */}
               <div className="relative hidden lg:block">
-                <div className="relative h-64 overflow-hidden rounded-2xl bg-gradient-to-br from-[#F2E3C4] to-[#E6D2A6]">
+                {/* photo on a faint zodiac circle */}
+                <div className="relative z-10 mx-auto aspect-square max-w-[18rem]">
+                  <ZodiacWheel className="absolute inset-0 m-auto h-[92%] w-[92%] text-gold-600/15" />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={astro}
                     alt="Astro Rahul Raj"
                     onError={(e) => (e.currentTarget.style.display = "none")}
-                    className="absolute bottom-0 left-1/2 h-[112%] -translate-x-1/2 object-contain"
+                    className="absolute bottom-0 left-1/2 h-[108%] -translate-x-1/2 object-contain drop-shadow-[0_20px_30px_rgba(40,20,5,0.35)]"
                   />
                 </div>
-                <div className="mt-3 rounded-2xl bg-espresso p-5 text-cream">
+                {/* green stats block, tucked under the photo */}
+                <div className="relative -mt-8 rounded-2xl bg-[#173d22] p-5 text-cream">
                   {STATS.map((s, i) => (
                     <div key={i} className={`flex items-center gap-3 ${i > 0 ? "mt-3" : ""}`}>
                       <span className="text-luxe-gold">{s.icon}</span>
