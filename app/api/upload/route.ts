@@ -2,18 +2,22 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { promises as fs } from "fs";
 import path from "path";
+import { put } from "@vercel/blob";
 import { verifyToken, COOKIE_NAME } from "@/lib/auth";
 
 /**
- * Authenticated file upload (images + videos). Saves to /public/uploads and
- * returns a public URL like /uploads/<name>. Works on a Node host with a
- * writable disk. For serverless hosting, swap the write below for a storage
- * bucket (S3 / Cloudinary) and return its URL — nothing else changes.
+ * Authenticated file upload (images + videos).
+ *
+ * - On Vercel (BLOB_READ_WRITE_TOKEN set): stores the file in Vercel Blob and
+ *   returns its public https URL. The filesystem is read-only on Vercel, so
+ *   this is required for uploads to work in production.
+ * - Locally (no token): saves to <project>/uploads and serves it back via
+ *   /api/uploads/<name>.
  */
 
 export const dynamic = "force-dynamic";
 
-const MAX_BYTES = 200 * 1024 * 1024; // 200 MB
+const MAX_BYTES = 50 * 1024 * 1024; // 50 MB
 const UPLOAD_DIR = path.join(process.cwd(), "uploads");
 
 export async function POST(req: Request) {
@@ -34,10 +38,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No file provided" }, { status: 400 });
   }
   if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "File too large (max 200 MB)" }, { status: 413 });
+    return NextResponse.json({ error: "File too large (max 50 MB)" }, { status: 413 });
   }
 
-  const buf = Buffer.from(await file.arrayBuffer());
   const ext = (path.extname(file.name) || "").toLowerCase().replace(/[^.a-z0-9]/g, "").slice(0, 10);
   const base =
     file.name
@@ -47,8 +50,26 @@ export async function POST(req: Request) {
       .slice(0, 40) || "file";
   const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${base}${ext}`;
 
-  await fs.mkdir(UPLOAD_DIR, { recursive: true });
-  await fs.writeFile(path.join(UPLOAD_DIR, name), buf);
+  try {
+    // Production / Vercel: store in Blob
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      const blob = await put(`uploads/${name}`, file, {
+        access: "public",
+        contentType: file.type || undefined,
+      });
+      return NextResponse.json({ ok: true, url: blob.url });
+    }
 
-  return NextResponse.json({ ok: true, url: `/api/uploads/${name}` });
+    // Local: write to disk
+    const buf = Buffer.from(await file.arrayBuffer());
+    await fs.mkdir(UPLOAD_DIR, { recursive: true });
+    await fs.writeFile(path.join(UPLOAD_DIR, name), buf);
+    return NextResponse.json({ ok: true, url: `/api/uploads/${name}` });
+  } catch (err) {
+    console.error("[upload] failed:", err);
+    return NextResponse.json(
+      { error: "Storage error — could not save the file." },
+      { status: 500 }
+    );
+  }
 }
