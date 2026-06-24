@@ -130,7 +130,7 @@ export function Hero() {
                     key={slide.image}
                     src={slide.image}
                     alt={slide.title}
-                    className="absolute left-1/2 top-1/2 max-h-[92%] w-auto max-w-[78%] -translate-x-1/2 -translate-y-1/2 animate-float object-contain drop-shadow-[0_34px_44px_rgba(40,20,5,0.5)]"
+                    className="absolute left-1/2 top-1/2 max-h-[74%] w-auto max-w-[66%] -translate-x-1/2 -translate-y-1/2 animate-float object-contain drop-shadow-[0_34px_44px_rgba(40,20,5,0.5)]"
                   />
                 )
               )}
