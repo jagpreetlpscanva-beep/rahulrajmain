@@ -230,11 +230,21 @@ function FieldInput({
       const fd = new FormData();
       fd.append("file", file);
       const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const data = await res.json();
-      if (res.ok && data.url) onChange(data.url);
-      else alert(data.error || "Upload failed");
+      let data: { url?: string; error?: string } = {};
+      try {
+        data = await res.json();
+      } catch {
+        /* non-JSON response (server crash / proxy page) */
+      }
+      if (res.ok && data.url) {
+        onChange(data.url);
+      } else if (res.status === 401) {
+        alert("Your admin session expired. Refresh the page, sign in again, then re-upload.");
+      } else {
+        alert(`Upload failed (status ${res.status})${data.error ? `: ${data.error}` : ""}`);
+      }
     } catch {
-      alert("Upload failed — is the file too large?");
+      alert("Upload failed — could not reach the server. Is it still running?");
     } finally {
       setUploading(false);
     }
