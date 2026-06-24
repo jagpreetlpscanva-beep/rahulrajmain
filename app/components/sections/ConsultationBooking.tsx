@@ -68,7 +68,7 @@ export function ConsultationBooking() {
   const bookHref = `${BOOK_HREF}?topic=${encodeURIComponent(topic)}&date=${encodeURIComponent(date)}&time=${encodeURIComponent(time)}`;
 
   return (
-    <section className="relative overflow-hidden bg-paper-bg py-16 lg:py-24">
+    <section className="relative overflow-hidden bg-[#faf4e8] py-16 lg:py-24">
       <div className="amber-radial pointer-events-none absolute inset-0 opacity-30" />
       <div className="container-px relative">
         <div className="mx-auto grid max-w-6xl items-start gap-10 lg:grid-cols-2">

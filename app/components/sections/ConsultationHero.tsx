@@ -130,7 +130,7 @@ export function ConsultationHero() {
         </div>
 
         {/* ---------- feature row (overlapping card) ---------- */}
-        <div className="relative z-10 mx-auto -mb-10 mt-4 grid max-w-6xl translate-y-10 grid-cols-2 gap-x-6 gap-y-5 rounded-2xl border border-gold-500/20 bg-paper-bg p-6 shadow-card sm:grid-cols-3 lg:grid-cols-5">
+        <div className="relative z-10 mx-auto -mb-10 mt-4 grid max-w-6xl translate-y-10 grid-cols-2 gap-x-6 gap-y-5 rounded-2xl border border-gold-500/20 bg-[#faf4e8] p-6 shadow-card sm:grid-cols-3 lg:grid-cols-5">
           {FEATURES.map((f) => (
             <div key={f.title} className="flex items-start gap-3">
               <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold-500/40 text-gold-600">
@@ -144,7 +144,7 @@ export function ConsultationHero() {
           ))}
         </div>
       </div>
-      <div className="h-16 bg-paper-bg" />
+      <div className="h-16 bg-[#faf4e8]" />
     </section>
   );
 }

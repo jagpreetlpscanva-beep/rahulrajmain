@@ -68,7 +68,7 @@ export function ConsultationPopup() {
             exit={{ scale: 0.95, opacity: 0 }}
             transition={{ type: "spring", stiffness: 260, damping: 24 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-paper-bg p-6 shadow-2xl sm:p-8"
+            className="relative max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-3xl bg-[#faf4e8] p-6 shadow-2xl sm:p-8"
           >
             <button
               type="button"
