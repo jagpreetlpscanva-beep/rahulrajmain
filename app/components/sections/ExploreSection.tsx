@@ -2,7 +2,7 @@
 
 import { useCollection, DEFAULT_REPORTS, DEFAULT_COURSES, type StoredReport, type Course } from "@/lib/adminStore";
 import { TOOLS, optimizeImage } from "@/lib/content";
-import { Icon, ArrowRightIcon } from "../icons";
+import { Icon, ArrowRightIcon, WhatsAppIcon } from "../icons";
 import type { IconName } from "@/lib/content";
 
 const REPORT_ICONS: IconName[] = ["briefcase", "couple", "lotus-person", "wealth", "star", "numerology"];
@@ -62,7 +62,7 @@ export function ExploreSection() {
           <div className="rounded-3xl border border-gold-500/20 bg-white p-6 shadow-card">
             <p className="eyebrow text-center text-gold-600">Free Astrology Tools</p>
             <h2 className="mt-2 text-center font-serif text-2xl font-bold leading-tight text-ink sm:text-3xl">
-              Astrology Tools
+              Powerful Tools For Life&rsquo;s Answers
             </h2>
             <p className="mt-1 text-center text-sm text-ink/55">Accurate calculations. 100% free.</p>
 
@@ -80,6 +80,14 @@ export function ExploreSection() {
                   <ArrowRightIcon className="h-4 w-4 shrink-0 text-gold-600 transition-transform group-hover:translate-x-0.5" />
                 </a>
               ))}
+            </div>
+
+            {/* quote */}
+            <div className="mt-5 rounded-2xl border border-gold-500/15 bg-gold-50/60 p-4 text-center">
+              <p className="text-sm italic leading-relaxed text-ink/70">
+                &ldquo;These tools are designed to bring clarity to your life&rsquo;s questions and help you make empowered decisions.&rdquo;
+              </p>
+              <p className="mt-2 font-serif text-sm font-bold text-gold-700">— Astro Rahul Raj</p>
             </div>
           </div>
 
@@ -151,6 +159,24 @@ export function ExploreSection() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* ---------- WhatsApp CTA ---------- */}
+        <div className="mx-auto mt-6 flex max-w-[1500px] flex-col items-center justify-center gap-4 rounded-2xl border border-gold-500/25 bg-white p-5 text-center shadow-card sm:flex-row">
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-500 text-white">
+            <WhatsAppIcon className="h-6 w-6" />
+          </span>
+          <p className="text-ink">
+            <strong>Still have questions?</strong> Chat directly with Rahul Ji on WhatsApp
+          </p>
+          <a
+            href="https://wa.me/919415312590"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl bg-gold-gradient px-6 py-3 text-sm font-bold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5"
+          >
+            Chat Now <ArrowRightIcon className="h-4 w-4" />
+          </a>
         </div>
       </div>
     </section>
