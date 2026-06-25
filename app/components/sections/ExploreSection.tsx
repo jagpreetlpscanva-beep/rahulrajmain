@@ -3,6 +3,7 @@
 import { useCollection, DEFAULT_REPORTS, DEFAULT_COURSES, type StoredReport, type Course } from "@/lib/adminStore";
 import { TOOLS, optimizeImage } from "@/lib/content";
 import { Icon, ArrowRightIcon, WhatsAppIcon } from "../icons";
+import { Mandala } from "../ui/Mandala";
 import type { IconName } from "@/lib/content";
 
 const REPORT_ICONS: IconName[] = ["briefcase", "couple", "lotus-person", "wealth", "star", "numerology"];
@@ -22,10 +23,13 @@ export function ExploreSection() {
 
   return (
     <section className="relative overflow-hidden bg-[#faf4e8] py-16 lg:py-24">
-      <div className="container-wide">
+      <div className="amber-radial pointer-events-none absolute inset-0 opacity-30" />
+      <Mandala className="pointer-events-none absolute -left-24 top-10 h-72 w-72 text-gold-600/[0.06]" />
+      <Mandala className="pointer-events-none absolute -right-24 bottom-10 h-80 w-80 text-gold-600/[0.06]" />
+      <div className="container-wide relative">
         <div className="mx-auto grid max-w-[1500px] items-start gap-6 lg:grid-cols-3 lg:gap-8">
           {/* ---------- left: reports ---------- */}
-          <div className="rounded-3xl border border-gold-500/15 bg-white/70 p-6">
+          <div className="rounded-3xl border-2 border-gold-500/30 bg-white p-6 shadow-card">
             <p className="eyebrow text-gold-600">Personalized Vedic Reports</p>
             <h2 className="mt-2 font-serif text-2xl font-bold leading-tight text-ink sm:text-3xl">
               Reports Crafted For Your Chart
@@ -59,7 +63,7 @@ export function ExploreSection() {
           </div>
 
           {/* ---------- middle: astrology tools ---------- */}
-          <div className="rounded-3xl border border-gold-500/20 bg-white p-6 shadow-card">
+          <div className="rounded-3xl border-2 border-gold-500/40 bg-gradient-to-b from-white to-gold-50/50 p-6 shadow-card-hover">
             <p className="eyebrow text-center text-gold-600">Free Astrology Tools</p>
             <h2 className="mt-2 text-center font-serif text-2xl font-bold leading-tight text-ink sm:text-3xl">
               Powerful Tools For Life&rsquo;s Answers
@@ -92,7 +96,7 @@ export function ExploreSection() {
           </div>
 
           {/* ---------- right: courses ---------- */}
-          <div className="rounded-3xl border border-gold-500/15 bg-white/70 p-6">
+          <div className="rounded-3xl border-2 border-gold-500/30 bg-white p-6 shadow-card">
             <p className="eyebrow text-gold-600">Learn With Rahul Raj</p>
             <h2 className="mt-2 font-serif text-2xl font-bold leading-tight text-ink sm:text-3xl">
               Courses &amp; Masterclasses
