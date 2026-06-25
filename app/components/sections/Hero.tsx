@@ -126,13 +126,15 @@ export function Hero() {
                 </div>
               ) : (
                 slide.image && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    key={slide.image}
-                    src={optimizeImage(slide.image)}
-                    alt={slide.title}
-                    className="absolute left-1/2 top-1/2 max-h-[74%] w-auto max-w-[66%] -translate-x-1/2 -translate-y-1/2 animate-float object-contain drop-shadow-[0_34px_44px_rgba(40,20,5,0.5)]"
-                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      key={slide.image}
+                      src={optimizeImage(slide.image)}
+                      alt={slide.title}
+                      className="max-h-[66%] max-w-[72%] animate-float object-contain drop-shadow-[0_34px_44px_rgba(40,20,5,0.5)]"
+                    />
+                  </div>
                 )
               )}
             </motion.div>
