@@ -3,9 +3,7 @@ import { Hero } from "./components/sections/Hero";
 import { FeatureTiles } from "./components/sections/FeatureTiles";
 import { ConsultationBooking } from "./components/sections/ConsultationBooking";
 import { Panchang } from "./components/sections/Panchang";
-import { Tools } from "./components/sections/Tools";
-import { ReportsGrid } from "./components/sections/ReportsGrid";
-import { CoursesGrid } from "./components/sections/CoursesGrid";
+import { ExploreSection } from "./components/sections/ExploreSection";
 import { Gallery } from "./components/sections/Gallery";
 import { Testimonials } from "./components/sections/Testimonials";
 import { Footer } from "./components/sections/Footer";
@@ -24,12 +22,8 @@ export default function Home() {
         <ConsultationBooking />
         {/* panchang (left) + kundali generator (right) */}
         <Panchang />
-        {/* calculators */}
-        <Tools />
-        {/* reports */}
-        <ReportsGrid />
-        {/* courses */}
-        <CoursesGrid />
+        {/* reports + astrology tools + courses, with trust badges */}
+        <ExploreSection />
         {/* awards & recognition (auto-scrolling) */}
         <Gallery />
         <Testimonials />

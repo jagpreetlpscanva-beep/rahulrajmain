@@ -1,0 +1,144 @@
+"use client";
+
+import { useCollection, DEFAULT_REPORTS, DEFAULT_COURSES, type StoredReport, type Course } from "@/lib/adminStore";
+import { TOOLS } from "@/lib/content";
+import { Icon, ArrowRightIcon } from "../icons";
+import type { IconName } from "@/lib/content";
+
+const REPORT_ICONS: IconName[] = ["briefcase", "couple", "lotus-person", "wealth", "star", "numerology"];
+const COURSE_GRADIENTS = ["from-[#3B5BA9] to-[#1E2F66]", "from-[#6B3FA0] to-[#36205C]", "from-[#1F7A6B] to-[#0C3B34]"];
+
+const TRUST = [
+  { icon: "shield" as IconName, title: "100% Confidential", body: "Your privacy is our top priority." },
+  { icon: "star" as IconName, title: "Accurate & Reliable", body: "Insights you can trust and act on." },
+  { icon: "lotus-person" as IconName, title: "Personalized Guidance", body: "Solutions tailored to your chart." },
+  { icon: "magnet" as IconName, title: "Timely Remedies", body: "Effective remedies for a better tomorrow." },
+  { icon: "users" as IconName, title: "Expert Support", body: "We're here to help you always." },
+];
+
+export function ExploreSection() {
+  const { items: reports } = useCollection<StoredReport>("reports", DEFAULT_REPORTS);
+  const { items: courses } = useCollection<Course>("courses", DEFAULT_COURSES);
+
+  return (
+    <section className="relative overflow-hidden bg-[#faf4e8] py-16 lg:py-24">
+      <div className="container-px">
+        <div className="mx-auto grid max-w-7xl items-start gap-6 lg:grid-cols-3 lg:gap-7">
+          {/* ---------- left: reports ---------- */}
+          <div className="rounded-3xl border border-gold-500/15 bg-white/70 p-6">
+            <p className="eyebrow text-gold-600">Personalized Vedic Reports</p>
+            <h2 className="mt-2 font-serif text-2xl font-bold leading-tight text-ink sm:text-3xl">
+              Reports Crafted For Your Chart
+            </h2>
+            <p className="mt-1 text-sm text-ink/55">Detailed • Accurate • Personalized</p>
+
+            <div className="mt-5 space-y-3">
+              {reports.slice(0, 3).map((r, i) => (
+                <a
+                  key={r.id}
+                  href="/reports"
+                  className="group flex items-start gap-3 rounded-2xl border border-gold-500/15 bg-[#fbf7ee] p-3.5 transition-colors hover:border-gold-500/40"
+                >
+                  <span
+                    className="grid h-11 w-11 shrink-0 place-items-center rounded-xl text-white"
+                    style={{ background: `linear-gradient(150deg, ${r.accent?.[0] ?? "#C08A2E"}, ${r.accent?.[1] ?? "#7A5212"})` }}
+                  >
+                    <Icon name={REPORT_ICONS[i % REPORT_ICONS.length]} className="h-6 w-6" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="font-serif font-bold text-ink">{r.title}</p>
+                    <p className="mt-0.5 line-clamp-2 text-xs text-ink/55">{r.description}</p>
+                  </div>
+                </a>
+              ))}
+            </div>
+
+            <a href="/reports" className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-gold-700 hover:text-gold-800">
+              Explore All Reports <ArrowRightIcon className="h-4 w-4" />
+            </a>
+          </div>
+
+          {/* ---------- middle: astrology tools ---------- */}
+          <div className="rounded-3xl border border-gold-500/20 bg-white p-6 shadow-card">
+            <p className="eyebrow text-center text-gold-600">Free Astrology Tools</p>
+            <h2 className="mt-2 text-center font-serif text-2xl font-bold leading-tight text-ink sm:text-3xl">
+              Astrology Tools
+            </h2>
+            <p className="mt-1 text-center text-sm text-ink/55">Accurate calculations. 100% free.</p>
+
+            <div className="mt-5 space-y-2.5">
+              {TOOLS.map((tool) => (
+                <a
+                  key={tool.title}
+                  href="#contact"
+                  className="group flex items-center gap-3 rounded-xl border border-gold-500/15 bg-[#fbf7ee] p-3 transition-all hover:border-gold-500/40 hover:bg-gold-50"
+                >
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-gold-gradient text-cream">
+                    <Icon name={tool.icon} className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0 flex-1 font-serif text-sm font-bold text-ink">{tool.title}</span>
+                  <ArrowRightIcon className="h-4 w-4 shrink-0 text-gold-600 transition-transform group-hover:translate-x-0.5" />
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* ---------- right: courses ---------- */}
+          <div className="rounded-3xl border border-gold-500/15 bg-white/70 p-6">
+            <p className="eyebrow text-gold-600">Learn With Rahul Raj</p>
+            <h2 className="mt-2 font-serif text-2xl font-bold leading-tight text-ink sm:text-3xl">
+              Courses &amp; Masterclasses
+            </h2>
+            <p className="mt-1 text-sm text-ink/55">Learn anytime. Grow every day.</p>
+
+            <div className="mt-5 space-y-4">
+              {courses.slice(0, 2).map((c, i) => (
+                <a
+                  key={c.id}
+                  href="/courses"
+                  className={`relative block overflow-hidden rounded-2xl bg-gradient-to-br ${COURSE_GRADIENTS[i % COURSE_GRADIENTS.length]} p-5 text-white shadow-card`}
+                >
+                  {i === 0 && (
+                    <span className="absolute right-3 top-3 rounded-full bg-luxe-gold px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-wider text-espresso">
+                      Bestseller
+                    </span>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/90 text-night">
+                      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-serif text-lg font-bold leading-tight">{c.title}</p>
+                      <p className="text-xs text-white/70">{c.level}</p>
+                    </div>
+                    {c.price && <span className="shrink-0 font-serif text-xl font-bold">{c.price}</span>}
+                  </div>
+                  {c.lessons && <p className="mt-2 text-xs text-white/70">{c.lessons}</p>}
+                </a>
+              ))}
+            </div>
+
+            <a href="/courses" className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-gold-700 hover:text-gold-800">
+              View All Courses <ArrowRightIcon className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+
+        {/* ---------- trust badges ---------- */}
+        <div className="mx-auto mt-10 grid max-w-7xl gap-5 rounded-2xl border border-gold-500/15 bg-white/70 p-6 sm:grid-cols-3 lg:grid-cols-5">
+          {TRUST.map((t) => (
+            <div key={t.title} className="flex items-start gap-3">
+              <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gold-500/40 text-gold-600">
+                <Icon name={t.icon} className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-sm font-bold leading-tight text-ink">{t.title}</p>
+                <p className="mt-0.5 text-xs text-ink/55">{t.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
