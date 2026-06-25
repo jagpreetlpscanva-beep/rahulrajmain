@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCollection, DEFAULT_HERO_SLIDES, type HeroSlide } from "@/lib/adminStore";
 import { ZodiacWheel } from "./ZodiacWheel";
-import { optimizeImage } from "@/lib/content";
 import { CalendarIcon, CloseIcon, WhatsAppIcon } from "../icons";
 
 const WHATSAPP_HREF = "https://wa.me/919415312590";
@@ -146,7 +145,7 @@ export function ConsultationPopup() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     key={astro}
-                    src={optimizeImage(astro)}
+                    src={astro}
                     alt="Astro Rahul Raj"
                     className="absolute bottom-0 left-1/2 h-[108%] -translate-x-1/2 object-contain drop-shadow-[0_20px_30px_rgba(40,20,5,0.35)]"
                   />

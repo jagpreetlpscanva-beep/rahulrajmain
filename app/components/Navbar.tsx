@@ -90,9 +90,7 @@ export function Navbar() {
 
         {/* logo */}
         <div className="flex flex-1 justify-start xl:flex-none xl:justify-center">
-          <a href="/" aria-label="Rahul Raj — Home">
-            <Logo variant={scrolled ? "dark" : "light"} />
-          </a>
+          <Logo variant={scrolled ? "dark" : "light"} />
         </div>
 
         {/* right menu + language pill */}

@@ -63,8 +63,8 @@ export function Logo({
   const nameColor = variant === "light" ? "text-cream" : "text-ink";
   return (
     <a
-      href="#home"
-      aria-label="Rahul Raj — Vedic Astrologer, back to top"
+      href="/"
+      aria-label="Rahul Raj — Vedic Astrologer, home"
       className={`group flex flex-col items-center leading-none ${className}`}
     >
       <SunEmblem className="mb-1 h-9 w-9 transition-transform duration-500 group-hover:rotate-90 sm:h-11 sm:w-11" />

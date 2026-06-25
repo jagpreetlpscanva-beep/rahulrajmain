@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useCollection, DEFAULT_HERO_SLIDES, type HeroSlide, type Slot, type Consultation } from "@/lib/adminStore";
 import { ZodiacWheel } from "../ui/ZodiacWheel";
-import { optimizeImage } from "@/lib/content";
 
 const BOOK_HREF = "/book/consultation/quick";
 
@@ -104,7 +103,7 @@ export function ConsultationBooking() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 key={astro}
-                src={optimizeImage(astro)}
+                src={astro}
                 alt="Astro Rahul Raj"
                 className="absolute bottom-0 left-1/2 h-[98%] -translate-x-1/2 object-contain"
               />

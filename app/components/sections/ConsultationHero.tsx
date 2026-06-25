@@ -3,7 +3,6 @@
 import { useCollection, DEFAULT_HERO_SLIDES, type HeroSlide } from "@/lib/adminStore";
 import { ZodiacWheel } from "../ui/ZodiacWheel";
 import { WhatsAppIcon, CalendarIcon } from "../icons";
-import { optimizeImage } from "@/lib/content";
 
 const WHATSAPP_HREF = "https://wa.me/919415312590";
 const BOOK_HREF = "/book/consultation/quick";
@@ -116,7 +115,7 @@ export function ConsultationHero() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               key={astro}
-              src={optimizeImage(astro)}
+              src={astro}
               alt="Astro Rahul Raj"
               className="absolute bottom-0 left-1/2 h-[96%] -translate-x-1/2 object-contain drop-shadow-[0_30px_40px_rgba(40,20,5,0.45)]"
             />
