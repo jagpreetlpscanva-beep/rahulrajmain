@@ -4,6 +4,7 @@ import { Footer } from "../components/sections/Footer";
 import { PoojaGrid } from "../components/sections/PoojaGrid";
 import { ScrollToTop } from "../components/ui/ScrollToTop";
 import { Mandala } from "../components/ui/Mandala";
+import { AstroPhoto } from "../components/ui/AstroPhoto";
 import { OmIcon } from "../components/icons";
 
 export const metadata: Metadata = {
@@ -95,8 +96,8 @@ export default function OnlinePoojaPage() {
             <div className="relative grid aspect-[5/4] place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#F2E3C4] to-[#E6D2A6]">
               <Mandala className="pointer-events-none absolute inset-0 m-auto h-[120%] w-[120%] text-gold-600/15" />
               <div className="relative flex flex-col items-center gap-2 text-center">
-                <span className="grid h-20 w-20 place-items-center rounded-full border border-gold-600/30 bg-white/50 text-gold-700">
-                  <OmIcon className="h-10 w-10" />
+                <span className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-2 border-gold-600/40 bg-white/60 shadow-card">
+                  <AstroPhoto className="h-full w-full object-cover object-top" />
                 </span>
                 <span className="font-serif text-xl font-bold text-ink">Rahul Raj</span>
                 <span className="text-xs uppercase tracking-[0.25em] text-gold-700">Certified Pandits</span>
