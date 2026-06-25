@@ -19,14 +19,14 @@ export default function Home() {
         <Hero />
         {/* quick-access tiles peeking up below the hero */}
         <FeatureTiles />
+        {/* online pooja (collapsed; slides open on click) */}
+        <OnlinePoojaSection />
         {/* book a personal consultation (slots editable in admin) */}
         <ConsultationBooking />
         {/* panchang (left) + kundali generator (right) */}
         <Panchang />
         {/* reports + astrology tools + courses, with trust badges */}
         <ExploreSection />
-        {/* online pooja (collapsed; slides open on click) */}
-        <OnlinePoojaSection />
         {/* awards & recognition (auto-scrolling) */}
         <Gallery />
         <Testimonials />

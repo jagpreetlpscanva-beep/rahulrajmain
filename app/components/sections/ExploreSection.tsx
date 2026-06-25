@@ -1,7 +1,7 @@
 "use client";
 
 import { useCollection, DEFAULT_REPORTS, DEFAULT_COURSES, type StoredReport, type Course } from "@/lib/adminStore";
-import { TOOLS, optimizeImage } from "@/lib/content";
+import { TOOLS } from "@/lib/content";
 import { Icon, ArrowRightIcon, WhatsAppIcon } from "../icons";
 import { Mandala } from "../ui/Mandala";
 import { ZodiacWheel } from "../ui/ZodiacWheel";
@@ -133,7 +133,7 @@ export function ExploreSection() {
                   {c.thumbnail ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={optimizeImage(c.thumbnail, 700)} alt={c.title} className="absolute inset-0 h-full w-full object-cover" />
+                      <img src={c.thumbnail} alt={c.title} className="absolute inset-0 h-full w-full object-cover" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/25" />
                     </>
                   ) : (
