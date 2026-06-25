@@ -1,7 +1,7 @@
 "use client";
 
 import { useCollection, DEFAULT_REPORTS, DEFAULT_COURSES, type StoredReport, type Course } from "@/lib/adminStore";
-import { TOOLS } from "@/lib/content";
+import { TOOLS, optimizeImage } from "@/lib/content";
 import { Icon, ArrowRightIcon } from "../icons";
 import type { IconName } from "@/lib/content";
 
@@ -22,8 +22,8 @@ export function ExploreSection() {
 
   return (
     <section className="relative overflow-hidden bg-[#faf4e8] py-16 lg:py-24">
-      <div className="container-px">
-        <div className="mx-auto grid max-w-7xl items-start gap-6 lg:grid-cols-3 lg:gap-7">
+      <div className="container-wide">
+        <div className="mx-auto grid max-w-[1500px] items-start gap-6 lg:grid-cols-3 lg:gap-8">
           {/* ---------- left: reports ---------- */}
           <div className="rounded-3xl border border-gold-500/15 bg-white/70 p-6">
             <p className="eyebrow text-gold-600">Personalized Vedic Reports</p>
@@ -96,24 +96,38 @@ export function ExploreSection() {
                 <a
                   key={c.id}
                   href="/courses"
-                  className={`relative block overflow-hidden rounded-2xl bg-gradient-to-br ${COURSE_GRADIENTS[i % COURSE_GRADIENTS.length]} p-5 text-white shadow-card`}
+                  className="relative block overflow-hidden rounded-2xl text-white shadow-card"
                 >
+                  {/* background: course thumbnail if set, else gradient */}
+                  {c.thumbnail ? (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={optimizeImage(c.thumbnail, 700)} alt={c.title} className="absolute inset-0 h-full w-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/25" />
+                    </>
+                  ) : (
+                    <div className={`absolute inset-0 bg-gradient-to-br ${COURSE_GRADIENTS[i % COURSE_GRADIENTS.length]}`} />
+                  )}
+
                   {i === 0 && (
-                    <span className="absolute right-3 top-3 rounded-full bg-luxe-gold px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-wider text-espresso">
+                    <span className="absolute right-3 top-3 z-10 rounded-full bg-luxe-gold px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-wider text-espresso">
                       Bestseller
                     </span>
                   )}
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/90 text-night">
-                      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-serif text-lg font-bold leading-tight">{c.title}</p>
-                      <p className="text-xs text-white/70">{c.level}</p>
+
+                  <div className="relative flex min-h-[8.5rem] flex-col justify-end p-5">
+                    <div className="flex items-center gap-3">
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/90 text-night">
+                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-serif text-lg font-bold leading-tight">{c.title}</p>
+                        <p className="text-xs text-white/75">{c.level}</p>
+                      </div>
+                      {c.price && <span className="shrink-0 font-serif text-xl font-bold">{c.price}</span>}
                     </div>
-                    {c.price && <span className="shrink-0 font-serif text-xl font-bold">{c.price}</span>}
+                    {c.lessons && <p className="mt-2 text-xs text-white/75">{c.lessons}</p>}
                   </div>
-                  {c.lessons && <p className="mt-2 text-xs text-white/70">{c.lessons}</p>}
                 </a>
               ))}
             </div>
@@ -125,7 +139,7 @@ export function ExploreSection() {
         </div>
 
         {/* ---------- trust badges ---------- */}
-        <div className="mx-auto mt-10 grid max-w-7xl gap-5 rounded-2xl border border-gold-500/15 bg-white/70 p-6 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mx-auto mt-10 grid max-w-[1500px] gap-5 rounded-2xl border border-gold-500/15 bg-white/70 p-6 sm:grid-cols-3 lg:grid-cols-5">
           {TRUST.map((t) => (
             <div key={t.title} className="flex items-start gap-3">
               <span className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gold-500/40 text-gold-600">
