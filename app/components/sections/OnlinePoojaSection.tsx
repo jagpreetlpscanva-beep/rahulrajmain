@@ -3,9 +3,16 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCollection, DEFAULT_POOJAS, type Pooja } from "@/lib/adminStore";
-import { optimizeImage } from "@/lib/content";
 import { Mandala } from "../ui/Mandala";
+import { LotusDivider, Diamond } from "../ui/Dividers";
 import { OmIcon, ArrowRightIcon } from "../icons";
+
+const BADGES = [
+  { icon: <ShieldSvg />, title: "Authentic Vedic Rituals" },
+  { icon: <PersonSvg />, title: "Experienced Pandits" },
+  { icon: <LockSvg />, title: "Secure & Private" },
+  { icon: <ClockSvg />, title: "Easy & Convenient" },
+];
 
 export function OnlinePoojaSection() {
   const { items } = useCollection<Pooja>("poojas", DEFAULT_POOJAS);
@@ -13,35 +20,54 @@ export function OnlinePoojaSection() {
   const poojas = items.slice(0, 6);
 
   return (
-    <section className="bg-[#faf4e8] py-12 lg:py-16">
-      <div className="container-px">
-        {/* slide-down toggle */}
+    <section className="relative overflow-hidden bg-[#faf4e8] py-14 lg:py-20">
+      {/* decorative watermarks */}
+      <Mandala className="pointer-events-none absolute -right-20 -top-16 h-72 w-72 text-gold-600/[0.08]" />
+      <OmIcon className="pointer-events-none absolute right-10 top-24 hidden h-28 w-28 text-gold-600/[0.07] lg:block" />
+      <Mandala className="pointer-events-none absolute -left-24 bottom-0 h-64 w-64 text-gold-600/[0.06]" />
+
+      <div className="container-px relative">
+        {/* heading */}
+        <div className="text-center">
+          <h2 className="inline-flex items-center justify-center gap-3 font-serif text-3xl font-bold text-ink sm:text-4xl">
+            <Diamond className="h-3 w-3 text-gold-500" />
+            Divine Poojas, Personalized for You
+            <Diamond className="h-3 w-3 text-gold-500" />
+          </h2>
+          <LotusDivider className="mx-auto mt-4" />
+          <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-ink/65 sm:text-lg">
+            Experience the power of <span className="font-semibold text-gold-700">Vedic rituals</span> performed by
+            expert pandits from the comfort of your home.
+          </p>
+        </div>
+
+        {/* slide-down toggle card */}
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="mx-auto flex w-full max-w-3xl items-center justify-between gap-4 rounded-2xl border-2 border-gold-500/30 bg-white px-5 py-4 shadow-card transition-colors hover:border-gold-500/50 sm:px-6 sm:py-5"
+          className="mx-auto mt-9 flex w-full max-w-4xl items-center gap-5 rounded-3xl border-2 border-gold-500/40 bg-white p-5 text-left shadow-card-hover transition-colors hover:border-gold-500/60 sm:p-6"
         >
-          <span className="flex items-center gap-3 text-left">
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gold-gradient text-cream shadow-[0_8px_22px_-6px_rgba(192,138,46,0.7)]">
-              <OmIcon className="h-6 w-6" />
-            </span>
-            <span>
-              <span className="block font-serif text-lg font-bold text-ink sm:text-xl">Online Pooja</span>
-              <span className="block text-xs text-ink/55 sm:text-sm">Personalized pujas performed for you — tap to view</span>
-            </span>
+          <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-gradient-to-br from-gold-500 to-[#7A5212] text-cream shadow-[0_10px_28px_-6px_rgba(192,138,46,0.8)] sm:h-20 sm:w-20">
+            <OmIcon className="h-9 w-9 sm:h-11 sm:w-11" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-serif text-2xl font-bold text-ink sm:text-3xl">Online Pooja</span>
+            <LotusDivider className="my-2 !justify-start" />
+            <span className="block text-sm text-ink/55 sm:text-base">Personalized pujas performed for you — tap to view</span>
           </span>
           <motion.span
             animate={{ rotate: open ? 180 : 0 }}
             transition={{ duration: 0.3 }}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-gold-500/40 text-gold-600"
+            className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-gold-500/40 bg-white text-gold-600 shadow-sm"
           >
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 9l6 6 6-6" />
             </svg>
           </motion.span>
         </button>
 
+        {/* slide-down content */}
         <AnimatePresence initial={false}>
           {open && (
             <motion.div
@@ -51,7 +77,7 @@ export function OnlinePoojaSection() {
               transition={{ duration: 0.4, ease: "easeInOut" }}
               className="overflow-hidden"
             >
-              <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="mx-auto mt-8 grid max-w-6xl gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {poojas.map((p) => (
                   <a
                     key={p.id}
@@ -69,7 +95,7 @@ export function OnlinePoojaSection() {
                     >
                       {p.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img src={optimizeImage(p.image, 600)} alt={p.title} className="h-full w-full object-cover" />
+                        <img src={p.image} alt={p.title} className="h-full w-full object-cover" />
                       ) : (
                         <div className="absolute inset-0 grid place-items-center text-cream/90">
                           <Mandala className="absolute inset-0 m-auto h-4/5 w-4/5 text-white/10" />
@@ -99,7 +125,49 @@ export function OnlinePoojaSection() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* trust badges */}
+        <div className="mx-auto mt-10 flex max-w-4xl flex-wrap items-center justify-center gap-y-4">
+          {BADGES.map((b, i) => (
+            <div key={b.title} className={`flex items-center gap-2.5 px-5 ${i > 0 ? "sm:border-l sm:border-gold-500/20" : ""}`}>
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-gold-500 to-[#7A5212] text-cream shadow-[0_6px_16px_-6px_rgba(192,138,46,0.7)]">
+                {b.icon}
+              </span>
+              <span className="text-sm font-semibold leading-tight text-ink">{b.title}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
+  );
+}
+
+/* ---------------- inline icons ---------------- */
+function ShieldSvg() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 2l8 3v6c0 5-3.4 9-8 11-4.6-2-8-6-8-11V5l8-3Z" /><path d="M9 12l2 2 4-4" />
+    </svg>
+  );
+}
+function PersonSvg() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" />
+    </svg>
+  );
+}
+function LockSvg() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
+  );
+}
+function ClockSvg() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+    </svg>
   );
 }
