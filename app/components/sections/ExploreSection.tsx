@@ -43,7 +43,7 @@ export function ExploreSection() {
       <div className="container-wide relative">
         <div className="mx-auto grid max-w-[1500px] items-stretch gap-6 lg:grid-cols-3 lg:gap-8">
           {/* ---------- left: reports ---------- */}
-          <div className="rounded-3xl border-2 border-gold-500/30 bg-white p-6 shadow-card">
+          <div className="flex flex-col rounded-3xl border-2 border-gold-500/30 bg-white p-6 shadow-card">
             <Eyebrow>Personalized Vedic Reports</Eyebrow>
             <h2 className="mt-3 font-serif text-2xl font-bold leading-tight text-ink sm:text-3xl">
               Reports Crafted For Your Chart
@@ -51,12 +51,12 @@ export function ExploreSection() {
             <p className="mt-1 text-sm text-ink/55">Detailed • Accurate • Personalized</p>
             <LotusDivider className="mt-4" />
 
-            <div className="mt-5 space-y-3">
+            <div className="mt-5 flex flex-1 flex-col gap-3">
               {reports.slice(0, 3).map((r, i) => (
                 <a
                   key={r.id}
                   href="/reports"
-                  className="group flex items-start gap-3 rounded-2xl border border-gold-500/15 bg-[#fbf7ee] p-3.5 transition-all hover:-translate-y-0.5 hover:border-gold-500/45 hover:shadow-card"
+                  className="group flex flex-1 items-center gap-3 rounded-2xl border border-gold-500/15 bg-[#fbf7ee] p-3.5 transition-all hover:-translate-y-0.5 hover:border-gold-500/45 hover:shadow-card"
                 >
                   <span
                     className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-white ${ICON_GLOW}`}
@@ -115,7 +115,7 @@ export function ExploreSection() {
           </div>
 
           {/* ---------- right: courses ---------- */}
-          <div className="rounded-3xl border-2 border-gold-500/30 bg-white p-6 shadow-card">
+          <div className="flex flex-col rounded-3xl border-2 border-gold-500/30 bg-white p-6 shadow-card">
             <Eyebrow>Learn With Rahul Raj</Eyebrow>
             <h2 className="mt-3 font-serif text-2xl font-bold leading-tight text-ink sm:text-3xl">
               Courses &amp; Masterclasses
@@ -123,12 +123,12 @@ export function ExploreSection() {
             <p className="mt-1 text-sm text-ink/55">Learn anytime. Grow every day.</p>
             <LotusDivider className="mt-4" />
 
-            <div className="mt-5 space-y-4">
+            <div className="mt-5 flex flex-1 flex-col gap-4">
               {courses.slice(0, 2).map((c, i) => (
                 <a
                   key={c.id}
                   href="/courses"
-                  className="relative block overflow-hidden rounded-2xl text-white shadow-card transition-transform hover:-translate-y-0.5"
+                  className="relative flex-1 overflow-hidden rounded-2xl text-white shadow-card transition-transform hover:-translate-y-0.5"
                 >
                   {c.thumbnail ? (
                     <>
