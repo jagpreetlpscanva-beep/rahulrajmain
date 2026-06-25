@@ -8,6 +8,7 @@ import { ZodiacWheel } from "../ui/ZodiacWheel";
 import { Button } from "../ui/Button";
 import { Mandala } from "../ui/Mandala";
 import { CalendarIcon, WhatsAppIcon } from "../icons";
+import { optimizeImage } from "@/lib/content";
 
 const AUTOPLAY_MS = 4000;
 
@@ -111,7 +112,7 @@ export function Hero() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       key={slide.image}
-                      src={slide.image}
+                      src={optimizeImage(slide.image)}
                       alt="Astro Rahul Raj"
                       className="absolute bottom-0 left-1/2 h-[94%] -translate-x-1/2 object-contain drop-shadow-[0_30px_40px_rgba(40,20,5,0.45)]"
                     />
@@ -128,7 +129,7 @@ export function Hero() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     key={slide.image}
-                    src={slide.image}
+                    src={optimizeImage(slide.image)}
                     alt={slide.title}
                     className="absolute left-1/2 top-1/2 max-h-[74%] w-auto max-w-[66%] -translate-x-1/2 -translate-y-1/2 animate-float object-contain drop-shadow-[0_34px_44px_rgba(40,20,5,0.5)]"
                   />

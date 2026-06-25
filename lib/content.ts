@@ -3,6 +3,17 @@
  * Keeping copy here makes the section components reusable and data-driven.
  */
 
+/**
+ * Serve a remote image through Next's image optimizer (smaller WebP, resized,
+ * edge-cached) so large uploaded photos load fast. Local/relative paths and
+ * already-optimized URLs are returned unchanged.
+ */
+export function optimizeImage(src: string | undefined, width = 1080): string {
+  if (!src) return "";
+  if (!src.startsWith("http")) return src;
+  return `/_next/image?url=${encodeURIComponent(src)}&w=${width}&q=70`;
+}
+
 export type IconName =
   | "couple"
   | "briefcase"
