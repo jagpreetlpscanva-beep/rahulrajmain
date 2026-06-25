@@ -114,6 +114,8 @@ export function Hero() {
                       key={slide.image}
                       src={optimizeImage(slide.image)}
                       alt="Astro Rahul Raj"
+                      loading="eager"
+                      fetchPriority="high"
                       className="absolute bottom-0 left-1/2 h-[94%] -translate-x-1/2 object-contain drop-shadow-[0_30px_40px_rgba(40,20,5,0.45)]"
                     />
                   )}
