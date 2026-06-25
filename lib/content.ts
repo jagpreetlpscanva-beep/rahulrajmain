@@ -107,14 +107,14 @@ export const NAV_MENU: { left: NavMenuItem[]; right: NavMenuItem[] } = {
     { label: "Courses", href: "/courses" },
     {
       label: "About Us",
-      href: "/#home",
+      href: "/about",
       children: [
-        { label: "My Story", href: "/#home" },
+        { label: "My Story", href: "/about" },
         { label: "Success Stories", href: "/#testimonials" },
         { label: "Reviews", href: "/#testimonials" },
       ],
     },
-    { label: "Contact Us", href: "/#contact" },
+    { label: "Contact Us", href: "/contact" },
   ],
 };
 
