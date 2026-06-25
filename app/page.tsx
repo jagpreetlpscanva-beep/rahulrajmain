@@ -4,6 +4,7 @@ import { FeatureTiles } from "./components/sections/FeatureTiles";
 import { ConsultationBooking } from "./components/sections/ConsultationBooking";
 import { Panchang } from "./components/sections/Panchang";
 import { ExploreSection } from "./components/sections/ExploreSection";
+import { OnlinePoojaSection } from "./components/sections/OnlinePoojaSection";
 import { Gallery } from "./components/sections/Gallery";
 import { Testimonials } from "./components/sections/Testimonials";
 import { Footer } from "./components/sections/Footer";
@@ -24,6 +25,8 @@ export default function Home() {
         <Panchang />
         {/* reports + astrology tools + courses, with trust badges */}
         <ExploreSection />
+        {/* online pooja (collapsed; slides open on click) */}
+        <OnlinePoojaSection />
         {/* awards & recognition (auto-scrolling) */}
         <Gallery />
         <Testimonials />

@@ -15,7 +15,7 @@ export function FeatureTiles() {
   return (
     <section className="paper-bg relative z-10 pb-16 lg:pb-24">
       <div className="container-px">
-        <div className="mx-auto -mt-12 grid max-w-5xl grid-cols-2 justify-center gap-3.5 sm:grid-cols-3 sm:gap-4 lg:-mt-16 lg:grid-cols-6">
+        <div className="mx-auto -mt-12 grid max-w-6xl grid-cols-2 justify-center gap-3.5 sm:grid-cols-3 sm:gap-4 lg:-mt-16 lg:grid-cols-6">
           {TILES.map((t) => (
             <a
               key={t.label}
