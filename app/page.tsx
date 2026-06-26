@@ -8,7 +8,7 @@ import { Panchang } from "./components/sections/Panchang";
 import { ExploreSection } from "./components/sections/ExploreSection";
 import { OnlinePoojaSection } from "./components/sections/OnlinePoojaSection";
 import { Gallery } from "./components/sections/Gallery";
-import { Testimonials } from "./components/sections/Testimonials";
+import { ReviewsSection } from "./components/sections/ReviewsSection";
 import { Footer } from "./components/sections/Footer";
 import { ScrollToTop } from "./components/ui/ScrollToTop";
 import { ConsultationPopup } from "./components/ui/ConsultationPopup";
@@ -37,7 +37,7 @@ export default async function Home() {
         <ExploreSection />
         {/* awards & recognition (auto-scrolling) */}
         <Gallery />
-        <Testimonials />
+        <ReviewsSection />
       </main>
       <Footer />
       <ScrollToTop />

@@ -14,6 +14,7 @@ export {
   DEFAULT_HERO_SLIDES,
   DEFAULT_ADDONS,
   DEFAULT_ARC_TILES,
+  DEFAULT_REVIEWS,
   COLLECTIONS,
   POOJA_CATEGORIES,
   COURSE_CATEGORIES,
@@ -32,6 +33,7 @@ export type {
   HeroSlide,
   Addon,
   ArcTile,
+  Review,
   CollectionKey,
 } from "./cms";
 

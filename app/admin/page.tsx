@@ -27,6 +27,8 @@ import {
 import { CollectionManager, type FieldDef } from "../components/admin/CollectionManager";
 import { SlotsManager } from "../components/admin/SlotsManager";
 import { BookingsView } from "../components/admin/BookingsView";
+import { ReviewsManager } from "../components/admin/ReviewsManager";
+import type { Booking } from "@/lib/bookings";
 import { Logo } from "../components/ui/Logo";
 import { MoonIcon, OmIcon, StarIcon, UsersIcon, MedalIcon, GiftIcon } from "../components/icons";
 
@@ -198,7 +200,7 @@ const blankConsultation = (): Consultation => ({
   image: "",
 });
 
-type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "consultations" | "addons" | "gallery" | "slots" | "bookings";
+type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "consultations" | "addons" | "gallery" | "reviews" | "slots" | "bookings";
 
 const GridIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -219,6 +221,7 @@ const NAV: { key: TabKey; label: string; icon: (p: { className?: string }) => Re
   { key: "reports", label: "Reports", icon: MedalIcon },
   { key: "addons", label: "Add-ons", icon: GiftIcon },
   { key: "gallery", label: "Gallery", icon: GiftIcon },
+  { key: "reviews", label: "Reviews", icon: StarIcon },
   { key: "slots", label: "Slots", icon: GridIcon },
   { key: "bookings", label: "Bookings", icon: UsersIcon },
 ];
@@ -418,6 +421,7 @@ export default function AdminPage() {
           {tab === "gallery" && (
             <CollectionManager<GalleryItem> label="Gallery" items={gallery.items} fields={galleryFields} blank={blankGallery} onChange={gallery.save} onReset={gallery.reset} previewHref="/" />
           )}
+          {tab === "reviews" && <ReviewsManager />}
           {tab === "slots" && <SlotsManager />}
           {tab === "bookings" && <BookingsView />}
         </div>
@@ -428,66 +432,105 @@ export default function AdminPage() {
 
 /* ---------------- dashboard overview ---------------- */
 
-function Dashboard({
-  counts,
-  onOpen,
-}: {
-  counts: Record<string, number>;
-  onOpen: (k: TabKey) => void;
-}) {
-  const cards: { key: TabKey; label: string; icon: (p: { className?: string }) => ReactNode; href: string }[] = [
-    { key: "poojas", label: "Poojas", icon: OmIcon, href: "/online-pooja" },
-    { key: "consultations", label: "Consultations", icon: UsersIcon, href: "/consultation" },
-    { key: "courses", label: "Courses", icon: StarIcon, href: "/courses" },
-    { key: "reports", label: "Reports", icon: MedalIcon, href: "/reports" },
+function fmtBookingDate(b: Booking) {
+  const d = b.slotDate || b.createdAt?.slice(0, 10) || "";
+  try {
+    return new Date(`${d}T00:00:00`).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+  } catch {
+    return d;
+  }
+}
+
+const BOOKING_STATUS_STYLE: Record<Booking["status"], string> = {
+  new: "bg-amber-50 text-amber-700",
+  completed: "bg-blue-50 text-blue-700",
+  cancelled: "bg-rose-50 text-rose-700",
+};
+
+function Dashboard({ onOpen }: { counts: Record<string, number>; onOpen: (k: TabKey) => void }) {
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  useEffect(() => {
+    fetch("/api/bookings", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setBookings(Array.isArray(d) ? d : []))
+      .catch(() => {});
+  }, []);
+
+  const revenue = bookings.reduce((s, b) => s + (Number(String(b.amount).replace(/[^\d.]/g, "")) || 0), 0);
+  const pending = bookings.filter((b) => b.status === "new").length;
+  const completed = bookings.filter((b) => b.status === "completed").length;
+  const upcoming = [...bookings]
+    .sort((a, b) => (b.slotDate || b.createdAt || "").localeCompare(a.slotDate || a.createdAt || ""))
+    .slice(0, 6);
+
+  const stats = [
+    { label: "Total Orders", value: String(bookings.length), icon: BagIcon },
+    { label: "Total Revenue", value: `₹${revenue.toLocaleString("en-IN")}`, icon: ChartIcon },
+    { label: "Pending Orders", value: String(pending), icon: ClockIcon },
+    { label: "Completed Orders", value: String(completed), icon: CheckIcon },
   ];
+
   return (
     <div>
       <h1 className="font-serif text-3xl font-bold text-ink">Dashboard Overview</h1>
-      <p className="mt-1 text-sm text-ink/55">Welcome back. Here&rsquo;s your content at a glance.</p>
+      <p className="mt-1 text-sm text-ink/55">Welcome back. Here&rsquo;s what&rsquo;s happening today.</p>
 
       <div className="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map(({ key, label, icon: Icon }) => (
-          <button
-            key={key}
-            onClick={() => onOpen(key)}
-            className="flex flex-col rounded-2xl border border-ink/10 bg-white p-6 text-left shadow-sm transition-shadow hover:shadow-md"
-          >
+        {stats.map(({ label, value, icon: Icon }) => (
+          <div key={label} className="rounded-2xl border border-ink/10 bg-white p-6 shadow-sm">
             <div className="flex items-start justify-between">
-              <span className="text-sm font-medium text-ink/55">Total {label}</span>
+              <span className="text-sm font-medium text-ink/55">{label}</span>
               <span className="grid h-10 w-10 place-items-center rounded-full bg-orange-100 text-[#f97316]">
                 <Icon className="h-5 w-5" />
               </span>
             </div>
-            <span className="mt-3 font-serif text-4xl font-bold text-ink">{counts[key] ?? 0}</span>
-            <span className="mt-2 text-xs font-semibold text-[#f97316]">Manage →</span>
-          </button>
+            <span className="mt-3 block font-serif text-4xl font-bold text-ink">{value}</span>
+          </div>
         ))}
       </div>
 
-      <div className="mt-7 rounded-2xl border border-ink/10 bg-white p-6 shadow-sm">
-        <h2 className="font-serif text-lg font-bold text-ink">Live pages</h2>
-        <p className="mt-1 text-sm text-ink/55">Open the public pages your content powers.</p>
-        <div className="mt-4 flex flex-wrap gap-2.5">
-          {[
-            ["Home", "/"],
-            ["Online Puja", "/online-pooja"],
-            ["Consultation", "/consultation"],
-            ["Courses", "/courses"],
-            ["Reports", "/reports"],
-          ].map(([label, href]) => (
-            <a
-              key={href}
-              href={href}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-lg border border-ink/15 px-4 py-2 text-sm font-medium text-ink/75 transition-colors hover:bg-ink/5"
-            >
-              {label} ↗
-            </a>
-          ))}
+      <div className="mt-7 rounded-2xl border border-ink/10 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-ink/10 px-6 py-4">
+          <h2 className="font-serif text-lg font-bold text-ink">📅 Upcoming Service Bookings</h2>
+          <button onClick={() => onOpen("bookings")} className="text-sm font-semibold text-[#7c3aed] hover:underline">
+            Manage Bookings →
+          </button>
         </div>
+        {upcoming.length === 0 ? (
+          <p className="px-6 py-10 text-center text-ink/50">No bookings yet.</p>
+        ) : (
+          <ul>
+            {upcoming.map((b) => (
+              <li key={b.id} className="flex items-center justify-between gap-4 border-b border-ink/5 px-6 py-4 last:border-0">
+                <div className="min-w-0">
+                  <p className="truncate font-bold text-ink">{b.name}</p>
+                  <p className="text-sm text-ink/45">{b.phone}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-bold text-[#7c3aed]">{fmtBookingDate(b)}</p>
+                  {b.slotTime && <p className="text-sm font-semibold text-[#f97316]">{b.slotTime}</p>}
+                </div>
+                <span className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold ${BOOKING_STATUS_STYLE[b.status]}`}>
+                  {b.status === "new" ? "pending" : b.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );
 }
+
+const BagIcon = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 7h12l-1 13H7L6 7Z" /><path d="M9 7a3 3 0 0 1 6 0" /></svg>
+);
+const ChartIcon = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></svg>
+);
+const ClockIcon = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+);
+const CheckIcon = ({ className = "" }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>
+);

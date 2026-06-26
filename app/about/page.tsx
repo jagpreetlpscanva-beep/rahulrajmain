@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/sections/Footer";
-import { Testimonials } from "../components/sections/Testimonials";
+import { ReviewsSection } from "../components/sections/ReviewsSection";
 import { ScrollToTop } from "../components/ui/ScrollToTop";
 import { AstroPhoto } from "../components/ui/AstroPhoto";
 import { ZodiacWheel } from "../components/ui/ZodiacWheel";
@@ -105,7 +105,7 @@ export default function AboutPage() {
           </div>
         </section>
 
-        <Testimonials />
+        <ReviewsSection />
       </main>
       <Footer />
       <ScrollToTop />

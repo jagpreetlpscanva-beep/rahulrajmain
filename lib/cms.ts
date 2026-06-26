@@ -583,6 +583,27 @@ export const DEFAULT_ARC_TILES: ArcTile[] = [
   { id: "arc-5", title: "Banner 5", accent: ["#8E2D22", "#4E140F"], href: "#poojas" },
 ];
 
+/** Customer reviews (submitted by visitors, moderated in admin). */
+export interface Review {
+  id: string;
+  name: string;
+  email?: string;
+  location?: string;
+  initials?: string;
+  rating: number;
+  text: string;
+  status: "pending" | "approved" | "rejected";
+  featured?: boolean;
+  date: string;
+}
+
+export const DEFAULT_REVIEWS: Review[] = [
+  { id: "rev-1", name: "Priya S.", location: "Mumbai", initials: "PS", rating: 5, text: "Rahul sir gave me the clarity I was looking for in my career. Highly grateful!", status: "approved", featured: true, date: "2026-05-27" },
+  { id: "rev-2", name: "Rajat K.", location: "Delhi", initials: "RK", rating: 5, text: "His guidance helped me improve my business and take the right decisions.", status: "approved", date: "2026-05-25" },
+  { id: "rev-3", name: "Neha & Amit", location: "Bengaluru", initials: "NA", rating: 5, text: "We got the solutions to our marriage problems. Thank you Rahul sir!", status: "approved", date: "2026-05-20" },
+  { id: "rev-4", name: "Anjali M.", location: "Pune", initials: "AM", rating: 5, text: "Very accurate predictions and practical remedies. Truly life-changing!", status: "approved", date: "2026-05-14" },
+];
+
 /** Collections exposed by the CMS API, with their seed data. */
 export const COLLECTIONS = {
   poojas: DEFAULT_POOJAS,
@@ -594,6 +615,7 @@ export const COLLECTIONS = {
   hero: DEFAULT_HERO_SLIDES,
   addons: DEFAULT_ADDONS,
   poojaBanner: DEFAULT_ARC_TILES,
+  reviews: DEFAULT_REVIEWS,
 } as const;
 
 export type CollectionKey = keyof typeof COLLECTIONS;
