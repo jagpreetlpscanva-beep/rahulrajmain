@@ -41,6 +41,10 @@ export function Hero({ initialSlides }: { initialSlides?: HeroSlide[] }) {
       className="relative flex min-h-[94vh] flex-col overflow-hidden bg-sunset-orange pt-28 text-cream lg:pt-28"
     >
       {/* ---------- atmosphere ---------- */}
+      {/* dark brown wash at the very top (behind the nav) → fades into the warm hero */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-[#2a1407] via-[#2a1407]/45 to-transparent" />
+      {/* light cream fade at the bottom into the tiles */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#f7ecd6] to-transparent" />
       {/* edge vignette for depth */}
       <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_240px_60px_rgba(80,40,12,0.4)]" />
       {/* warm light behind the wheel */}

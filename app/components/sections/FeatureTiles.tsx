@@ -22,7 +22,7 @@ export function FeatureTiles() {
               href={t.href}
               className="group flex flex-col items-center gap-2.5 bg-white p-6 text-center transition-colors hover:bg-gold-50"
             >
-              <span className="grid h-16 w-16 place-items-center rounded-full border border-gold-500/40 text-gold-600 transition-colors duration-300 group-hover:border-gold-500 group-hover:bg-gold-50">
+              <span className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-gold-50 to-gold-100 text-gold-600 shadow-[0_8px_18px_-6px_rgba(192,138,46,0.45)] ring-1 ring-gold-500/20 transition-all duration-300 group-hover:from-gold-100 group-hover:to-gold-200">
                 <Icon name={t.icon} className="h-8 w-8" />
               </span>
               <span className="font-serif text-base font-bold leading-tight text-ink">{t.label}</span>
