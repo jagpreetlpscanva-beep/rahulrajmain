@@ -11,6 +11,13 @@ import { CalendarIcon, WhatsAppIcon } from "../icons";
 
 const AUTOPLAY_MS = 4000;
 
+const HERO_STATS = [
+  { value: "15+", label: "Years Experience", icon: <svg viewBox="0 0 24 24" className="h-6 w-6" fill="currentColor"><path d="M12 2l2.6 6.3L21 9l-5 4.2L17.5 21 12 17.3 6.5 21 8 13.2 3 9l6.4-.7L12 2Z" /></svg> },
+  { value: "40K+", label: "Consultations", icon: <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg> },
+  { value: "100%", label: "Trusted & Confidential", icon: <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l8 3v6c0 5-3.4 9-8 11-4.6-2-8-6-8-11V5l8-3Z" /><path d="M9 12l2 2 4-4" /></svg> },
+  { value: "4.9/5", label: "Client Rating", icon: <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" /></svg> },
+];
+
 export function Hero({ initialSlides }: { initialSlides?: HeroSlide[] }) {
   const { items: slides } = useCollection<HeroSlide>("hero", initialSlides?.length ? initialSlides : DEFAULT_HERO_SLIDES);
   const [index, setIndex] = useState(0);
@@ -63,8 +70,18 @@ export function Hero({ initialSlides }: { initialSlides?: HeroSlide[] }) {
                 </span>
 
                 <h1 className="mt-6 max-w-xl font-serif font-bold leading-[1.07] tracking-[-0.01em] text-white text-[2.3rem] sm:text-[2.9rem] lg:text-[3.2rem] xl:text-[3.65rem]">
-                  {slide.title}
+                  {slide.title.split(" ").slice(0, -1).join(" ")}{" "}
+                  <span className="bg-gradient-to-r from-[#F0CE84] to-[#C9962F] bg-clip-text text-transparent">
+                    {slide.title.split(" ").slice(-1)}
+                  </span>
                 </h1>
+
+                {/* ornament divider */}
+                <span className="mt-5 flex items-center gap-2 text-gold-300">
+                  <span className="h-px w-24 bg-gradient-to-r from-gold-400/70 to-transparent" />
+                  <svg viewBox="0 0 16 16" className="h-2.5 w-2.5" fill="currentColor" aria-hidden="true"><path d="M8 1 11 8 8 15 5 8 8 1Z" /></svg>
+                  <span className="h-px w-24 bg-gradient-to-l from-gold-400/70 to-transparent" />
+                </span>
 
                 <p className="mt-5 max-w-lg text-base leading-relaxed text-cream/85 sm:text-lg">
                   {slide.subtitle}
@@ -89,6 +106,19 @@ export function Hero({ initialSlides }: { initialSlides?: HeroSlide[] }) {
                   >
                     {slide.secondaryLabel}
                   </Button>
+                </div>
+
+                {/* stat row */}
+                <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
+                  {HERO_STATS.map((s, i) => (
+                    <div key={s.label} className={`flex items-center gap-2.5 ${i > 0 ? "sm:border-l sm:border-cream/20 sm:pl-7" : ""}`}>
+                      <span className="text-gold-300">{s.icon}</span>
+                      <div>
+                        <p className="font-serif text-xl font-bold leading-none text-white">{s.value}</p>
+                        <p className="mt-1 text-xs text-cream/70">{s.label}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
             </motion.div>
           </div>
