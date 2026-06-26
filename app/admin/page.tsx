@@ -163,7 +163,7 @@ const blankAddon = (): Addon => ({
 });
 
 const galleryFields: FieldDef[] = [
-  { name: "caption", label: "Caption", type: "text", placeholder: "Felicitated by CM Harish Rawat" },
+  { name: "title", label: "Title / Caption", type: "text", placeholder: "Jyotish Vibhushan — Amar Ujala" },
   { name: "image", label: "Photo", type: "image", optional: true, hint: "Upload the award/recognition photo." },
   { name: "accent", label: "Placeholder colours", type: "colorPair" },
 ];
