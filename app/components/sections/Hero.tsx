@@ -108,14 +108,14 @@ export function Hero({ initialSlides }: { initialSlides?: HeroSlide[] }) {
                   </Button>
                 </div>
 
-                {/* stat row */}
-                <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
+                {/* stat row — one line of four */}
+                <div className="mt-9 grid max-w-xl grid-cols-2 gap-x-3 gap-y-4 sm:grid-cols-4">
                   {HERO_STATS.map((s, i) => (
-                    <div key={s.label} className={`flex items-center gap-2.5 ${i > 0 ? "sm:border-l sm:border-cream/20 sm:pl-7" : ""}`}>
-                      <span className="text-gold-300">{s.icon}</span>
-                      <div>
-                        <p className="font-serif text-xl font-bold leading-none text-white">{s.value}</p>
-                        <p className="mt-1 text-xs text-cream/70">{s.label}</p>
+                    <div key={s.label} className={`flex items-center gap-2 ${i > 0 ? "sm:border-l sm:border-cream/20 sm:pl-3" : ""}`}>
+                      <span className="shrink-0 text-gold-300">{s.icon}</span>
+                      <div className="min-w-0">
+                        <p className="font-serif text-lg font-bold leading-none text-white">{s.value}</p>
+                        <p className="mt-1 text-[0.7rem] leading-tight text-cream/70">{s.label}</p>
                       </div>
                     </div>
                   ))}
