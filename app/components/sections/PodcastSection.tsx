@@ -19,7 +19,7 @@ export function PodcastSection() {
   const id = ytId(cur.videoUrl)!;
 
   return (
-    <section className="relative overflow-hidden bg-night py-16 lg:py-24">
+    <section className="relative overflow-hidden bg-night py-10 lg:py-14">
       <div className="amber-radial pointer-events-none absolute inset-0 opacity-50" />
       <div className="container-px relative">
         <div className="text-center text-cream">

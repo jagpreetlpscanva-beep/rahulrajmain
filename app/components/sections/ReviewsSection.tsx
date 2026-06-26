@@ -70,7 +70,7 @@ export function ReviewsSection() {
     "w-full rounded-xl border border-ink/15 bg-[#fbf7ee] px-4 py-3 text-sm text-ink outline-none focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20";
 
   return (
-    <section id="testimonials" className="relative overflow-hidden bg-[#faf4e8] py-16 lg:py-24">
+    <section id="testimonials" className="relative overflow-hidden bg-[#faf4e8] py-10 lg:py-14">
       <div className="container-px">
         <div className="text-center">
           <h2 className="inline-flex items-center gap-3 font-serif text-3xl font-bold uppercase tracking-wide text-ink sm:text-4xl">

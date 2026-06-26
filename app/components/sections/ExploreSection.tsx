@@ -52,7 +52,7 @@ export function ExploreSection() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[#faf4e8] py-16 lg:py-24">
+    <section className="relative overflow-hidden bg-[#faf4e8] py-10 lg:py-14">
       <div className="amber-radial pointer-events-none absolute inset-0 opacity-40" />
       <Mandala className="pointer-events-none absolute -left-24 top-10 h-72 w-72 text-gold-600/[0.07]" />
       <Mandala className="pointer-events-none absolute -right-24 bottom-10 h-80 w-80 text-gold-600/[0.07]" />

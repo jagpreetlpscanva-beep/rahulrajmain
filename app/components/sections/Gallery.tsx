@@ -12,7 +12,7 @@ export function Gallery() {
   const row = [...items, ...items];
 
   return (
-    <section className="paper-bg relative overflow-hidden py-16 lg:py-20">
+    <section className="paper-bg relative overflow-hidden py-10 lg:py-14">
       <div className="container-px flex flex-col items-center text-center">
         <CrestDivider className="mb-8" />
         <span className="eyebrow text-gold-600">Honours &amp; Felicitations</span>

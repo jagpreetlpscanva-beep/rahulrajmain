@@ -75,7 +75,7 @@ export function Panchang() {
   ];
 
   return (
-    <section className="paper-bg relative overflow-hidden py-16 lg:py-20">
+    <section className="paper-bg relative overflow-hidden py-10 lg:py-14">
       {/* faint zodiac watermarks on the edges */}
       <ZodiacWheel className="pointer-events-none absolute -left-44 top-10 h-[34rem] w-[34rem] text-gold-500/[0.05]" />
       <ZodiacWheel className="pointer-events-none absolute -right-44 bottom-0 h-[34rem] w-[34rem] text-gold-500/[0.05]" />

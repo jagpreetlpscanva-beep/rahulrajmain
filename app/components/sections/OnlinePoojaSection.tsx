@@ -20,7 +20,7 @@ export function OnlinePoojaSection() {
   const poojas = items.slice(0, 6);
 
   return (
-    <section className="relative overflow-hidden bg-[#faf4e8] py-14 lg:py-20">
+    <section className="relative overflow-hidden bg-[#faf4e8] py-9 lg:py-12">
       {/* decorative watermarks */}
       <Mandala className="pointer-events-none absolute -right-20 -top-16 h-72 w-72 text-gold-600/[0.08]" />
       <OmIcon className="pointer-events-none absolute right-10 top-24 hidden h-28 w-28 text-gold-600/[0.07] lg:block" />

@@ -13,7 +13,7 @@ const TILES: { label: string; sub: string; icon: IconName; href: string }[] = [
 /** Quick-access tiles in one card peeking up below the hero. */
 export function FeatureTiles() {
   return (
-    <section className="paper-bg relative z-10 pb-16 lg:pb-24">
+    <section className="paper-bg relative z-10 pb-10 lg:pb-14">
       <div className="container-px">
         <div className="mx-auto -mt-14 grid max-w-6xl grid-cols-2 gap-px overflow-hidden rounded-3xl border border-gold-500/15 bg-gold-500/12 shadow-card lg:-mt-20 lg:grid-cols-6 sm:grid-cols-3">
           {TILES.map((t) => (
