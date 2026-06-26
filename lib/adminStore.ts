@@ -13,6 +13,7 @@ export {
   DEFAULT_SLOTS,
   DEFAULT_HERO_SLIDES,
   DEFAULT_ADDONS,
+  DEFAULT_ARC_TILES,
   COLLECTIONS,
   POOJA_CATEGORIES,
   COURSE_CATEGORIES,
@@ -30,6 +31,7 @@ export type {
   Slot,
   HeroSlide,
   Addon,
+  ArcTile,
   CollectionKey,
 } from "./cms";
 

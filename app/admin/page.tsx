@@ -21,6 +21,8 @@ import {
   type HeroSlide,
   DEFAULT_ADDONS,
   type Addon,
+  DEFAULT_ARC_TILES,
+  type ArcTile,
 } from "@/lib/adminStore";
 import { CollectionManager, type FieldDef } from "../components/admin/CollectionManager";
 import { SlotsManager } from "../components/admin/SlotsManager";
@@ -169,6 +171,21 @@ const blankGallery = (): GalleryItem => ({
   accent: ["#B5651D", "#6E3A10"],
 });
 
+const arcFields: FieldDef[] = [
+  { name: "title", label: "Label", type: "text", placeholder: "Banner 1" },
+  { name: "image", label: "Banner image", type: "image", optional: true, hint: "Upload your custom image for this tile." },
+  { name: "href", label: "Link (optional)", type: "text", optional: true, placeholder: "#poojas or /book/pooja/..." },
+  { name: "accent", label: "Placeholder colours", type: "colorPair" },
+];
+
+const blankArcTile = (): ArcTile => ({
+  id: newId("arc"),
+  title: "",
+  image: "",
+  accent: ["#8E2D22", "#4E140F"],
+  href: "#poojas",
+});
+
 const blankConsultation = (): Consultation => ({
   id: newId("consult"),
   title: "",
@@ -181,7 +198,7 @@ const blankConsultation = (): Consultation => ({
   image: "",
 });
 
-type TabKey = "dashboard" | "hero" | "poojas" | "reports" | "courses" | "consultations" | "addons" | "gallery" | "slots" | "bookings";
+type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "consultations" | "addons" | "gallery" | "slots" | "bookings";
 
 const GridIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -196,6 +213,7 @@ const NAV: { key: TabKey; label: string; icon: (p: { className?: string }) => Re
   { key: "dashboard", label: "Dashboard", icon: GridIcon },
   { key: "hero", label: "Hero Slides", icon: StarIcon },
   { key: "poojas", label: "Poojas", icon: OmIcon },
+  { key: "poojaBanner", label: "Pooja Banner", icon: OmIcon },
   { key: "consultations", label: "Consultations", icon: UsersIcon },
   { key: "courses", label: "Courses", icon: StarIcon },
   { key: "reports", label: "Reports", icon: MedalIcon },
@@ -221,6 +239,7 @@ export default function AdminPage() {
   const gallery = useCollection<GalleryItem>("gallery", DEFAULT_GALLERY);
   const addons = useCollection<Addon>("addons", DEFAULT_ADDONS);
   const hero = useCollection<HeroSlide>("hero", DEFAULT_HERO_SLIDES);
+  const poojaBanner = useCollection<ArcTile>("poojaBanner", DEFAULT_ARC_TILES);
 
   useEffect(() => {
     fetch("/api/admin/session", { cache: "no-store" })
@@ -392,6 +411,9 @@ export default function AdminPage() {
           )}
           {tab === "addons" && (
             <CollectionManager<Addon> label="Add-ons" items={addons.items} fields={addonFields} blank={blankAddon} onChange={addons.save} onReset={addons.reset} previewHref="/book/report/quick" />
+          )}
+          {tab === "poojaBanner" && (
+            <CollectionManager<ArcTile> label="Pooja Banner" items={poojaBanner.items} fields={arcFields} blank={blankArcTile} onChange={poojaBanner.save} onReset={poojaBanner.reset} previewHref="/online-pooja" />
           )}
           {tab === "gallery" && (
             <CollectionManager<GalleryItem> label="Gallery" items={gallery.items} fields={galleryFields} blank={blankGallery} onChange={gallery.save} onReset={gallery.reset} previewHref="/" />

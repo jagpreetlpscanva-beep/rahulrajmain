@@ -565,6 +565,24 @@ export const DEFAULT_ADDONS: Addon[] = [
   { id: "addon-call", title: "15-min Explanation Call", description: "A short call to walk you through your report.", price: 499 },
 ];
 
+/** Custom image tiles for the Online Puja page hero (the fanned-out arc). */
+export interface ArcTile {
+  id: string;
+  title: string;
+  image?: string;
+  accent: [string, string];
+  /** Optional link when the tile is clicked. */
+  href?: string;
+}
+
+export const DEFAULT_ARC_TILES: ArcTile[] = [
+  { id: "arc-1", title: "Banner 1", accent: ["#8E2D22", "#4E140F"], href: "#poojas" },
+  { id: "arc-2", title: "Banner 2", accent: ["#B5651D", "#6E3A10"], href: "#poojas" },
+  { id: "arc-3", title: "Banner 3", accent: ["#9A3324", "#5A1B12"], href: "#poojas" },
+  { id: "arc-4", title: "Banner 4", accent: ["#B5651D", "#6E3A10"], href: "#poojas" },
+  { id: "arc-5", title: "Banner 5", accent: ["#8E2D22", "#4E140F"], href: "#poojas" },
+];
+
 /** Collections exposed by the CMS API, with their seed data. */
 export const COLLECTIONS = {
   poojas: DEFAULT_POOJAS,
@@ -575,6 +593,7 @@ export const COLLECTIONS = {
   slots: DEFAULT_SLOTS,
   hero: DEFAULT_HERO_SLIDES,
   addons: DEFAULT_ADDONS,
+  poojaBanner: DEFAULT_ARC_TILES,
 } as const;
 
 export type CollectionKey = keyof typeof COLLECTIONS;
