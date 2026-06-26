@@ -81,7 +81,7 @@ export function Panchang() {
       <ZodiacWheel className="pointer-events-none absolute -right-44 bottom-0 h-[34rem] w-[34rem] text-gold-500/[0.05]" />
 
       <div className="container-px relative">
-        <div className="grid items-stretch gap-6 lg:grid-cols-2 lg:gap-8">
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch lg:gap-8">
           {/* ---- left: panchang ---- */}
           <div className="flex flex-col overflow-hidden rounded-3xl border border-gold-500/30 bg-white shadow-card">
             {/* gold header */}

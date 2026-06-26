@@ -58,7 +58,7 @@ export function ExploreSection() {
       <Mandala className="pointer-events-none absolute -right-24 bottom-10 h-80 w-80 text-gold-600/[0.07]" />
 
       <div className="container-wide relative">
-        <div className="mx-auto grid max-w-[1500px] items-stretch gap-6 lg:grid-cols-3 lg:gap-8">
+        <div className="mx-auto grid max-w-[1500px] gap-6 lg:grid-cols-3 lg:items-stretch lg:gap-8">
           {/* ---------- reports ---------- */}
           <div className="flex flex-col rounded-3xl border-2 border-gold-500/25 bg-white p-6 shadow-card sm:p-7">
             <ColHeader icon={<DocSvg />} title={<>Personalized Reports<br />That Guide You</>} sub="Accurate • In-Depth • Actionable" />
