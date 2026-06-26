@@ -38,8 +38,13 @@ export function KundaliGenerator() {
 
   return (
     <div className="flex h-full flex-col rounded-3xl border border-gold-500/30 bg-white p-6 shadow-card lg:p-8">
-      <span className="eyebrow text-gold-600">Free Janam Kundli</span>
-      <h3 className="mt-2 font-serif text-2xl font-bold text-ink sm:text-3xl">Generate Your Birth Chart</h3>
+      <span className="inline-flex items-center gap-2 self-start rounded-full border border-gold-500/30 bg-gold-50 px-3.5 py-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-gold-700">
+        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true"><path d="M12 2l2.6 6.3L21 9l-5 4.2L17.5 21 12 17.3 6.5 21 8 13.2 3 9l6.4-.7L12 2Z" /></svg>
+        Free Janam Kundli
+      </span>
+      <h3 className="mt-3 font-serif text-2xl font-bold text-ink sm:text-3xl">
+        Generate Your <span className="text-gold-600">Birth Chart</span>
+      </h3>
       {/* ornament divider */}
       <span className="mt-3 flex items-center gap-2 text-gold-500">
         <span className="h-px w-16 bg-gradient-to-r from-transparent to-gold-400" />
@@ -104,6 +109,10 @@ export function KundaliGenerator() {
             <SunburstIcon className="h-5 w-5" />
             Generate Kundli
           </button>
+          <p className="flex items-center justify-center gap-1.5 text-xs text-ink/50">
+            <svg viewBox="0 0 24 24" className="h-4 w-4 text-gold-500/70" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3Z" /><path d="M9 12l2 2 4-4" /></svg>
+            Your information is 100% safe and private
+          </p>
         </form>
       )}
     </div>
