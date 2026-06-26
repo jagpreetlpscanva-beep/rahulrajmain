@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useServerCollection } from "./collectionsContext";
 
 // re-export the server-safe model so existing imports keep working
 export {
@@ -38,7 +39,9 @@ export type {
  * live data. Saving writes to the server so every visitor sees the change.
  */
 export function useCollection<T extends { id: string }>(key: string, defaults: T[]) {
-  const [items, setItems] = useState<T[]>(defaults);
+  // Server-provided data (from the root layout) renders images on first paint.
+  const server = useServerCollection(key) as T[] | undefined;
+  const [items, setItems] = useState<T[]>(server && server.length ? server : defaults);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {

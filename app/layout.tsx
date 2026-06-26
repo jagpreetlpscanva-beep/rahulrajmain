@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Poppins } from "next/font/google";
 import "./globals.css";
+import { readCollection } from "@/lib/contentRepo";
+import { COLLECTIONS, type CollectionKey } from "@/lib/cms";
+import { CollectionsProvider } from "@/lib/collectionsContext";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -91,9 +94,20 @@ const jsonLd = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Preload all collections server-side so client components (and their images)
+  // render on first paint without a client-side fetch.
+  let initialCollections: Record<string, unknown[]> = {};
+  try {
+    const keys = Object.keys(COLLECTIONS) as CollectionKey[];
+    const results = await Promise.all(keys.map((k) => readCollection(k)));
+    initialCollections = Object.fromEntries(keys.map((k, i) => [k, results[i]]));
+  } catch {
+    /* fall back to client fetch + defaults */
+  }
+
   return (
     <html lang="en" className={`${playfair.variable} ${poppins.variable}`}>
       <body>
@@ -102,7 +116,7 @@ export default function RootLayout({
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {children}
+        <CollectionsProvider value={initialCollections}>{children}</CollectionsProvider>
       </body>
     </html>
   );
