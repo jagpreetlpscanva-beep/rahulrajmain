@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { NAV_MENU, LANGUAGES, type NavMenuItem } from "@/lib/content";
 import { useScrolled } from "@/lib/hooks";
 import { Logo } from "./ui/Logo";
+import { SearchBox } from "./ui/SearchBox";
 import { CalendarIcon, CloseIcon, MenuIcon, ChevronDownIcon, GlobeIcon } from "./icons";
 
 export function Navbar() {
@@ -98,6 +99,8 @@ export function Navbar() {
           {NAV_MENU.right.map((item) => (
             <MenuItem key={item.label} item={item} align="right" />
           ))}
+          {/* search */}
+          <li><SearchBox scrolled={scrolled} /></li>
           {/* language selector */}
           <li className="group relative">
             <button

@@ -52,6 +52,16 @@ export function CollectionManager<T extends Item>({
 }: Props<T>) {
   const [draft, setDraft] = useState<T | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [query, setQuery] = useState("");
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? items.filter((it) => {
+        const rec = it as Record<string, unknown>;
+        return [it.title, rec.category, rec.tagline, rec.description, rec.venue, rec.price, rec.level]
+          .some((v) => typeof v === "string" && v.toLowerCase().includes(q));
+      })
+    : items;
 
   const startAdd = () => {
     setDraft(blank());
@@ -158,53 +168,70 @@ export function CollectionManager<T extends Item>({
           </div>
         </div>
       ) : (
-        <ul className="space-y-2.5">
-          {items.map((item, i) => {
-            const rec = item as Record<string, unknown>;
-            const accent = Array.isArray(rec.accent) ? (rec.accent as string[]) : null;
-            const meta = [rec.category, rec.tagline, rec.venue, rec.date, rec.price]
-              .filter(Boolean)
-              .join(" · ");
-            return (
-            <li
-              key={item.id}
-              className="flex items-center gap-3 rounded-xl border border-ink/10 bg-white p-3 shadow-sm"
-            >
-              <span
-                className="h-11 w-11 shrink-0 rounded-lg"
-                style={{
-                  background: accent
-                    ? `linear-gradient(150deg, ${accent[0]}, ${accent[1]})`
-                    : "#e9dcc2",
-                }}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-ink">{item.title || "Untitled"}</p>
-                <p className="truncate text-xs text-ink/55">{meta || "—"}</p>
-              </div>
-              <div className="flex items-center gap-1">
-                <button type="button" aria-label="Move up" onClick={() => move(i, -1)} className="grid h-8 w-8 place-items-center rounded-md text-ink/50 hover:bg-ink/5 disabled:opacity-30" disabled={i === 0}>
-                  ↑
-                </button>
-                <button type="button" aria-label="Move down" onClick={() => move(i, 1)} className="grid h-8 w-8 place-items-center rounded-md text-ink/50 hover:bg-ink/5 disabled:opacity-30" disabled={i === items.length - 1}>
-                  ↓
-                </button>
-                <button type="button" onClick={() => startEdit(item)} className="rounded-md px-3 py-1.5 text-sm font-medium text-gold-700 hover:bg-gold-100/70">
-                  Edit
-                </button>
-                <button type="button" onClick={() => remove(item.id)} className="rounded-md px-3 py-1.5 text-sm font-medium text-rose-600 hover:bg-rose-50">
-                  Delete
-                </button>
-              </div>
-            </li>
-            );
-          })}
-          {items.length === 0 && (
-            <li className="rounded-xl border border-dashed border-ink/15 p-8 text-center text-ink/50">
-              No items yet — click “Add New”.
-            </li>
-          )}
-        </ul>
+        <>
+          {/* search */}
+          <div className="relative mb-4">
+            <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/40" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={`Search ${label.toLowerCase()} by name…`}
+              className="w-full rounded-lg border border-ink/15 bg-white py-2.5 pl-9 pr-3 text-sm text-ink outline-none focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20"
+            />
+          </div>
+
+          <ul className="space-y-2.5">
+            {filtered.map((item) => {
+              const i = items.indexOf(item);
+              const rec = item as Record<string, unknown>;
+              const accent = Array.isArray(rec.accent) ? (rec.accent as string[]) : null;
+              const img = (rec.image || rec.thumbnail) as string | undefined;
+              const meta = [rec.category, rec.tagline, rec.venue, rec.date, rec.price]
+                .filter(Boolean)
+                .join(" · ");
+              return (
+              <li
+                key={item.id}
+                className="flex items-center gap-3 rounded-xl border border-ink/10 bg-white p-3 shadow-sm"
+              >
+                {img ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={img} alt={item.title} className="h-11 w-11 shrink-0 rounded-lg object-cover" />
+                ) : (
+                  <span
+                    className="h-11 w-11 shrink-0 rounded-lg"
+                    style={{ background: accent ? `linear-gradient(150deg, ${accent[0]}, ${accent[1]})` : "#e9dcc2" }}
+                  />
+                )}
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold text-ink">{item.title || "Untitled"}</p>
+                  <p className="truncate text-xs text-ink/55">{meta || "—"}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button type="button" aria-label="Move up" onClick={() => move(i, -1)} className="grid h-8 w-8 place-items-center rounded-md text-ink/50 hover:bg-ink/5 disabled:opacity-30" disabled={i <= 0 || !!q}>
+                    ↑
+                  </button>
+                  <button type="button" aria-label="Move down" onClick={() => move(i, 1)} className="grid h-8 w-8 place-items-center rounded-md text-ink/50 hover:bg-ink/5 disabled:opacity-30" disabled={i === items.length - 1 || !!q}>
+                    ↓
+                  </button>
+                  <button type="button" onClick={() => startEdit(item)} className="rounded-md px-3 py-1.5 text-sm font-medium text-gold-700 hover:bg-gold-100/70">
+                    Edit
+                  </button>
+                  <button type="button" onClick={() => remove(item.id)} className="rounded-md px-3 py-1.5 text-sm font-medium text-rose-600 hover:bg-rose-50">
+                    Delete
+                  </button>
+                </div>
+              </li>
+              );
+            })}
+            {filtered.length === 0 && (
+              <li className="rounded-xl border border-dashed border-ink/15 p-8 text-center text-ink/50">
+                {q ? `No ${label.toLowerCase()} match “${query}”.` : "No items yet — click “Add New”."}
+              </li>
+            )}
+          </ul>
+        </>
       )}
     </div>
   );
