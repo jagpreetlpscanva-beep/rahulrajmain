@@ -5,22 +5,13 @@ import { PoojaGrid } from "../components/sections/PoojaGrid";
 import { ScrollToTop } from "../components/ui/ScrollToTop";
 import { Mandala } from "../components/ui/Mandala";
 import { AstroPhoto } from "../components/ui/AstroPhoto";
-import { OmIcon } from "../components/icons";
+import { PoojaArcTiles } from "../components/sections/PoojaArcTiles";
 
 export const metadata: Metadata = {
   title: "Online Puja Services — Rahul Raj, Vedic Astrologer",
   description:
     "Book authentic online pujas performed on your behalf by certified pandits — Grah Shanti, Dosh Nivaran, Vrat, festival and personalized pujas with sankalp in your name.",
 };
-
-// hero image-arc placeholders (replace `src` with real photos later)
-const HERO_TILES: { accent: [string, string]; offset: string }[] = [
-  { accent: ["#8E2D22", "#4E140F"], offset: "mt-0" },
-  { accent: ["#B5651D", "#6E3A10"], offset: "mt-10" },
-  { accent: ["#9A3324", "#5A1B12"], offset: "mt-20" },
-  { accent: ["#B5651D", "#6E3A10"], offset: "mt-10" },
-  { accent: ["#8E2D22", "#4E140F"], offset: "mt-0" },
-];
 
 const POINTS = [
   <>
@@ -67,18 +58,8 @@ export default function OnlinePoojaPage() {
               Trusted by 5,000+ Devotees &nbsp;|&nbsp; 100% Authentic Rituals
             </p>
 
-            {/* image arc — large placeholders (drop in real photos later) */}
-            <div className="mt-12 flex items-start justify-center gap-3 pb-2 sm:gap-5">
-              {HERO_TILES.map((tile, i) => (
-                <div
-                  key={i}
-                  className={`${tile.offset} grid aspect-[3/4] w-[19%] max-w-[14rem] place-items-center overflow-hidden rounded-2xl border border-white/15 shadow-xl`}
-                  style={{ background: `linear-gradient(150deg, ${tile.accent[0]}, ${tile.accent[1]})` }}
-                >
-                  <OmIcon className="h-12 w-12 text-cream/70 sm:h-16 sm:w-16" />
-                </div>
-              ))}
-            </div>
+            {/* image arc — shows the first poojas' cover images (set in admin) */}
+            <PoojaArcTiles />
           </div>
 
           {/* curved divider */}
