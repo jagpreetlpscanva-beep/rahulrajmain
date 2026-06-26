@@ -56,7 +56,7 @@ export function Hero({ initialSlides }: { initialSlides?: HeroSlide[] }) {
         </defs>
         <path
           fill="url(#hero-nav-band)"
-          d="M0,0 H1440 V112 C1150,112 1000,112 868,120 C812,123 768,170 720,170 C672,170 628,123 572,120 C440,112 290,112 0,112 Z"
+          d="M0,0 H1440 V108 C1080,108 900,140 720,140 C540,140 360,108 0,108 Z"
         />
       </svg>
       {/* light cream fade at the bottom into the tiles */}
