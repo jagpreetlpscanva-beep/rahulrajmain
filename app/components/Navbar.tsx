@@ -160,6 +160,9 @@ export function Navbar() {
             className="max-h-[80vh] overflow-y-auto border-t border-gold-500/15 bg-cream/98 backdrop-blur-md xl:hidden"
           >
             <ul className="flex flex-col gap-1 px-5 py-4 sm:px-8">
+              <li className="pb-2">
+                <SearchBox inline />
+              </li>
               {[...NAV_MENU.left, ...NAV_MENU.right].map((item) => (
                 <li key={item.label}>
                   <a

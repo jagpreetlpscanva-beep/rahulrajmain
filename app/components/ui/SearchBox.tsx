@@ -15,7 +15,7 @@ import {
 
 type Result = { title: string; type: string; href: string };
 
-export function SearchBox({ scrolled }: { scrolled: boolean }) {
+export function SearchBox({ scrolled, inline = false }: { scrolled?: boolean; inline?: boolean }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
 
@@ -34,6 +34,39 @@ export function SearchBox({ scrolled }: { scrolled: boolean }) {
         ...consults.filter((c) => has(c.title)).map((c) => ({ title: c.title, type: "Consultation", href: "/consultation" })),
       ].slice(0, 8)
     : [];
+
+  // inline: always-visible search input (used in the mobile menu)
+  if (inline) {
+    return (
+      <div>
+        <div className="relative">
+          <svg viewBox="0 0 24 24" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink/40" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search reports, courses, poojas…"
+            className="w-full rounded-lg border border-ink/15 bg-[#fbf7ee] py-2.5 pl-9 pr-3 text-sm text-ink outline-none focus:border-gold-500"
+          />
+        </div>
+        {query && (
+          <ul className="mt-2 max-h-60 overflow-y-auto rounded-lg border border-ink/10 bg-white">
+            {results.length === 0 ? (
+              <li className="px-3 py-3 text-center text-sm text-ink/50">No matches for “{q}”.</li>
+            ) : (
+              results.map((r, i) => (
+                <li key={i}>
+                  <a href={r.href} className="flex items-center justify-between gap-2 px-3 py-2.5 text-sm transition-colors hover:bg-gold-100/70">
+                    <span className="truncate font-medium text-ink">{r.title}</span>
+                    <span className="shrink-0 rounded-full bg-gold-100 px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-gold-700">{r.type}</span>
+                  </a>
+                </li>
+              ))
+            )}
+          </ul>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
