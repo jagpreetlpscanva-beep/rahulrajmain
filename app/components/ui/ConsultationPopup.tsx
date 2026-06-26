@@ -28,9 +28,9 @@ const TRUST = [
   { icon: <ClockSvg />, title: "Get Clarity, Take Control", body: "Right guidance, right timing" },
 ];
 
-export function ConsultationPopup() {
+export function ConsultationPopup({ initialSlides }: { initialSlides?: HeroSlide[] }) {
   const [open, setOpen] = useState(false);
-  const { items: slides } = useCollection<HeroSlide>("hero", DEFAULT_HERO_SLIDES);
+  const { items: slides } = useCollection<HeroSlide>("hero", initialSlides?.length ? initialSlides : DEFAULT_HERO_SLIDES);
   const astro =
     slides.find((s) => s.visual === "astrologer" && s.image)?.image ||
     slides.find((s) => s.image)?.image ||

@@ -41,7 +41,7 @@ export default async function Home() {
       </main>
       <Footer />
       <ScrollToTop />
-      <ConsultationPopup />
+      <ConsultationPopup initialSlides={heroSlides} />
     </>
   );
 }
