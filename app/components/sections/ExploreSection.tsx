@@ -58,12 +58,17 @@ export function ExploreSection() {
                   href="/reports"
                   className="group flex flex-1 items-center gap-3 rounded-2xl border border-gold-500/15 bg-[#fbf7ee] p-3.5 transition-all hover:-translate-y-0.5 hover:border-gold-500/45 hover:shadow-card"
                 >
-                  <span
-                    className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-white ${ICON_GLOW}`}
-                    style={{ background: `linear-gradient(150deg, ${r.accent?.[0] ?? "#C08A2E"}, ${r.accent?.[1] ?? "#7A5212"})` }}
-                  >
-                    <Icon name={REPORT_ICONS[i % REPORT_ICONS.length]} className="h-6 w-6" />
-                  </span>
+                  {r.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={r.image} alt={r.title} className={`h-12 w-12 shrink-0 rounded-full object-cover ${ICON_GLOW}`} />
+                  ) : (
+                    <span
+                      className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-white ${ICON_GLOW}`}
+                      style={{ background: `linear-gradient(150deg, ${r.accent?.[0] ?? "#C08A2E"}, ${r.accent?.[1] ?? "#7A5212"})` }}
+                    >
+                      <Icon name={REPORT_ICONS[i % REPORT_ICONS.length]} className="h-6 w-6" />
+                    </span>
+                  )}
                   <div className="min-w-0">
                     <p className="font-serif font-bold text-ink">{r.title}</p>
                     <p className="mt-0.5 line-clamp-2 text-xs text-ink/55">{r.description}</p>

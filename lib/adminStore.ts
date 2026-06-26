@@ -15,6 +15,7 @@ export {
   DEFAULT_ADDONS,
   DEFAULT_ARC_TILES,
   DEFAULT_REVIEWS,
+  DEFAULT_PODCASTS,
   COLLECTIONS,
   POOJA_CATEGORIES,
   COURSE_CATEGORIES,
@@ -34,6 +35,7 @@ export type {
   Addon,
   ArcTile,
   Review,
+  Podcast,
   CollectionKey,
 } from "./cms";
 

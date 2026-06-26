@@ -6,6 +6,7 @@ import { FeatureTiles } from "./components/sections/FeatureTiles";
 import { ConsultationBooking } from "./components/sections/ConsultationBooking";
 import { Panchang } from "./components/sections/Panchang";
 import { ExploreSection } from "./components/sections/ExploreSection";
+import { PodcastSection } from "./components/sections/PodcastSection";
 import { OnlinePoojaSection } from "./components/sections/OnlinePoojaSection";
 import { Gallery } from "./components/sections/Gallery";
 import { ReviewsSection } from "./components/sections/ReviewsSection";
@@ -35,6 +36,8 @@ export default async function Home() {
         <Panchang />
         {/* reports + astrology tools + courses, with trust badges */}
         <ExploreSection />
+        {/* youtube podcast video */}
+        <PodcastSection />
         {/* awards & recognition (auto-scrolling) */}
         <Gallery />
         <ReviewsSection />

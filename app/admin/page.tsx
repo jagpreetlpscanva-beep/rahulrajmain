@@ -23,6 +23,8 @@ import {
   type Addon,
   DEFAULT_ARC_TILES,
   type ArcTile,
+  DEFAULT_PODCASTS,
+  type Podcast,
 } from "@/lib/adminStore";
 import { CollectionManager, type FieldDef } from "../components/admin/CollectionManager";
 import { SlotsManager } from "../components/admin/SlotsManager";
@@ -188,6 +190,14 @@ const blankArcTile = (): ArcTile => ({
   href: "#poojas",
 });
 
+const podcastFields: FieldDef[] = [
+  { name: "title", label: "Title", type: "text", placeholder: "Astro Rahul Raj — Podcast" },
+  { name: "videoUrl", label: "YouTube link", type: "video", hint: "Paste a YouTube link (youtu.be/… or youtube.com/watch?v=…)." },
+  { name: "description", label: "Description", type: "textarea", optional: true },
+];
+
+const blankPodcast = (): Podcast => ({ id: newId("pod"), title: "", videoUrl: "", description: "" });
+
 const blankConsultation = (): Consultation => ({
   id: newId("consult"),
   title: "",
@@ -200,7 +210,7 @@ const blankConsultation = (): Consultation => ({
   image: "",
 });
 
-type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "consultations" | "addons" | "gallery" | "reviews" | "slots" | "bookings";
+type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "reviews" | "slots" | "bookings";
 
 const GridIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -218,6 +228,7 @@ const NAV: { key: TabKey; label: string; icon: (p: { className?: string }) => Re
   { key: "poojaBanner", label: "Pooja Banner", icon: OmIcon },
   { key: "consultations", label: "Consultations", icon: UsersIcon },
   { key: "courses", label: "Courses", icon: StarIcon },
+  { key: "podcasts", label: "Podcast", icon: StarIcon },
   { key: "reports", label: "Reports", icon: MedalIcon },
   { key: "addons", label: "Add-ons", icon: GiftIcon },
   { key: "gallery", label: "Gallery", icon: GiftIcon },
@@ -243,6 +254,7 @@ export default function AdminPage() {
   const addons = useCollection<Addon>("addons", DEFAULT_ADDONS);
   const hero = useCollection<HeroSlide>("hero", DEFAULT_HERO_SLIDES);
   const poojaBanner = useCollection<ArcTile>("poojaBanner", DEFAULT_ARC_TILES);
+  const podcasts = useCollection<Podcast>("podcasts", DEFAULT_PODCASTS);
 
   useEffect(() => {
     fetch("/api/admin/session", { cache: "no-store" })
@@ -420,6 +432,9 @@ export default function AdminPage() {
           )}
           {tab === "gallery" && (
             <CollectionManager<GalleryItem> label="Gallery" items={gallery.items} fields={galleryFields} blank={blankGallery} onChange={gallery.save} onReset={gallery.reset} previewHref="/" />
+          )}
+          {tab === "podcasts" && (
+            <CollectionManager<Podcast> label="Podcast" items={podcasts.items} fields={podcastFields} blank={blankPodcast} onChange={podcasts.save} onReset={podcasts.reset} previewHref="/" />
           )}
           {tab === "reviews" && <ReviewsManager />}
           {tab === "slots" && <SlotsManager />}

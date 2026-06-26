@@ -604,6 +604,23 @@ export const DEFAULT_REVIEWS: Review[] = [
   { id: "rev-4", name: "Anjali M.", location: "Pune", initials: "AM", rating: 5, text: "Very accurate predictions and practical remedies. Truly life-changing!", status: "approved", date: "2026-05-14" },
 ];
 
+/** Podcast / YouTube videos shown on the site. */
+export interface Podcast {
+  id: string;
+  title: string;
+  videoUrl: string;
+  description?: string;
+}
+
+export const DEFAULT_PODCASTS: Podcast[] = [
+  {
+    id: "pod-1",
+    title: "Astro Rahul Raj — Podcast",
+    videoUrl: "https://youtu.be/kcQQeZlu208",
+    description: "Watch our latest conversation on Vedic astrology, life and clarity.",
+  },
+];
+
 /** Collections exposed by the CMS API, with their seed data. */
 export const COLLECTIONS = {
   poojas: DEFAULT_POOJAS,
@@ -616,6 +633,7 @@ export const COLLECTIONS = {
   addons: DEFAULT_ADDONS,
   poojaBanner: DEFAULT_ARC_TILES,
   reviews: DEFAULT_REVIEWS,
+  podcasts: DEFAULT_PODCASTS,
 } as const;
 
 export type CollectionKey = keyof typeof COLLECTIONS;
