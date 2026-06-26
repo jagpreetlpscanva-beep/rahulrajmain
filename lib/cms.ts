@@ -253,6 +253,14 @@ export interface Course {
   videoUrl?: string;
   accent: [string, string];
   badge?: string;
+  /** Optional extras used by the redesigned courses grid — all optional so older records keep working. */
+  rating?: number;
+  reviewCount?: number;
+  originalPrice?: string;
+  certificate?: boolean;
+  lifetimeAccess?: boolean;
+  downloadableResources?: boolean;
+  mobileFriendly?: boolean;
 }
 
 export const DEFAULT_COURSES: Course[] = [
@@ -266,6 +274,11 @@ export const DEFAULT_COURSES: Course[] = [
     price: "₹2,999",
     accent: ["#3B4FA0", "#1E2A66"],
     badge: "Bestseller",
+    rating: 4.8,
+    reviewCount: 128,
+    certificate: true,
+    lifetimeAccess: true,
+    mobileFriendly: true,
   },
   {
     id: "course-predictive",
@@ -276,16 +289,24 @@ export const DEFAULT_COURSES: Course[] = [
     lessons: "20 lessons · 12h",
     price: "₹5,499",
     accent: ["#6B3FA0", "#36205C"],
+    rating: 4.9,
+    reviewCount: 86,
+    certificate: true,
+    lifetimeAccess: true,
   },
   {
     id: "course-numerology-basics",
     title: "Numerology Basics",
     category: "Numerology",
-    description: "Understand the meaning of numbers and how they shape personality and destiny.",
+    description: "Understand numbers and their powerful impact on your life and destiny.",
     level: "Beginner",
     lessons: "10 lessons · 5h",
     price: "₹1,999",
     accent: ["#1F7A6B", "#0C3B34"],
+    rating: 4.6,
+    reviewCount: 74,
+    lifetimeAccess: true,
+    mobileFriendly: true,
   },
   {
     id: "course-name-numerology",
@@ -296,17 +317,23 @@ export const DEFAULT_COURSES: Course[] = [
     lessons: "12 lessons · 6h",
     price: "₹3,499",
     accent: ["#2B6CB0", "#163E66"],
+    rating: 4.7,
+    reviewCount: 41,
+    certificate: true,
   },
   {
     id: "course-vastu-home",
-    title: "Vastu for Home",
+    title: "Vastu Shastra Masterclass",
     category: "Vastu",
-    description: "Arrange your living space to invite positivity, health and abundance.",
-    level: "Beginner",
-    lessons: "9 lessons · 5h",
-    price: "₹2,499",
+    description: "Create positive energy in your space and attract health, wealth & peace.",
+    level: "Intermediate",
+    lessons: "16 lessons · 9h",
+    price: "₹2,199",
     accent: ["#C08A2E", "#7A5212"],
-    badge: "Popular",
+    rating: 4.6,
+    reviewCount: 52,
+    lifetimeAccess: true,
+    mobileFriendly: true,
   },
   {
     id: "course-vastu-business",
@@ -317,16 +344,22 @@ export const DEFAULT_COURSES: Course[] = [
     lessons: "11 lessons · 6h",
     price: "₹3,999",
     accent: ["#A23B5B", "#5E1B33"],
+    rating: 4.5,
+    reviewCount: 33,
   },
   {
     id: "course-palmistry-essentials",
-    title: "Palmistry Essentials",
+    title: "Palmistry – The Complete Guide",
     category: "Palmistry",
-    description: "Read the major lines and mounts of the hand to understand life patterns.",
-    level: "Beginner",
-    lessons: "8 lessons · 4h",
-    price: "₹1,799",
+    description: "Learn the art of palm reading and decode the secrets of hand lines.",
+    level: "Intermediate",
+    lessons: "18 lessons · 10h",
+    price: "₹2,499",
     accent: ["#B23A2E", "#6E1C16"],
+    rating: 4.7,
+    reviewCount: 64,
+    certificate: true,
+    downloadableResources: true,
   },
   {
     id: "course-palmistry-advanced",
@@ -337,17 +370,23 @@ export const DEFAULT_COURSES: Course[] = [
     lessons: "14 lessons · 7h",
     price: "₹3,299",
     accent: ["#3A4A66", "#1B2436"],
+    rating: 4.6,
+    reviewCount: 28,
   },
   {
     id: "course-mantra-meditation",
-    title: "Mantra & Meditation",
+    title: "Spiritual Growth & Meditation",
     category: "Spiritual",
-    description: "Practical mantra sadhana and meditation for peace, focus and inner growth.",
+    description: "Elevate your consciousness and connect with your higher self.",
     level: "All levels",
     lessons: "16 lessons · 6h",
     price: "₹1,499",
     accent: ["#1F5A57", "#0E3331"],
     badge: "New",
+    rating: 4.8,
+    reviewCount: 47,
+    lifetimeAccess: true,
+    mobileFriendly: true,
   },
   {
     id: "course-chakra-healing",
@@ -358,6 +397,34 @@ export const DEFAULT_COURSES: Course[] = [
     lessons: "12 lessons · 6h",
     price: "₹2,799",
     accent: ["#8E2D22", "#4E140F"],
+    rating: 4.5,
+    reviewCount: 22,
+  },
+  {
+    id: "course-kp-astrology",
+    title: "KP Astrology Advanced",
+    category: "Astrology",
+    description: "Learn Krishnamurti Paddhati (KP) for precise predictions.",
+    level: "Advanced",
+    lessons: "18 lessons · 11h",
+    price: "₹4,799",
+    accent: ["#1F7A4A", "#0C3B22"],
+    rating: 4.8,
+    reviewCount: 39,
+    certificate: true,
+  },
+  {
+    id: "course-remedies-healing",
+    title: "Remedies & Planetary Healing",
+    category: "Astrology",
+    description: "Simple and effective remedies to reduce doshas and attract blessings.",
+    level: "Beginner",
+    lessons: "10 lessons · 5h",
+    price: "₹1,999",
+    accent: ["#C0512E", "#7A2E12"],
+    rating: 4.7,
+    reviewCount: 35,
+    mobileFriendly: true,
   },
 ];
 
