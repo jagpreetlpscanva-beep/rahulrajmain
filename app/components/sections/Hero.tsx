@@ -11,8 +11,8 @@ import { CalendarIcon, WhatsAppIcon } from "../icons";
 
 const AUTOPLAY_MS = 4000;
 
-export function Hero() {
-  const { items: slides } = useCollection<HeroSlide>("hero", DEFAULT_HERO_SLIDES);
+export function Hero({ initialSlides }: { initialSlides?: HeroSlide[] }) {
+  const { items: slides } = useCollection<HeroSlide>("hero", initialSlides?.length ? initialSlides : DEFAULT_HERO_SLIDES);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const reduce = useReducedMotion();

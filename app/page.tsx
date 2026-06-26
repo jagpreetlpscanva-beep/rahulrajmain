@@ -1,3 +1,5 @@
+import { readCollection } from "@/lib/contentRepo";
+import type { HeroSlide } from "@/lib/cms";
 import { Navbar } from "./components/Navbar";
 import { Hero } from "./components/sections/Hero";
 import { FeatureTiles } from "./components/sections/FeatureTiles";
@@ -11,12 +13,18 @@ import { Footer } from "./components/sections/Footer";
 import { ScrollToTop } from "./components/ui/ScrollToTop";
 import { ConsultationPopup } from "./components/ui/ConsultationPopup";
 
-export default function Home() {
+export default async function Home() {
+  let heroSlides: HeroSlide[] | undefined;
+  try {
+    heroSlides = (await readCollection("hero")) as HeroSlide[];
+  } catch {
+    /* fall back to defaults on the client */
+  }
   return (
     <>
       <Navbar />
       <main>
-        <Hero />
+        <Hero initialSlides={heroSlides} />
         {/* quick-access tiles peeking up below the hero */}
         <FeatureTiles />
         {/* online pooja (collapsed; slides open on click) */}
