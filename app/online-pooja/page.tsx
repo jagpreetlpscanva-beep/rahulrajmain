@@ -92,15 +92,13 @@ export default function OnlinePoojaPage() {
         {/* ---------- "will a puja still work" explainer ---------- */}
         <section className="paper-bg py-16 lg:py-20">
           <div className="container-px grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
-            {/* portrait placeholder */}
-            <div className="relative grid aspect-[5/4] place-items-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#F2E3C4] to-[#E6D2A6]">
+            {/* astrologer portrait — fills the block */}
+            <div className="relative aspect-[5/4] overflow-hidden rounded-2xl bg-gradient-to-br from-[#F2E3C4] to-[#E6D2A6]">
               <Mandala className="pointer-events-none absolute inset-0 m-auto h-[120%] w-[120%] text-gold-600/15" />
-              <div className="relative flex flex-col items-center gap-2 text-center">
-                <span className="grid h-28 w-28 place-items-center overflow-hidden rounded-full border-2 border-gold-600/40 bg-white/60 shadow-card">
-                  <AstroPhoto className="h-full w-full object-cover object-top" />
-                </span>
-                <span className="font-serif text-xl font-bold text-ink">Rahul Raj</span>
-                <span className="text-xs uppercase tracking-[0.25em] text-gold-700">Certified Pandits</span>
+              <AstroPhoto className="absolute inset-0 h-full w-full object-cover object-top" />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent p-4 text-center">
+                <p className="font-serif text-xl font-bold text-white">Rahul Raj</p>
+                <p className="text-xs uppercase tracking-[0.25em] text-cream/85">Certified Pandits</p>
               </div>
             </div>
 

@@ -3,18 +3,19 @@ import { cookies } from "next/headers";
 import { promises as fs } from "fs";
 import path from "path";
 import { put } from "@vercel/blob";
+import sharp from "sharp";
 import { verifyToken, COOKIE_NAME } from "@/lib/auth";
 
 /**
  * Authenticated file upload (images + videos).
+ * Raster images are compressed/resized to a small WebP so they load fast
+ * everywhere. SVGs and videos are stored unchanged.
  *
- * - On Vercel (BLOB_READ_WRITE_TOKEN set): stores the file in Vercel Blob and
- *   returns its public https URL. The filesystem is read-only on Vercel, so
- *   this is required for uploads to work in production.
- * - Locally (no token): saves to <project>/uploads and serves it back via
- *   /api/uploads/<name>.
+ * - On Vercel (BLOB_READ_WRITE_TOKEN set): stores in Vercel Blob (public CDN).
+ * - Locally: saves to <project>/uploads, served via /api/uploads/<name>.
  */
 
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_BYTES = 50 * 1024 * 1024; // 50 MB
@@ -48,29 +49,38 @@ export async function POST(req: Request) {
       .replace(/[^a-z0-9-_]+/gi, "-")
       .toLowerCase()
       .slice(0, 40) || "file";
-  const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${base}${ext}`;
+  const baseName = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${base}`;
+
+  // Compress raster images → small WebP. Leave SVG/GIF/video untouched.
+  let body: Buffer | File = file;
+  let name = `${baseName}${ext}`;
+  let contentType = file.type || "application/octet-stream";
+  if (/^image\/(jpeg|jpg|png|webp|avif)$/.test(file.type)) {
+    try {
+      const input = Buffer.from(await file.arrayBuffer());
+      body = await sharp(input)
+        .rotate()
+        .resize({ width: 1400, height: 1400, fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 80 })
+        .toBuffer();
+      name = `${baseName}.webp`;
+      contentType = "image/webp";
+    } catch {
+      body = file; // sharp failed — keep original
+    }
+  }
 
   try {
-    // Production / Vercel.
     if (process.env.BLOB_READ_WRITE_TOKEN) {
       try {
-        // Public store → permanent public CDN URL (fastest, no server round-trip).
-        const blob = await put(`uploads/${name}`, file, {
-          access: "public",
-          contentType: file.type || undefined,
-        });
+        const blob = await put(`uploads/${name}`, body, { access: "public", contentType });
         return NextResponse.json({ ok: true, url: blob.url });
       } catch {
-        // Private store → store privately, serve via our /api/uploads redirect.
-        await put(`uploads/${name}`, file, {
-          access: "private",
-          contentType: file.type || undefined,
-        });
+        await put(`uploads/${name}`, body, { access: "private", contentType });
         return NextResponse.json({ ok: true, url: `/api/uploads/${name}` });
       }
     }
 
-    // On Vercel without a Blob store, the disk is read-only — fail clearly.
     if (process.env.VERCEL) {
       return NextResponse.json(
         {
@@ -82,16 +92,13 @@ export async function POST(req: Request) {
     }
 
     // Local dev: write to disk
-    const buf = Buffer.from(await file.arrayBuffer());
+    const diskBuf = body instanceof Buffer ? body : Buffer.from(await file.arrayBuffer());
     await fs.mkdir(UPLOAD_DIR, { recursive: true });
-    await fs.writeFile(path.join(UPLOAD_DIR, name), buf);
+    await fs.writeFile(path.join(UPLOAD_DIR, name), diskBuf);
     return NextResponse.json({ ok: true, url: `/api/uploads/${name}` });
   } catch (err) {
     console.error("[upload] failed:", err);
     const msg = err instanceof Error ? err.message : "unknown error";
-    return NextResponse.json(
-      { error: `Storage error: ${msg}` },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: `Storage error: ${msg}` }, { status: 500 });
   }
 }
