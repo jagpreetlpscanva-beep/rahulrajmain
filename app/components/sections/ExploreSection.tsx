@@ -1,38 +1,55 @@
 "use client";
 
+import { useState, type FormEvent } from "react";
 import { useCollection, DEFAULT_REPORTS, DEFAULT_COURSES, type StoredReport, type Course } from "@/lib/adminStore";
 import { TOOLS } from "@/lib/content";
-import { Icon, ArrowRightIcon, WhatsAppIcon } from "../icons";
+import { Icon, ArrowRightIcon } from "../icons";
 import { Mandala } from "../ui/Mandala";
-import { ZodiacWheel } from "../ui/ZodiacWheel";
-import { LotusDivider, Diamond } from "../ui/Dividers";
+import { LotusDivider } from "../ui/Dividers";
 import type { IconName } from "@/lib/content";
 
 const REPORT_ICONS: IconName[] = ["briefcase", "couple", "lotus-person", "wealth", "star", "numerology"];
 const COURSE_GRADIENTS = ["from-[#3B5BA9] to-[#1E2F66]", "from-[#6B3FA0] to-[#36205C]", "from-[#1F7A6B] to-[#0C3B34]"];
-const ICON_GLOW = "shadow-[0_8px_22px_-6px_rgba(192,138,46,0.7)]";
+
+const TOOL_SUBTITLES: Record<string, string> = {
+  "Free Birth Chart": "Instant Janam Kundli",
+  "Compatibility Calculator": "Check Relationship Compatibility",
+  "Numerology Calculator": "Reveal Your Numbers",
+  "Lucky Number Finder": "Find Your Lucky Numbers",
+  "Name Analysis": "Analyze Your Name",
+  "Moon Sign Finder": "Discover Your Moon Sign",
+};
 
 const TRUST = [
-  { icon: "shield" as IconName, title: "100% Confidential", body: "Your privacy is our top priority." },
-  { icon: "star" as IconName, title: "Accurate & Reliable", body: "Insights you can trust and act on." },
-  { icon: "lotus-person" as IconName, title: "Personalized Guidance", body: "Solutions tailored to your chart." },
-  { icon: "magnet" as IconName, title: "Timely Remedies", body: "Effective remedies for a better tomorrow." },
-  { icon: "users" as IconName, title: "Expert Support", body: "We're here to help you always." },
+  { icon: <TargetSvg />, title: "100% Accurate", body: "Vedic calculations you can trust" },
+  { icon: <ShieldSvg />, title: "Trusted by Thousands", body: "Real guidance. Real results." },
+  { icon: <LockSvg />, title: "100% Secure", body: "Your data is safe with us" },
+  { icon: <HeadsetSvg />, title: "Expert Support", body: "We're here to help you" },
 ];
 
-function Eyebrow({ children, center }: { children: React.ReactNode; center?: boolean }) {
+const ICON_GLOW = "shadow-[0_8px_22px_-6px_rgba(192,138,46,0.7)]";
+
+function ColHeader({ icon, title, sub }: { icon: React.ReactNode; title: React.ReactNode; sub: string }) {
   return (
-    <span className={`inline-flex items-center gap-2 text-gold-600 ${center ? "justify-center" : ""}`}>
-      <Diamond className="h-2 w-2" />
-      <span className="eyebrow">{children}</span>
-      <Diamond className="h-2 w-2" />
-    </span>
+    <div className="text-center">
+      <span className={`mx-auto grid h-14 w-14 place-items-center rounded-full border-2 border-gold-500/40 text-gold-600 ${ICON_GLOW}`}>{icon}</span>
+      <h2 className="mt-3 font-serif text-2xl font-bold leading-tight text-ink sm:text-[1.7rem]">{title}</h2>
+      <p className="mt-1.5 text-sm font-semibold tracking-wide text-gold-700">{sub}</p>
+      <LotusDivider className="mx-auto mt-3" />
+    </div>
   );
 }
 
 export function ExploreSection() {
   const { items: reports } = useCollection<StoredReport>("reports", DEFAULT_REPORTS);
   const { items: courses } = useCollection<Course>("courses", DEFAULT_COURSES);
+
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+  const submitEmail = (e: FormEvent) => {
+    e.preventDefault();
+    if (email.trim()) setSent(true);
+  };
 
   return (
     <section className="relative overflow-hidden bg-[#faf4e8] py-16 lg:py-24">
@@ -42,120 +59,75 @@ export function ExploreSection() {
 
       <div className="container-wide relative">
         <div className="mx-auto grid max-w-[1500px] items-stretch gap-6 lg:grid-cols-3 lg:gap-8">
-          {/* ---------- left: reports ---------- */}
-          <div className="flex flex-col rounded-3xl border-2 border-gold-500/30 bg-white p-6 shadow-card">
-            <Eyebrow>Personalized Vedic Reports</Eyebrow>
-            <h2 className="mt-3 font-serif text-2xl font-bold leading-tight text-ink sm:text-3xl">
-              Reports Crafted For Your Chart
-            </h2>
-            <p className="mt-1 text-sm text-ink/55">Detailed • Accurate • Personalized</p>
-            <LotusDivider className="mt-4" />
-
+          {/* ---------- reports ---------- */}
+          <div className="flex flex-col rounded-3xl border-2 border-gold-500/25 bg-white p-6 shadow-card sm:p-7">
+            <ColHeader icon={<DocSvg />} title={<>Personalized Reports<br />That Guide You</>} sub="Accurate • In-Depth • Actionable" />
             <div className="mt-5 flex flex-1 flex-col gap-3">
               {reports.slice(0, 3).map((r, i) => (
-                <a
-                  key={r.id}
-                  href="/reports"
-                  className="group flex flex-1 items-center gap-3 rounded-2xl border border-gold-500/15 bg-[#fbf7ee] p-3.5 transition-all hover:-translate-y-0.5 hover:border-gold-500/45 hover:shadow-card"
-                >
+                <div key={r.id} className="flex flex-1 items-center gap-3.5 rounded-2xl border border-gold-500/15 bg-[#fbf7ee] p-4">
                   {r.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={r.image} alt={r.title} className={`h-12 w-12 shrink-0 rounded-full object-cover ${ICON_GLOW}`} />
+                    <img src={r.image} alt={r.title} className={`h-14 w-14 shrink-0 rounded-full object-cover ${ICON_GLOW}`} />
                   ) : (
-                    <span
-                      className={`grid h-12 w-12 shrink-0 place-items-center rounded-full text-white ${ICON_GLOW}`}
-                      style={{ background: `linear-gradient(150deg, ${r.accent?.[0] ?? "#C08A2E"}, ${r.accent?.[1] ?? "#7A5212"})` }}
-                    >
-                      <Icon name={REPORT_ICONS[i % REPORT_ICONS.length]} className="h-6 w-6" />
+                    <span className={`grid h-14 w-14 shrink-0 place-items-center rounded-full text-white ${ICON_GLOW}`} style={{ background: `linear-gradient(150deg, ${r.accent?.[0] ?? "#C08A2E"}, ${r.accent?.[1] ?? "#7A5212"})` }}>
+                      <Icon name={REPORT_ICONS[i % REPORT_ICONS.length]} className="h-7 w-7" />
                     </span>
                   )}
                   <div className="min-w-0">
-                    <p className="font-serif font-bold text-ink">{r.title}</p>
+                    <p className="font-serif text-lg font-bold leading-tight text-ink">{r.title}</p>
                     <p className="mt-0.5 line-clamp-2 text-xs text-ink/55">{r.description}</p>
+                    <a href="/reports" className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-gold-700">Explore Report <ArrowRightIcon className="h-3.5 w-3.5" /></a>
                   </div>
-                </a>
+                </div>
               ))}
             </div>
-
-            <a href="/reports" className="mt-5 inline-flex items-center gap-1.5 rounded-xl border border-gold-500/30 px-4 py-2.5 text-sm font-semibold text-gold-700 transition-colors hover:bg-gold-50">
-              Explore All Reports <ArrowRightIcon className="h-4 w-4" />
+            <a href="/reports" className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-night px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-cream transition-transform hover:-translate-y-0.5">
+              ⊞ View All Reports <ArrowRightIcon className="h-4 w-4" />
             </a>
           </div>
 
-          {/* ---------- middle: astrology tools ---------- */}
-          <div className="relative overflow-hidden rounded-3xl border-2 border-gold-500/45 bg-gradient-to-b from-white to-gold-50/60 p-6 shadow-card-hover">
-            <ZodiacWheel className="pointer-events-none absolute left-1/2 top-1/2 h-[125%] w-[125%] -translate-x-1/2 -translate-y-1/2 animate-spin-slower text-gold-600/[0.06]" />
-            <div className="relative text-center">
-              <Eyebrow center>Free Astrology Tools</Eyebrow>
-              <h2 className="mt-3 font-serif text-2xl font-bold leading-tight text-ink sm:text-3xl">
-                Powerful Tools For Life&rsquo;s Answers
-              </h2>
-              <p className="mt-1 text-sm text-ink/55">Accurate calculations. 100% free.</p>
-              <LotusDivider className="mx-auto mt-4" />
-
-              <div className="mt-5 space-y-2.5 text-left">
-                {TOOLS.map((tool) => (
-                  <a
-                    key={tool.title}
-                    href="#contact"
-                    className="group flex items-center gap-3 rounded-xl border border-gold-500/15 bg-white/80 p-3 transition-all hover:-translate-y-0.5 hover:border-gold-500/45 hover:shadow-card"
-                  >
-                    <span className={`grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold-gradient text-cream ${ICON_GLOW}`}>
-                      <Icon name={tool.icon} className="h-5 w-5" />
-                    </span>
-                    <span className="min-w-0 flex-1 font-serif text-sm font-bold text-ink">{tool.title}</span>
-                    <ArrowRightIcon className="h-4 w-4 shrink-0 text-gold-600 transition-transform group-hover:translate-x-0.5" />
-                  </a>
-                ))}
-              </div>
-
-              {/* quote */}
-              <div className="mt-5 rounded-2xl border border-gold-500/20 bg-gold-50/70 p-4">
-                <p className="text-sm italic leading-relaxed text-ink/70">
-                  &ldquo;These tools are designed to bring clarity to your life&rsquo;s questions and help you make empowered decisions.&rdquo;
-                </p>
-                <p className="mt-2 font-serif text-sm font-bold text-gold-700">— Astro Rahul Raj</p>
-              </div>
+          {/* ---------- tools ---------- */}
+          <div className="relative flex flex-col overflow-hidden rounded-3xl border-2 border-gold-500/40 bg-white p-6 shadow-card-hover sm:p-7">
+            <ColHeader icon={<StarSvg />} title={<>Powerful Tools For<br />Life&rsquo;s Answers</>} sub="100% Accurate • Free • Instant Results" />
+            <div className="mt-5 flex flex-1 flex-col gap-2.5">
+              {TOOLS.map((tool) => (
+                <a key={tool.title} href="#contact" className="group flex items-center gap-3 rounded-xl border border-gold-500/15 bg-white p-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-gold-500/45 hover:shadow-card">
+                  <span className={`grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gold-gradient text-cream ${ICON_GLOW}`}>
+                    <Icon name={tool.icon} className="h-5 w-5" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-serif text-base font-bold leading-tight text-ink">{tool.title}</span>
+                    <span className="block text-xs text-ink/50">{TOOL_SUBTITLES[tool.title] ?? "Free tool"}</span>
+                  </span>
+                  <ArrowRightIcon className="h-4 w-4 shrink-0 text-gold-600 transition-transform group-hover:translate-x-0.5" />
+                </a>
+              ))}
             </div>
+            <a href="#contact" className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-gold-gradient px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5">
+              Explore All Tools <ArrowRightIcon className="h-4 w-4" />
+            </a>
           </div>
 
-          {/* ---------- right: courses ---------- */}
-          <div className="flex flex-col rounded-3xl border-2 border-gold-500/30 bg-white p-6 shadow-card">
-            <Eyebrow>Learn With Rahul Raj</Eyebrow>
-            <h2 className="mt-3 font-serif text-2xl font-bold leading-tight text-ink sm:text-3xl">
-              Courses &amp; Masterclasses
-            </h2>
-            <p className="mt-1 text-sm text-ink/55">Learn anytime. Grow every day.</p>
-            <LotusDivider className="mt-4" />
-
+          {/* ---------- courses ---------- */}
+          <div className="flex flex-col rounded-3xl border-2 border-gold-500/25 bg-white p-6 shadow-card sm:p-7">
+            <ColHeader icon={<CapSvg />} title={<>Courses &amp;<br />Masterclasses</>} sub="Learn • Understand • Transform" />
             <div className="mt-5 flex flex-1 flex-col gap-4">
               {courses.slice(0, 2).map((c, i) => (
-                <a
-                  key={c.id}
-                  href="/courses"
-                  className="relative flex-1 overflow-hidden rounded-2xl text-white shadow-card transition-transform hover:-translate-y-0.5"
-                >
+                <a key={c.id} href="/courses" className="relative flex-1 overflow-hidden rounded-2xl text-white shadow-card transition-transform hover:-translate-y-0.5">
                   {c.thumbnail ? (
                     <>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={c.thumbnail} alt={c.title} className="absolute inset-0 h-full w-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/55 to-black/25" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/20" />
                     </>
                   ) : (
                     <div className={`absolute inset-0 bg-gradient-to-br ${COURSE_GRADIENTS[i % COURSE_GRADIENTS.length]}`} />
                   )}
-                  <ZodiacWheel className="pointer-events-none absolute -left-6 top-1/2 h-32 w-32 -translate-y-1/2 text-white/10" />
-
-                  {i === 0 && (
-                    <span className="absolute right-3 top-3 z-10 rounded-full bg-luxe-gold px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-wider text-espresso">
-                      Bestseller
-                    </span>
-                  )}
-
-                  <div className="relative flex min-h-[8.5rem] flex-col justify-end p-5">
+                  {i === 0 && <span className="absolute right-3 top-3 z-10 rounded-full bg-luxe-gold px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-wider text-espresso">Bestseller</span>}
+                  <div className="relative flex min-h-[9rem] flex-col justify-end p-5">
                     <div className="flex items-center gap-3">
-                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/90 text-night shadow-lg">
-                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z" /></svg>
+                      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white/90 text-night shadow-lg">
+                        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
                       </span>
                       <div className="min-w-0 flex-1">
                         <p className="font-serif text-lg font-bold leading-tight">{c.title}</p>
@@ -168,46 +140,72 @@ export function ExploreSection() {
                 </a>
               ))}
             </div>
-
-            <a href="/courses" className="mt-5 inline-flex items-center gap-1.5 rounded-xl border border-gold-500/30 px-4 py-2.5 text-sm font-semibold text-gold-700 transition-colors hover:bg-gold-50">
+            <a href="/courses" className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-night px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-cream transition-transform hover:-translate-y-0.5">
               View All Courses <ArrowRightIcon className="h-4 w-4" />
             </a>
           </div>
         </div>
 
-        {/* ---------- trust badges ---------- */}
-        <div className="mx-auto mt-10 grid max-w-[1500px] gap-5 rounded-2xl border-2 border-gold-500/25 bg-white p-6 shadow-card sm:grid-cols-3 lg:grid-cols-5">
+        {/* ---------- gold trust bar ---------- */}
+        <div className="mx-auto mt-8 grid max-w-[1500px] gap-5 rounded-2xl bg-gradient-to-r from-[#C9962F] via-[#E2B651] to-[#C9962F] p-6 text-night shadow-card sm:grid-cols-2 lg:grid-cols-4">
           {TRUST.map((t) => (
-            <div key={t.title} className="flex items-start gap-3">
-              <span className={`mt-0.5 grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gold-gradient text-cream ${ICON_GLOW}`}>
-                <Icon name={t.icon} className="h-5 w-5" />
-              </span>
+            <div key={t.title} className="flex items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white/25 text-night">{t.icon}</span>
               <div>
-                <p className="text-sm font-bold leading-tight text-ink">{t.title}</p>
-                <p className="mt-0.5 text-xs text-ink/55">{t.body}</p>
+                <p className="text-sm font-bold leading-tight">{t.title}</p>
+                <p className="text-xs text-night/70">{t.body}</p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* ---------- WhatsApp CTA ---------- */}
-        <div className="mx-auto mt-6 flex max-w-[1500px] flex-col items-center justify-center gap-4 rounded-2xl border-2 border-gold-500/30 bg-gradient-to-r from-white to-gold-50/60 p-5 text-center shadow-card sm:flex-row">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-500 text-white">
-            <WhatsAppIcon className="h-6 w-6" />
-          </span>
-          <p className="text-ink">
-            <strong>Still have questions?</strong> Chat directly with Rahul Ji on WhatsApp
-          </p>
-          <a
-            href="https://wa.me/919415312590"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl bg-gold-gradient px-6 py-3 text-sm font-bold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5"
-          >
-            Chat Now <ArrowRightIcon className="h-4 w-4" />
-          </a>
+        {/* ---------- free birth chart email capture ---------- */}
+        <div className="mx-auto mt-5 flex max-w-[1500px] flex-col items-center justify-between gap-4 rounded-2xl border-2 border-gold-500/30 bg-white p-5 shadow-card lg:flex-row">
+          <div className="flex items-center gap-3">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-gold-gradient text-night"><GiftSvg /></span>
+            <div>
+              <p className="font-serif text-lg font-bold text-ink">New Here? Get FREE Birth Chart Instantly!</p>
+              <p className="text-sm text-ink/55">Discover your Kundli and start your journey today.</p>
+            </div>
+          </div>
+          {sent ? (
+            <p className="font-semibold text-emerald-700">Thank you! We&rsquo;ll be in touch 🙏</p>
+          ) : (
+            <form onSubmit={submitEmail} className="flex w-full max-w-md gap-2">
+              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" className="flex-1 rounded-xl border border-ink/15 bg-[#fbf7ee] px-4 py-3 text-sm text-ink outline-none focus:border-gold-500" />
+              <button type="submit" className="flex items-center gap-2 rounded-xl bg-gold-gradient px-5 py-3 text-sm font-bold text-night shadow-gold-btn transition-transform hover:-translate-y-0.5">
+                Get Free Now <ArrowRightIcon className="h-4 w-4" />
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </section>
   );
+}
+
+/* ---------------- inline icons ---------------- */
+function DocSvg() {
+  return <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M8 13h8M8 17h6" /></svg>;
+}
+function StarSvg() {
+  return <svg viewBox="0 0 24 24" className="h-7 w-7" fill="currentColor"><path d="M12 2l2.6 6.3L21 9l-5 4.2L17.5 21 12 17.3 6.5 21 8 13.2 3 9l6.4-.7L12 2Z" /></svg>;
+}
+function CapSvg() {
+  return <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10L12 5 2 10l10 5 10-5Z" /><path d="M6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5" /></svg>;
+}
+function TargetSvg() {
+  return <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /></svg>;
+}
+function ShieldSvg() {
+  return <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l8 3v6c0 5-3.4 9-8 11-4.6-2-8-6-8-11V5l8-3Z" /><path d="M9 12l2 2 4-4" /></svg>;
+}
+function LockSvg() {
+  return <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>;
+}
+function HeadsetSvg() {
+  return <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14a2 2 0 0 0 2 2h1v-5H6a2 2 0 0 0-2 2v1Zm16 0a2 2 0 0 1-2 2h-1v-5h1a2 2 0 0 1 2 2v1Zm0 2v1a4 4 0 0 1-4 4h-4" /></svg>;
+}
+function GiftSvg() {
+  return <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="8" width="18" height="4" rx="1" /><path d="M12 8v13M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8M12 8C12 6 10.5 4 8.5 4S5 5 5 6.5 6.5 8 8.5 8H12Zm0 0c0-2 1.5-4 3.5-4S19 5 19 6.5 17.5 8 15.5 8H12Z" /></svg>;
 }
