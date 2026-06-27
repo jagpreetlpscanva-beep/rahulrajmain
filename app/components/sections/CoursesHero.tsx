@@ -80,6 +80,11 @@ export function CoursesHero() {
     <>
       {/* ---------------- compact hero banner ---------------- */}
       <section className="relative overflow-hidden bg-gradient-to-b from-cream-dark to-cream pt-36 lg:pt-40">
+        {/* dark strip behind the fixed navbar so its light text stays readable
+            against this page's light hero (navbar switches to dark text only
+            after scrolling) */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-night/90 via-night/40 to-transparent lg:h-28" />
+
         <HeroOrnamentBand />
 
         <div className="container-px relative pb-10 text-center lg:pb-12">
