@@ -214,7 +214,7 @@ export function CoursesGrid() {
     <section id="courses-list" className="paper-bg relative py-12 lg:py-16">
       <div className="container-px">
         {/* ---------------- icon category tabs (sits like a floating card) ---------------- */}
-        <div className="relative z-10 mx-auto -mt-20 mb-10 flex max-w-3xl flex-wrap items-stretch justify-center gap-1 rounded-2xl border border-gold-500/15 bg-white px-3 py-3 shadow-card sm:gap-2 lg:-mt-24">
+        <div className="relative z-10 mx-auto -mt-6 mb-10 flex max-w-3xl flex-wrap items-stretch justify-center gap-1 rounded-2xl border border-gold-500/15 bg-white px-3 py-3 shadow-card sm:gap-2 sm:-mt-10 lg:-mt-14">
           {COURSE_CATEGORIES.map((cat) => {
             const Icon = CATEGORY_ICONS[cat];
             const active = activeCategory === cat;
