@@ -10,7 +10,26 @@ import {
   type PoojaCategory,
 } from "@/lib/adminStore";
 import { Mandala } from "../ui/Mandala";
+import { LotusDivider, Diamond } from "../ui/Dividers";
 import { CalendarIcon, OmIcon } from "../icons";
+
+const FEATURES = [
+  { t: "Authentic", s: "Vedic Rituals" },
+  { t: "Expert", s: "Pundits" },
+  { t: "Pure & Sacred", s: "Process" },
+  { t: "Blessings for", s: "All Aspects of Life" },
+];
+
+const POOJA_TRUST = [
+  { t: "Need Help?", s: "Our team is here for you" },
+  { t: "Talk to Expert", s: "Call: +91 94153 12590" },
+  { t: "Secure & Trusted", s: "100% Safe & Confidential" },
+  { t: "10,000+ Devotees", s: "Trust our puja services" },
+];
+
+function Tick() {
+  return <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M8 12.5l2.5 2.5L16 9.5" /></svg>;
+}
 
 export function PoojaGrid() {
   const { items } = useCollection<Pooja>("poojas", DEFAULT_POOJAS);
@@ -22,13 +41,28 @@ export function PoojaGrid() {
     <section id="poojas" className="paper-bg relative py-16 lg:py-20">
       <div className="container-px">
         <div className="text-center">
-          <h2 className="font-serif text-3xl font-bold sm:text-4xl lg:text-[2.75rem]">
-            <span className="text-gold-600">Personalized Pujas, </span>
-            <span className="text-ink">Performed For You</span>
+          <span className="inline-flex items-center gap-2 rounded-full border border-gold-500/30 bg-gold-50 px-4 py-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-gold-700">
+            <Diamond className="h-2.5 w-2.5" /> Experience Real Blessings <Diamond className="h-2.5 w-2.5" />
+          </span>
+          <h2 className="mt-3 font-serif text-3xl font-bold sm:text-4xl lg:text-[2.75rem]">
+            <span className="text-ink">Personalized Pujas, </span>
+            <span className="text-gold-600">Performed For You</span>
           </h2>
           <p className="mt-3 text-base text-ink/65 sm:text-lg">
             Experience real blessings with your personal sankalp
           </p>
+          <LotusDivider className="mx-auto mt-4" />
+          <div className="mx-auto mt-6 flex max-w-3xl flex-wrap items-center justify-center gap-x-6 gap-y-3">
+            {FEATURES.map((f) => (
+              <div key={f.t} className="flex items-center gap-2 text-left">
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-gold-500 to-[#7A5212] text-cream"><Tick /></span>
+                <span>
+                  <span className="block text-sm font-bold leading-tight text-ink">{f.t}</span>
+                  <span className="block text-xs text-ink/55">{f.s}</span>
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* category tabs */}
@@ -65,6 +99,19 @@ export function PoojaGrid() {
             No pujas in this category yet. Add some from the admin panel.
           </p>
         )}
+
+        {/* trust bar */}
+        <div className="mt-12 grid gap-5 rounded-2xl border border-gold-500/20 bg-white p-6 shadow-card sm:grid-cols-2 lg:grid-cols-4">
+          {POOJA_TRUST.map((t) => (
+            <div key={t.t} className="flex items-center gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-gold-500/40 text-gold-600"><Tick /></span>
+              <div>
+                <p className="text-sm font-bold leading-tight text-ink">{t.t}</p>
+                <p className="text-xs text-ink/55">{t.s}</p>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
