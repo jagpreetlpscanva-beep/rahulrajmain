@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { SVGProps } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -133,7 +133,7 @@ const HeadsetIcon = (p: IconProps) => (
 /*  Static config                                                         */
 /* ---------------------------------------------------------------------- */
 
-const CATEGORY_ICONS: Record<CourseCategory, (p: IconProps) => React.JSX.Element> = {
+export const CATEGORY_ICONS: Record<CourseCategory, (p: IconProps) => React.JSX.Element> = {
   Astrology: SunIcon,
   Numerology: NumerologyIcon,
   Vastu: HomeIcon,
@@ -164,10 +164,15 @@ function priceToNumber(price: string) {
 /*  Main section                                                          */
 /* ---------------------------------------------------------------------- */
 
-export function CoursesGrid() {
+export function CoursesGrid({
+  activeCategory,
+  onCategoryChange,
+}: {
+  activeCategory: CourseCategory;
+  onCategoryChange: (cat: CourseCategory) => void;
+}) {
   const { items } = useCollection<Course>("courses", DEFAULT_COURSES);
 
-  const [activeCategory, setActiveCategory] = useState<CourseCategory>(COURSE_CATEGORIES[0]);
   const [sidebarCategory, setSidebarCategory] = useState<CourseCategory | "All">("All");
   const [levels, setLevels] = useState<string[]>([]);
   const [features, setFeatures] = useState<string[]>([]);
@@ -175,6 +180,10 @@ export function CoursesGrid() {
   const [sort, setSort] = useState<SortKey>("Newest First");
   const [sortOpen, setSortOpen] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+
+  useEffect(() => {
+    setSidebarCategory("All");
+  }, [activeCategory]);
 
   const PRICE_FLOOR = 499;
   const PRICE_CEIL = useMemo(
@@ -213,42 +222,6 @@ export function CoursesGrid() {
   return (
     <section id="courses-list" className="paper-bg relative py-12 lg:py-16">
       <div className="container-px">
-        {/* ---------------- icon category tabs (sits like a floating card) ---------------- */}
-        <div className="relative z-10 mx-auto -mt-6 mb-10 flex max-w-3xl flex-wrap items-stretch justify-center gap-1 rounded-2xl border border-gold-500/15 bg-white px-3 py-3 shadow-card sm:gap-2 sm:-mt-10 lg:-mt-14">
-          {COURSE_CATEGORIES.map((cat) => {
-            const Icon = CATEGORY_ICONS[cat];
-            const active = activeCategory === cat;
-            return (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => {
-                  setActiveCategory(cat);
-                  setSidebarCategory("All");
-                }}
-                className="relative flex min-w-[5.5rem] flex-1 flex-col items-center gap-2 rounded-xl px-3 py-2.5 transition-colors sm:min-w-[6.5rem]"
-              >
-                <span
-                  className={`grid h-11 w-11 place-items-center rounded-full border transition-colors ${
-                    active
-                      ? "border-gold-500 bg-gold-50 text-gold-600"
-                      : "border-ink/10 text-ink/45 group-hover:text-ink/70"
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                </span>
-                <span className={`text-xs font-semibold ${active ? "text-gold-600" : "text-ink/55"}`}>{cat}</span>
-                {active && (
-                  <motion.span
-                    layoutId="courses-tab-underline"
-                    className="absolute -bottom-1 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-gold-gradient"
-                  />
-                )}
-              </button>
-            );
-          })}
-        </div>
-
         <div className="grid gap-8 lg:grid-cols-[17rem_1fr]">
           {/* ---------------- sidebar ---------------- */}
           <aside className="lg:sticky lg:top-28 lg:self-start">
@@ -303,7 +276,7 @@ export function CoursesGrid() {
                             type="button"
                             onClick={() => {
                               setSidebarCategory(cat);
-                              setActiveCategory(cat);
+                              onCategoryChange(cat);
                             }}
                             className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-sm transition-colors ${
                               sidebarCategory === cat
