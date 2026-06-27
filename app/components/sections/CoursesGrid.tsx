@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { motion } from "framer-motion";
+import { useMemo, useState } from "react";
+import type { SVGProps } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   useCollection,
   DEFAULT_COURSES,
@@ -11,303 +12,473 @@ import {
 } from "@/lib/adminStore";
 import { Mandala } from "../ui/Mandala";
 
-/* ─── Mock ratings (extend Course type in cms.ts if you want admin control) ─── */
-const MOCK_RATINGS: Record<string, { score: number; count: number }> = {
-  "course-vedic-foundation":   { score: 4.8, count: 128 },
-  "course-predictive":         { score: 4.9, count: 86  },
-  "course-kp-advanced":        { score: 4.8, count: 74  },
-  "course-remedies":           { score: 4.7, count: 61  },
-  "course-numerology-basics":  { score: 4.7, count: 54  },
-  "course-name-numerology":    { score: 4.6, count: 41  },
-  "course-vastu-home":         { score: 4.8, count: 73  },
-  "course-vastu-shastra":      { score: 4.6, count: 52  },
-  "course-vastu-business":     { score: 4.7, count: 38  },
-  "course-palmistry-essentials":{ score: 4.7, count: 64 },
-  "course-palmistry-advanced": { score: 4.6, count: 52  },
-  "course-mantra-meditation":  { score: 4.9, count: 47  },
-  "course-chakra-healing":     { score: 4.8, count: 39  },
-};
-const DEFAULT_RATING = { score: 4.7, count: 20 };
+/* ---------------------------------------------------------------------- */
+/*  Small inline icons (kept local to this file — no shared icon deps)    */
+/* ---------------------------------------------------------------------- */
 
-const LEVEL_COLORS: Record<string, string> = {
-  Beginner:     "text-emerald-700 bg-emerald-50  border-emerald-200",
-  Intermediate: "text-amber-700   bg-amber-50    border-amber-200",
-  Advanced:     "text-blue-700    bg-blue-50     border-blue-200",
-  Spiritual:    "text-purple-700  bg-purple-50   border-purple-200",
-  "All levels": "text-pink-700    bg-pink-50     border-pink-200",
+type IconProps = SVGProps<SVGSVGElement>;
+
+const SunIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...p}>
+    <circle cx="12" cy="12" r="4.2" />
+    <path
+      strokeLinecap="round"
+      d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"
+    />
+  </svg>
+);
+
+const NumerologyIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...p}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5 4h3v7M5 11h3M5 20l3-7M13 4h2.5a2.5 2.5 0 0 1 0 5H13V4Zm0 5h2a3 3 0 0 1 0 6h-2" />
+  </svg>
+);
+
+const HomeIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...p}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 11.5 12 4l8 7.5M6 9.5V20h12V9.5M10 20v-6h4v6" />
+  </svg>
+);
+
+const PalmIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...p}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M8 11.5V5a1.5 1.5 0 0 1 3 0v5M11 10V4a1.5 1.5 0 0 1 3 0v6M14 10.2V5.3a1.5 1.5 0 0 1 3 0v7.2M17 10.8a1.4 1.4 0 0 1 2.8.2c0 3.2-.4 5.2-1.6 6.9-1.2 1.7-3 2.6-5.2 2.6h-1.3c-1.7 0-2.8-.5-3.8-1.7L4.6 14.4a1.3 1.3 0 0 1 1.9-1.8L8 14"
+    />
+  </svg>
+);
+
+const LotusIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...p}>
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 13c0-4.5 2-7.5 4.5-9.5C17 7 16 11 12 13Zm0 0c0-4.5-2-7.5-4.5-9.5C7 7 8 11 12 13Zm0 0c2.8-1.6 5-1.4 7-.2-1.2 2.6-3.6 4-7 4.2Zm0 0c-2.8-1.6-5-1.4-7-.2 1.2 2.6 3.6 4 7 4.2Zm0 0v6.5M6 19.5h12"
+    />
+  </svg>
+);
+
+const StarFillIcon = (p: IconProps) => (
+  <svg viewBox="0 0 20 20" fill="currentColor" {...p}>
+    <path d="M10 1.6l2.47 5.27 5.73.69-4.27 3.95 1.16 5.69L10 14.4l-5.09 2.8 1.16-5.69-4.27-3.95 5.73-.69L10 1.6z" />
+  </svg>
+);
+
+const ClockIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path strokeLinecap="round" d="M12 7.5V12l3 2" />
+  </svg>
+);
+
+const LessonsIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...p}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 5.5h11.5A2.5 2.5 0 0 1 18 8v11H6.5A2.5 2.5 0 0 1 4 16.5v-11Z" />
+    <path strokeLinecap="round" d="M18 8h2v11h-2" />
+  </svg>
+);
+
+const FilterIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...p}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M7 12h10M10 18h4" />
+  </svg>
+);
+
+const CertificateIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" {...p}>
+    <circle cx="12" cy="9" r="5.5" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 13.5 7.5 21l4.5-2.3 4.5 2.3-1.5-7.5" />
+  </svg>
+);
+
+const InfinityIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" {...p}>
+    <path d="M7 9a3.5 3.5 0 1 0 0 7c1.8 0 2.9-1.4 5-4.5C14.1 8.4 15.2 7 17 7a3.5 3.5 0 1 1 0 7c-1.8 0-2.9-1.4-5-4.5" />
+  </svg>
+);
+
+const GuideIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" {...p}>
+    <circle cx="12" cy="7.5" r="3.2" />
+    <path strokeLinecap="round" d="M5 20c0-3.6 3-6 7-6s7 2.4 7 6" />
+  </svg>
+);
+
+const MobileIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" {...p}>
+    <rect x="6.5" y="2.5" width="11" height="19" rx="2.3" />
+    <path strokeLinecap="round" d="M10.5 18.3h3" />
+  </svg>
+);
+
+const LockIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" {...p}>
+    <rect x="5" y="10.5" width="14" height="9.5" rx="2" />
+    <path strokeLinecap="round" d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" />
+  </svg>
+);
+
+const HeadsetIcon = (p: IconProps) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" {...p}>
+    <path strokeLinecap="round" d="M4 13v-1a8 8 0 0 1 16 0v1" />
+    <rect x="3" y="13" width="4" height="6" rx="1.6" />
+    <rect x="17" y="13" width="4" height="6" rx="1.6" />
+    <path strokeLinecap="round" d="M19 19v.5a3 3 0 0 1-3 3h-2" />
+  </svg>
+);
+
+/* ---------------------------------------------------------------------- */
+/*  Static config                                                         */
+/* ---------------------------------------------------------------------- */
+
+const CATEGORY_ICONS: Record<CourseCategory, (p: IconProps) => React.JSX.Element> = {
+  Astrology: SunIcon,
+  Numerology: NumerologyIcon,
+  Vastu: HomeIcon,
+  Palmistry: PalmIcon,
+  Spiritual: LotusIcon,
 };
 
-const FEATURES = [
-  "Certificate Included",
-  "Lifetime Access",
-  "Downloadable Resources",
-  "Mobile Friendly",
+const LEVELS = ["Beginner", "Intermediate", "Advanced"] as const;
+
+const SORTS = ["Newest First", "Price: Low to High", "Price: High to Low", "Top Rated"] as const;
+type SortKey = (typeof SORTS)[number];
+
+const TRUST_STRIP = [
+  { icon: InfinityIcon, title: "Lifetime Access", sub: "Learn at your own pace" },
+  { icon: CertificateIcon, title: "Certificate", sub: "Upon Completion" },
+  { icon: GuideIcon, title: "Expert Guidance", sub: "From Rahul Raj" },
+  { icon: MobileIcon, title: "Mobile Friendly", sub: "Study Anywhere" },
+  { icon: LockIcon, title: "Secure Payment", sub: "100% Safe & Secure" },
+  { icon: HeadsetIcon, title: "24/7 Support", sub: "We're Here to Help" },
 ];
 
-type SortOption = "Newest First" | "Price: Low to High" | "Price: High to Low" | "Top Rated";
-
-function parsePriceNum(price: string) {
-  return parseInt(price.replace(/[^\d]/g, ""), 10) || 0;
+function priceToNumber(price: string) {
+  const n = Number(price.replace(/[^0-9.]/g, ""));
+  return Number.isFinite(n) ? n : 0;
 }
 
-/* ─── Category icons ─── */
-function CatIcon({ cat }: { cat: string }) {
-  if (cat === "Astrology")
-    return (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
-        <circle cx="12" cy="12" r="4" />
-        <path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M17.66 6.34l-1.41 1.41M6.34 17.66l-1.41 1.41" />
-      </svg>
-    );
-  if (cat === "Numerology")
-    return (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
-      </svg>
-    );
-  if (cat === "Vastu")
-    return (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
-        <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
-        <polyline points="9 22 9 12 15 12 15 22" />
-      </svg>
-    );
-  if (cat === "Palmistry")
-    return (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
-        <path d="M18 11V6a2 2 0 00-4 0M14 10V4a2 2 0 00-4 0v2M10 10.5V6a2 2 0 00-4 0v8" />
-        <path d="M6 14a2 2 0 012-2h8a2 2 0 012 2v3a5 5 0 01-10 0v-1z" />
-      </svg>
-    );
-  if (cat === "Spiritual")
-    return (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
-        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
-      </svg>
-    );
-  return null;
-}
+/* ---------------------------------------------------------------------- */
+/*  Main section                                                          */
+/* ---------------------------------------------------------------------- */
 
-/* ══════════════════════════════════════════════════
-   MAIN EXPORT
-══════════════════════════════════════════════════ */
 export function CoursesGrid() {
   const { items } = useCollection<Course>("courses", DEFAULT_COURSES);
 
-  const [activeCategory, setActiveCategory] = useState<CourseCategory | "All">("All");
-  const [pendingMax, setPendingMax] = useState(5499);
-  const [appliedMax, setAppliedMax] = useState(5499);
+  const [activeCategory, setActiveCategory] = useState<CourseCategory>(COURSE_CATEGORIES[0]);
+  const [sidebarCategory, setSidebarCategory] = useState<CourseCategory | "All">("All");
   const [levels, setLevels] = useState<string[]>([]);
   const [features, setFeatures] = useState<string[]>([]);
-  const [sort, setSort] = useState<SortOption>("Newest First");
+  const [maxPrice, setMaxPrice] = useState(5499);
+  const [sort, setSort] = useState<SortKey>("Newest First");
+  const [sortOpen, setSortOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
-  /* category counts */
-  const catCounts = useMemo(() => {
-    const m: Record<string, number> = { All: items.length };
-    COURSE_CATEGORIES.forEach((c) => { m[c] = items.filter((x) => x.category === c).length; });
-    return m;
+  const PRICE_FLOOR = 499;
+  const PRICE_CEIL = useMemo(
+    () => Math.max(5499, ...items.map((c) => priceToNumber(c.price))),
+    [items]
+  );
+
+  const counts = useMemo(() => {
+    const map = new Map<CourseCategory, number>();
+    for (const cat of COURSE_CATEGORIES) map.set(cat, items.filter((c) => c.category === cat).length);
+    return map;
   }, [items]);
 
-  /* filtered + sorted list */
-  const visible = useMemo(() => {
-    let r = items.filter((c) => {
-      if (activeCategory !== "All" && c.category !== activeCategory) return false;
-      if (parsePriceNum(c.price) > appliedMax) return false;
-      if (levels.length > 0 && !levels.includes(c.level)) return false;
-      return true;
-    });
-    if (sort === "Price: Low to High")  r = [...r].sort((a, b) => parsePriceNum(a.price) - parsePriceNum(b.price));
-    if (sort === "Price: High to Low")  r = [...r].sort((a, b) => parsePriceNum(b.price) - parsePriceNum(a.price));
-    if (sort === "Top Rated")           r = [...r].sort((a, b) => (MOCK_RATINGS[b.id]?.score ?? 4.5) - (MOCK_RATINGS[a.id]?.score ?? 4.5));
-    return r;
-  }, [items, activeCategory, appliedMax, levels, sort]);
+  const toggle = (list: string[], setList: (v: string[]) => void, value: string) =>
+    setList(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
-  const toggleLevel   = (l: string) => setLevels((p)   => p.includes(l) ? p.filter((x) => x !== l) : [...p, l]);
-  const toggleFeature = (f: string) => setFeatures((p)  => p.includes(f) ? p.filter((x) => x !== f) : [...p, f]);
+  const filtered = useMemo(() => {
+    let list = items.filter((c) => c.category === activeCategory);
+    if (sidebarCategory !== "All") list = list.filter((c) => c.category === sidebarCategory);
+    if (levels.length) list = list.filter((c) => levels.includes(c.level));
+    list = list.filter((c) => priceToNumber(c.price) <= maxPrice);
+    if (features.includes("Certificate Included")) list = list.filter((c) => c.certificate);
+    if (features.includes("Lifetime Access")) list = list.filter((c) => c.lifetimeAccess);
+    if (features.includes("Downloadable Resources")) list = list.filter((c) => c.downloadableResources);
+    if (features.includes("Mobile Friendly")) list = list.filter((c) => c.mobileFriendly);
+
+    const sorted = [...list];
+    if (sort === "Price: Low to High") sorted.sort((a, b) => priceToNumber(a.price) - priceToNumber(b.price));
+    else if (sort === "Price: High to Low") sorted.sort((a, b) => priceToNumber(b.price) - priceToNumber(a.price));
+    else if (sort === "Top Rated") sorted.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    return sorted;
+  }, [items, activeCategory, sidebarCategory, levels, features, maxPrice, sort]);
+
+  const allInTab = items.filter((c) => c.category === activeCategory).length;
 
   return (
-    <section id="courses-list" className="paper-bg relative py-10 lg:py-14">
+    <section id="courses-list" className="paper-bg relative py-12 lg:py-16">
       <div className="container-px">
-
-        {/* ── Category tabs with icons ── */}
-        <div className="mb-8 flex justify-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {COURSE_CATEGORIES.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setActiveCategory(cat)}
-              className={`flex shrink-0 flex-col items-center gap-1.5 rounded-xl border px-5 py-3 text-sm font-medium transition-all ${
-                activeCategory === cat
-                  ? "border-gold-500 bg-white text-gold-600 shadow-md"
-                  : "border-gold-500/20 bg-white/50 text-ink/50 hover:bg-white hover:text-ink/70"
-              }`}
-            >
-              <CatIcon cat={cat} />
-              {cat}
-            </button>
-          ))}
+        {/* ---------------- icon category tabs (sits like a floating card) ---------------- */}
+        <div className="relative z-10 mx-auto -mt-20 mb-10 flex max-w-3xl flex-wrap items-stretch justify-center gap-1 rounded-2xl border border-gold-500/15 bg-white px-3 py-3 shadow-card sm:gap-2 lg:-mt-24">
+          {COURSE_CATEGORIES.map((cat) => {
+            const Icon = CATEGORY_ICONS[cat];
+            const active = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => {
+                  setActiveCategory(cat);
+                  setSidebarCategory("All");
+                }}
+                className="relative flex min-w-[5.5rem] flex-1 flex-col items-center gap-2 rounded-xl px-3 py-2.5 transition-colors sm:min-w-[6.5rem]"
+              >
+                <span
+                  className={`grid h-11 w-11 place-items-center rounded-full border transition-colors ${
+                    active
+                      ? "border-gold-500 bg-gold-50 text-gold-600"
+                      : "border-ink/10 text-ink/45 group-hover:text-ink/70"
+                  }`}
+                >
+                  <Icon className="h-5 w-5" />
+                </span>
+                <span className={`text-xs font-semibold ${active ? "text-gold-600" : "text-ink/55"}`}>{cat}</span>
+                {active && (
+                  <motion.span
+                    layoutId="courses-tab-underline"
+                    className="absolute -bottom-1 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-gold-gradient"
+                  />
+                )}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="flex gap-6">
-          {/* ── Sidebar ── */}
-          <aside className="hidden w-52 shrink-0 lg:block">
-            <div className="rounded-xl border border-gold-500/20 bg-white/90 p-5 shadow-sm">
+        <div className="grid gap-8 lg:grid-cols-[17rem_1fr]">
+          {/* ---------------- sidebar ---------------- */}
+          <aside className="lg:sticky lg:top-28 lg:self-start">
+            {/* mobile toggle */}
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen((v) => !v)}
+              className="mb-4 flex w-full items-center justify-between rounded-xl border border-gold-500/25 bg-white px-4 py-3 text-sm font-semibold text-ink shadow-card lg:hidden"
+            >
+              <span className="flex items-center gap-2">
+                <FilterIcon className="h-4 w-4 text-gold-600" /> Filters
+              </span>
+              <span className="text-ink/50">{mobileFiltersOpen ? "Hide" : "Show"}</span>
+            </button>
 
-              {/* Categories */}
-              <p className="mb-3 text-[0.65rem] font-bold uppercase tracking-widest text-ink/40">Categories</p>
-              <ul className="space-y-2.5">
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => setActiveCategory("All")}
-                    className={`flex w-full items-center justify-between text-sm font-medium ${
-                      activeCategory === "All" ? "text-gold-600" : "text-ink/65 hover:text-ink"
-                    }`}
-                  >
-                    <span>All Courses</span>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                      activeCategory === "All" ? "bg-gold-100 text-gold-700" : "bg-ink/[0.06] text-ink/50"
-                    }`}>
-                      {catCounts.All}
-                    </span>
-                  </button>
-                </li>
-                {COURSE_CATEGORIES.map((cat) => (
-                  <li key={cat}>
+            <AnimatePresence initial={false}>
+              {(mobileFiltersOpen || true) && (
+                <motion.div
+                  initial={false}
+                  animate={{ height: "auto" }}
+                  className={`overflow-hidden rounded-2xl border border-gold-500/20 bg-white p-5 shadow-card ${
+                    mobileFiltersOpen ? "block" : "hidden lg:block"
+                  }`}
+                >
+                  {/* categories */}
+                  <div>
+                    <h3 className="eyebrow text-ink/50">Categories</h3>
+                    <ul className="mt-3 space-y-1">
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => setSidebarCategory("All")}
+                          className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-sm font-semibold transition-colors ${
+                            sidebarCategory === "All"
+                              ? "bg-gold-50 text-gold-700"
+                              : "text-ink/75 hover:bg-ink/[0.04]"
+                          }`}
+                        >
+                          All Courses
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-bold ${
+                              sidebarCategory === "All" ? "bg-gold-100 text-gold-700" : "bg-ink/5 text-ink/50"
+                            }`}
+                          >
+                            {items.length}
+                          </span>
+                        </button>
+                      </li>
+                      {COURSE_CATEGORIES.map((cat) => (
+                        <li key={cat}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSidebarCategory(cat);
+                              setActiveCategory(cat);
+                            }}
+                            className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-sm transition-colors ${
+                              sidebarCategory === cat
+                                ? "bg-gold-50 font-semibold text-gold-700"
+                                : "text-ink/70 hover:bg-ink/[0.04]"
+                            }`}
+                          >
+                            {cat}
+                            <span className="rounded-full bg-ink/5 px-2 py-0.5 text-xs font-bold text-ink/50">
+                              {counts.get(cat) ?? 0}
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* price range */}
+                  <div className="mt-6 border-t border-ink/10 pt-5">
+                    <h3 className="eyebrow text-ink/50">Price Range</h3>
+                    <input
+                      type="range"
+                      min={PRICE_FLOOR}
+                      max={PRICE_CEIL}
+                      step={100}
+                      value={maxPrice}
+                      onChange={(e) => setMaxPrice(Number(e.target.value))}
+                      className="mt-4 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-ink/10 accent-gold-500"
+                    />
+                    <div className="mt-2 flex items-center justify-between text-xs font-medium text-ink/55">
+                      <span>₹{PRICE_FLOOR.toLocaleString("en-IN")}</span>
+                      <span>₹{maxPrice.toLocaleString("en-IN")}</span>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => setActiveCategory(cat)}
-                      className={`flex w-full items-center justify-between text-sm ${
-                        activeCategory === cat ? "font-semibold text-gold-600" : "text-ink/65 hover:text-ink"
-                      }`}
+                      onClick={() => setMaxPrice(PRICE_CEIL)}
+                      className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-gold-gradient px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5"
                     >
-                      <span>{cat}</span>
-                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
-                        activeCategory === cat ? "bg-gold-100 text-gold-700" : "bg-ink/[0.06] text-ink/50"
-                      }`}>
-                        {catCounts[cat] ?? 0}
-                      </span>
+                      <FilterIcon className="h-3.5 w-3.5" /> Apply Filter
                     </button>
-                  </li>
-                ))}
-              </ul>
+                  </div>
 
-              {/* Price Range */}
-              <p className="mb-2 mt-6 text-[0.65rem] font-bold uppercase tracking-widest text-ink/40">Price Range</p>
-              <input
-                type="range"
-                min={499} max={5499} step={100}
-                value={pendingMax}
-                onChange={(e) => setPendingMax(Number(e.target.value))}
-                className="w-full accent-gold-500"
-              />
-              <div className="mt-1 flex justify-between text-xs text-ink/55">
-                <span>₹499</span>
-                <span>₹{pendingMax.toLocaleString("en-IN")}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAppliedMax(pendingMax)}
-                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg bg-gold-gradient py-2 text-xs font-semibold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5"
-              >
-                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                  <line x1="2" y1="5" x2="14" y2="5" /><line x1="4" y1="9" x2="12" y2="9" /><line x1="6" y1="13" x2="10" y2="13" />
-                </svg>
-                Apply Filter
-              </button>
+                  {/* level */}
+                  <div className="mt-6 border-t border-ink/10 pt-5">
+                    <h3 className="eyebrow text-ink/50">Level</h3>
+                    <ul className="mt-3 space-y-2.5">
+                      {LEVELS.map((lvl) => (
+                        <li key={lvl}>
+                          <label className="flex cursor-pointer items-center gap-2.5 text-sm text-ink/75">
+                            <input
+                              type="checkbox"
+                              checked={levels.includes(lvl)}
+                              onChange={() => toggle(levels, setLevels, lvl)}
+                              className="h-4 w-4 rounded border-ink/25 text-gold-600 focus:ring-gold-400"
+                            />
+                            {lvl}
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-              {/* Level */}
-              <p className="mb-2 mt-6 text-[0.65rem] font-bold uppercase tracking-widest text-ink/40">Level</p>
-              <div className="space-y-2">
-                {["Beginner", "Intermediate", "Advanced"].map((lv) => (
-                  <label key={lv} className="flex cursor-pointer items-center gap-2 text-sm text-ink/70 hover:text-ink">
-                    <input
-                      type="checkbox"
-                      checked={levels.includes(lv)}
-                      onChange={() => toggleLevel(lv)}
-                      className="h-4 w-4 rounded border-gray-300 accent-gold-500"
-                    />
-                    {lv}
-                  </label>
-                ))}
-              </div>
-
-              {/* Features */}
-              <p className="mb-2 mt-6 text-[0.65rem] font-bold uppercase tracking-widest text-ink/40">Features</p>
-              <div className="space-y-2">
-                {FEATURES.map((f) => (
-                  <label key={f} className="flex cursor-pointer items-center gap-2 text-sm text-ink/70 hover:text-ink">
-                    <input
-                      type="checkbox"
-                      checked={features.includes(f)}
-                      onChange={() => toggleFeature(f)}
-                      className="h-4 w-4 rounded border-gray-300 accent-gold-500"
-                    />
-                    {f}
-                  </label>
-                ))}
-              </div>
-            </div>
+                  {/* features */}
+                  <div className="mt-6 border-t border-ink/10 pt-5">
+                    <h3 className="eyebrow text-ink/50">Features</h3>
+                    <ul className="mt-3 space-y-2.5">
+                      {["Certificate Included", "Lifetime Access", "Downloadable Resources", "Mobile Friendly"].map(
+                        (f) => (
+                          <li key={f}>
+                            <label className="flex cursor-pointer items-center gap-2.5 text-sm text-ink/75">
+                              <input
+                                type="checkbox"
+                                checked={features.includes(f)}
+                                onChange={() => toggle(features, setFeatures, f)}
+                                className="h-4 w-4 rounded border-ink/25 text-gold-600 focus:ring-gold-400"
+                              />
+                              {f}
+                            </label>
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </aside>
 
-          {/* ── Main area ── */}
-          <div className="min-w-0 flex-1">
-            {/* Sort bar */}
-            <div className="mb-5 flex items-center justify-between">
+          {/* ---------------- results ---------------- */}
+          <div>
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
               <p className="text-sm text-ink/60">
-                Showing <span className="font-semibold text-ink">{visible.length}</span> results
+                Showing <span className="font-bold text-ink">{filtered.length}</span>{" "}
+                {filtered.length === allInTab ? "results" : `of ${allInTab} results`}
               </p>
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as SortOption)}
-                className="rounded-lg border border-gold-500/30 bg-white px-3 py-2 text-sm text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-gold-400"
-              >
-                {(["Newest First", "Price: Low to High", "Price: High to Low", "Top Rated"] as SortOption[]).map((o) => (
-                  <option key={o}>{o}</option>
-                ))}
-              </select>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setSortOpen((v) => !v)}
+                  className="flex items-center gap-2 rounded-lg border border-ink/15 bg-white px-4 py-2 text-sm font-medium text-ink/75 shadow-sm transition-colors hover:border-gold-400"
+                >
+                  {sort}
+                  <svg viewBox="0 0 24 24" className={`h-3.5 w-3.5 transition-transform ${sortOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                <AnimatePresence>
+                  {sortOpen && (
+                    <motion.ul
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute right-0 top-full z-20 mt-2 w-52 overflow-hidden rounded-xl bg-white p-1.5 shadow-[0_26px_60px_-15px_rgba(45,27,18,0.35)] ring-1 ring-ink/10"
+                    >
+                      {SORTS.map((s) => (
+                        <li key={s}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSort(s);
+                              setSortOpen(false);
+                            }}
+                            className={`block w-full rounded-lg px-3 py-2 text-left text-sm transition-colors hover:bg-gold-50 ${
+                              s === sort ? "font-semibold text-gold-700" : "text-ink/75"
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        </li>
+                      ))}
+                    </motion.ul>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
-            {visible.length > 0 ? (
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-                {visible.map((course) => (
-                  <CourseCard key={course.id} course={course} />
+            {filtered.length > 0 ? (
+              <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {filtered.map((course, i) => (
+                  <CourseCard key={course.id} course={course} priority={i === 0} />
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-24 text-center">
-                <p className="text-ink/40">No courses match your filters.</p>
+              <div className="rounded-2xl border border-dashed border-gold-500/30 bg-white/60 py-16 text-center">
+                <p className="text-ink/55">No courses match these filters yet.</p>
                 <button
                   type="button"
-                  onClick={() => { setActiveCategory("All"); setAppliedMax(5499); setPendingMax(5499); setLevels([]); }}
-                  className="mt-4 text-sm font-medium text-gold-600 underline"
+                  onClick={() => {
+                    setSidebarCategory("All");
+                    setLevels([]);
+                    setFeatures([]);
+                    setMaxPrice(PRICE_CEIL);
+                  }}
+                  className="mt-4 text-sm font-semibold text-gold-600 underline-offset-4 hover:underline"
                 >
-                  Reset filters
+                  Clear all filters
                 </button>
               </div>
             )}
           </div>
         </div>
 
-        {/* ── Trust bar ── */}
-        <div className="mt-14 grid grid-cols-2 gap-x-4 gap-y-6 border-t border-gold-500/20 pt-10 sm:grid-cols-3 lg:grid-cols-6">
-          {[
-            { icon: "🕐", title: "Lifetime Access",   sub: "Learn at your own pace" },
-            { icon: "🏆", title: "Certificate",       sub: "Upon Completion"         },
-            { icon: "👨‍🏫", title: "Expert Guidance",  sub: "From Rahul Raj"          },
-            { icon: "📱", title: "Mobile Friendly",   sub: "Study Anywhere"          },
-            { icon: "🔒", title: "Secure Payment",    sub: "100% Safe & Secure"      },
-            { icon: "💬", title: "24/7 Support",      sub: "We're Here to Help"      },
-          ].map(({ icon, title, sub }) => (
-            <div key={title} className="flex items-start gap-3">
-              <span className="mt-0.5 text-2xl leading-none">{icon}</span>
-              <div>
-                <p className="text-sm font-semibold text-ink">{title}</p>
-                <p className="text-xs text-ink/55">{sub}</p>
-              </div>
+        {/* ---------------- trust strip ---------------- */}
+        <div className="mt-14 grid grid-cols-2 gap-4 rounded-2xl border border-gold-500/15 bg-white/70 p-6 shadow-card sm:grid-cols-3 lg:grid-cols-6 lg:gap-3 lg:p-5">
+          {TRUST_STRIP.map(({ icon: Icon, title, sub }) => (
+            <div key={title} className="flex items-center gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold-50 text-gold-600">
+                <Icon className="h-5 w-5" />
+              </span>
+              <span>
+                <span className="block text-sm font-bold text-ink">{title}</span>
+                <span className="block text-xs text-ink/55">{sub}</span>
+              </span>
             </div>
           ))}
         </div>
@@ -316,24 +487,37 @@ export function CoursesGrid() {
   );
 }
 
-/* ══════════════════════════════════════════════════
-   COURSE CARD
-══════════════════════════════════════════════════ */
-function CourseCard({ course }: { course: Course }) {
-  const href = course.videoUrl || `/book/course/${course.id}`;
-  const rating = MOCK_RATINGS[course.id] ?? DEFAULT_RATING;
-  const levelCls = LEVEL_COLORS[course.level] ?? "text-ink/60 bg-ink/5 border-ink/15";
-  const [lessonsPart, hoursPart] = course.lessons.split("·").map((s) => s.trim());
+/* ---------------------------------------------------------------------- */
+/*  Course card                                                            */
+/* ---------------------------------------------------------------------- */
+
+function CourseCard({ course, priority }: { course: Course; priority?: boolean }) {
+  const watchHref = course.videoUrl || `/book/course/${course.id}`;
+  const badgeTone =
+    course.badge?.toLowerCase() === "bestseller"
+      ? "bg-orange-500 text-white"
+      : course.badge?.toLowerCase() === "new"
+        ? "bg-emerald-500 text-white"
+        : "bg-gold-gradient text-night";
+
+  const levelTone =
+    course.level === "Beginner"
+      ? "bg-emerald-100 text-emerald-700"
+      : course.level === "Advanced"
+        ? "bg-rose-100 text-rose-700"
+        : "bg-violet-100 text-violet-700";
+
+  const [lessonsPart, durationPart] = course.lessons.split("·").map((s) => s.trim());
 
   return (
     <motion.article
-      whileHover={{ y: -5 }}
-      transition={{ type: "spring", stiffness: 320, damping: 22 }}
-      className="group flex flex-col overflow-hidden rounded-2xl border border-gold-500/20 bg-white shadow-card transition-shadow duration-300 hover:shadow-card-hover"
+      whileHover={{ y: -6 }}
+      transition={{ type: "spring", stiffness: 300, damping: 22 }}
+      className="group flex h-full flex-col overflow-hidden rounded-2xl border border-gold-500/20 bg-white shadow-card transition-shadow duration-300 hover:shadow-card-hover"
     >
-      {/* Thumbnail */}
+      {/* thumbnail */}
       <a
-        href={href}
+        href={watchHref}
         target={course.videoUrl ? "_blank" : undefined}
         rel={course.videoUrl ? "noreferrer" : undefined}
         className="relative block aspect-video overflow-hidden"
@@ -341,76 +525,70 @@ function CourseCard({ course }: { course: Course }) {
       >
         {course.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={course.thumbnail} alt={course.title} className="h-full w-full object-cover" />
+          <img
+            src={course.thumbnail}
+            alt={course.title}
+            loading={priority ? "eager" : "lazy"}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         ) : (
           <Mandala className="absolute inset-0 m-auto h-4/5 w-4/5 text-white/10" />
         )}
-
-        {/* Badge */}
         {course.badge && (
-          <span className="absolute left-3 top-3 rounded-md bg-amber-500 px-2.5 py-1 text-[0.6rem] font-bold uppercase tracking-wider text-white shadow">
+          <span
+            className={`absolute left-3 top-3 rounded-md px-2.5 py-1 text-[0.62rem] font-bold uppercase tracking-wider shadow-sm ${badgeTone}`}
+          >
             {course.badge}
           </span>
         )}
-
-        {/* Play button */}
         <span className="absolute inset-0 grid place-items-center">
-          <span className="grid h-11 w-11 place-items-center rounded-full bg-white/90 text-ink shadow-lg transition-transform duration-300 group-hover:scale-110">
-            <svg viewBox="0 0 24 24" className="ml-0.5 h-5 w-5" fill="currentColor" aria-hidden>
+          <span className="grid h-14 w-14 place-items-center rounded-full bg-white/95 text-ink shadow-lg transition-transform duration-300 group-hover:scale-110">
+            <svg viewBox="0 0 24 24" className="ml-1 h-6 w-6" fill="currentColor" aria-hidden="true">
               <path d="M8 5v14l11-7z" />
             </svg>
           </span>
         </span>
       </a>
 
-      <div className="flex flex-1 flex-col p-4">
-        {/* Level badge */}
-        <span className={`self-start rounded border px-2 py-0.5 text-[0.6rem] font-bold uppercase tracking-wider ${levelCls}`}>
+      <div className="flex flex-1 flex-col p-5">
+        <span className={`inline-flex w-fit items-center rounded-md px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider ${levelTone}`}>
           {course.level}
         </span>
+        <h3 className="mt-2 font-serif text-lg font-bold leading-snug text-ink">{course.title}</h3>
+        <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-ink/65">{course.description}</p>
 
-        <h3 className="mt-2 font-serif text-[0.9rem] font-bold leading-snug text-ink">
-          {course.title}
-        </h3>
-        <p className="mt-1.5 line-clamp-2 text-xs leading-relaxed text-ink/60">
-          {course.description}
-        </p>
-
-        {/* Meta row */}
-        <div className="mt-2.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[0.7rem] text-ink/50">
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-medium text-ink/55">
           {lessonsPart && (
-            <span className="flex items-center gap-1">
-              <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                <rect x="2" y="2" width="12" height="12" rx="2" /><path d="M5 8h6M5 5.5h6M5 10.5h4" />
-              </svg>
-              {lessonsPart}
+            <span className="inline-flex items-center gap-1.5">
+              <LessonsIcon className="h-3.5 w-3.5 text-gold-500" /> {lessonsPart}
             </span>
           )}
-          {hoursPart && (
-            <span className="flex items-center gap-1">
-              <svg viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden>
-                <circle cx="8" cy="8" r="6" /><path d="M8 5v3l2 1.5" />
-              </svg>
-              {hoursPart}
+          {durationPart && (
+            <span className="inline-flex items-center gap-1.5">
+              <ClockIcon className="h-3.5 w-3.5 text-gold-500" /> {durationPart}
             </span>
           )}
-          <span className="flex items-center gap-0.5">
-            <svg viewBox="0 0 16 16" className="h-3 w-3 text-amber-400" fill="currentColor" aria-hidden>
-              <path d="M8 1l1.8 3.6L14 5.3l-3 2.9.7 4.1L8 10.3l-3.7 1.9.7-4.1-3-2.9 4.2-.7z" />
-            </svg>
-            <span className="font-semibold text-ink">{rating.score.toFixed(1)}</span>
-            <span className="text-ink/40">({rating.count})</span>
-          </span>
+          {typeof course.rating === "number" && (
+            <span className="inline-flex items-center gap-1 text-ink/70">
+              <StarFillIcon className="h-3.5 w-3.5 text-amber-400" />
+              <span className="font-bold">{course.rating.toFixed(1)}</span>
+              {typeof course.reviewCount === "number" && <span>({course.reviewCount})</span>}
+            </span>
+          )}
         </div>
 
-        {/* Price + CTA */}
-        <div className="mt-auto flex items-center justify-between gap-2 pt-4">
-          <span className="font-serif text-lg font-bold text-[#c0392b]">{course.price}</span>
+        <div className="mt-auto flex items-center justify-between gap-3 pt-5">
+          <span className="flex items-baseline gap-2">
+            {course.price && <span className="font-serif text-xl font-bold text-ink">{course.price}</span>}
+            {course.originalPrice && (
+              <span className="text-sm text-ink/40 line-through">{course.originalPrice}</span>
+            )}
+          </span>
           <a
-            href={href}
+            href={watchHref}
             target={course.videoUrl ? "_blank" : undefined}
             rel={course.videoUrl ? "noreferrer" : undefined}
-            className="inline-flex shrink-0 items-center rounded-lg border border-gold-500/50 px-3 py-1.5 text-[0.7rem] font-semibold uppercase tracking-wider text-gold-700 transition-all hover:border-gold-500 hover:bg-gold-50"
+            className="inline-flex items-center gap-2 rounded-lg border border-gold-500 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-gold-700 transition-colors hover:bg-gold-gradient hover:text-night hover:shadow-gold-btn"
           >
             {course.videoUrl ? "Watch Now" : "Enroll Now"}
           </a>
