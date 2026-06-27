@@ -6,56 +6,62 @@ import { CoursesGrid, CATEGORY_ICONS } from "./CoursesGrid";
 import { COURSE_CATEGORIES, type CourseCategory } from "@/lib/adminStore";
 
 /* ---------------------------------------------------------------------- */
-/*  Decorative ornaments — simple inline SVGs in the site's gold/ink tone  */
+/*  Decorative background — one continuous illustrated band spanning the   */
+/*  full hero width (lotus + diya + books on the left, armillary sphere + */
+/*  candle on the right), instead of isolated corner icons.                */
 /* ---------------------------------------------------------------------- */
 
-function LeftOrnament() {
+function HeroOrnamentBand() {
   return (
     <svg
-      viewBox="0 0 240 140"
-      className="pointer-events-none absolute -left-6 bottom-2 hidden h-32 w-52 text-gold-500/40 md:block lg:-left-2 lg:h-40 lg:w-64 xl:left-6"
+      viewBox="0 0 1600 320"
+      preserveAspectRatio="xMidYMax slice"
+      className="pointer-events-none absolute inset-0 h-full w-full text-gold-600/[0.16]"
       fill="none"
       aria-hidden="true"
     >
-      {/* stacked books */}
-      <rect x="6" y="96" width="78" height="14" rx="2" fill="currentColor" opacity="0.55" />
-      <rect x="14" y="82" width="66" height="14" rx="2" fill="currentColor" opacity="0.7" />
-      <rect x="10" y="68" width="72" height="14" rx="2" fill="currentColor" opacity="0.85" />
-      {/* oil lamp */}
-      <path d="M120 110h36M138 110V92M124 92h28a14 14 0 0 1-28 0Z" stroke="currentColor" strokeWidth="3" />
-      <path d="M138 92V78" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      <path d="M138 70c4 0 6 4 4 8-2-2-6-2-8 0-2-4 0-8 4-8Z" fill="currentColor" />
-      {/* lotus */}
-      <path
-        d="M196 110c0-12 5-20 12-26 3 9 1 18-12 26Zm0 0c0-12-5-20-12-26-3 9-1 18 12 26Zm0 0c7-4 13-3 18 0-3 7-9 10-18 0Zm0 0c-7-4-13-3-18 0 3 7 9 10 18 0Z"
-        stroke="currentColor"
-        strokeWidth="2.5"
-      />
-    </svg>
-  );
-}
+      {/* soft ground gradient strip so the ornaments feel grounded, not floating */}
+      <ellipse cx="180" cy="300" rx="320" ry="60" fill="currentColor" opacity="0.35" />
+      <ellipse cx="1420" cy="300" rx="320" ry="60" fill="currentColor" opacity="0.35" />
 
-function RightOrnament() {
-  return (
-    <svg
-      viewBox="0 0 240 140"
-      className="pointer-events-none absolute -right-6 bottom-2 hidden h-32 w-52 text-gold-500/40 md:block lg:-right-2 lg:h-40 lg:w-64 xl:right-6"
-      fill="none"
-      aria-hidden="true"
-    >
-      {/* armillary sphere */}
-      <circle cx="170" cy="68" r="34" stroke="currentColor" strokeWidth="2.5" />
-      <ellipse cx="170" cy="68" rx="34" ry="13" stroke="currentColor" strokeWidth="2" />
-      <ellipse cx="170" cy="68" rx="13" ry="34" stroke="currentColor" strokeWidth="2" />
-      <path d="M170 34v68M136 68h68" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M170 102v18M150 120h40" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      {/* candle */}
-      <rect x="34" y="86" width="22" height="24" rx="2" fill="currentColor" opacity="0.75" />
-      <path d="M45 86V74" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      <path d="M45 66c4 0 6 4 4 8-2-2-6-2-8 0-2-4 0-8 4-8Z" fill="currentColor" />
-      {/* petals scattered */}
-      <circle cx="14" cy="112" r="4.5" fill="currentColor" opacity="0.5" />
-      <circle cx="92" cy="120" r="3.5" fill="currentColor" opacity="0.5" />
+      {/* ---------- left cluster: stacked books + brass diya + lotus ---------- */}
+      <g transform="translate(40 150)">
+        <rect x="0" y="120" width="120" height="22" rx="3" fill="currentColor" opacity="0.6" />
+        <rect x="14" y="98" width="98" height="22" rx="3" fill="currentColor" opacity="0.75" />
+        <rect x="6" y="76" width="106" height="22" rx="3" fill="currentColor" opacity="0.9" />
+        {/* diya / oil lamp */}
+        <path d="M168 142h56M196 142v-30M174 112h44a22 22 0 0 1-44 0Z" stroke="currentColor" strokeWidth="4" />
+        <path d="M196 112V88" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        <path d="M196 76c6 0 9 6 6 12-3-3-9-3-12 0-3-6 0-12 6-12Z" fill="currentColor" />
+        {/* lotus bloom */}
+        <path
+          d="M286 142c0-18 7-30 18-39 4 14 1 27-18 39Zm0 0c0-18-7-30-18-39-4 14-1 27 18 39Zm0 0c10-6 19-4 27 0-5 10-13 15-27 0Zm0 0c-10-6-19-4-27 0 5 10 13 15 27 0Zm0 0v22m-44 0h88"
+          stroke="currentColor"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+        />
+        {/* scattered petals */}
+        <circle cx="330" cy="156" r="6" fill="currentColor" opacity="0.5" />
+        <circle cx="356" cy="168" r="4.5" fill="currentColor" opacity="0.4" />
+        <circle cx="20" cy="158" r="5" fill="currentColor" opacity="0.4" />
+      </g>
+
+      {/* ---------- right cluster: armillary sphere + candle ---------- */}
+      <g transform="translate(1180 140)">
+        <circle cx="220" cy="60" r="52" stroke="currentColor" strokeWidth="3.5" />
+        <ellipse cx="220" cy="60" rx="52" ry="20" stroke="currentColor" strokeWidth="2.8" />
+        <ellipse cx="220" cy="60" rx="20" ry="52" stroke="currentColor" strokeWidth="2.8" />
+        <path d="M220 8v104M168 60h104" stroke="currentColor" strokeWidth="2.2" />
+        <path d="M220 112v36M188 148h64" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        {/* candle */}
+        <rect x="40" y="106" width="34" height="42" rx="3" fill="currentColor" opacity="0.7" />
+        <path d="M57 106V82" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
+        <path d="M57 70c6 0 9 6 6 12-3-3-9-3-12 0-3-6 0-12 6-12Z" fill="currentColor" />
+        {/* scattered petals */}
+        <circle cx="12" cy="160" r="6" fill="currentColor" opacity="0.45" />
+        <circle cx="116" cy="172" r="4.5" fill="currentColor" opacity="0.4" />
+        <circle cx="318" cy="150" r="5" fill="currentColor" opacity="0.4" />
+      </g>
     </svg>
   );
 }
@@ -73,11 +79,10 @@ export function CoursesHero() {
   return (
     <>
       {/* ---------------- compact hero banner ---------------- */}
-      <section className="relative overflow-hidden bg-cream pt-36 lg:pt-40">
-        <LeftOrnament />
-        <RightOrnament />
+      <section className="relative overflow-hidden bg-gradient-to-b from-cream-dark to-cream pt-36 lg:pt-40">
+        <HeroOrnamentBand />
 
-        <div className="container-px relative pb-7 text-center lg:pb-8">
+        <div className="container-px relative pb-10 text-center lg:pb-12">
           <span className="inline-flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-gold-600">
             <svg viewBox="0 0 16 16" className="h-3 w-3" aria-hidden="true">
               <path d="M8 0 L9.6 6.4 L16 8 L9.6 9.6 L8 16 L6.4 9.6 L0 8 L6.4 6.4 Z" fill="currentColor" />
