@@ -21,7 +21,7 @@ export default function CoursesPage() {
           <Mandala className="pointer-events-none absolute -left-24 -top-16 h-72 w-72 text-cream/[0.07]" />
           <Mandala className="pointer-events-none absolute -right-24 -top-20 h-80 w-80 text-cream/[0.06]" />
 
-          <div className="container-px relative pb-36 text-center lg:pb-44">
+          <div className="container-px relative pb-20 text-center lg:pb-24">
             <span className="inline-flex items-center gap-2 rounded-full border border-cream/35 bg-white/5 px-4 py-2 text-xs font-medium uppercase tracking-[0.2em] text-cream backdrop-blur-sm">
               <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-gold-200" aria-hidden="true">
                 <path d="M8 0 L9.6 6.4 L16 8 L9.6 9.6 L8 16 L6.4 9.6 L0 8 L6.4 6.4 Z" fill="currentColor" />
