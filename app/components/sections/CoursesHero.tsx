@@ -13,23 +13,23 @@ function LeftOrnament() {
   return (
     <svg
       viewBox="0 0 240 140"
-      className="pointer-events-none absolute -left-4 bottom-0 hidden h-28 w-44 text-gold-500/25 sm:block lg:h-32 lg:w-52"
+      className="pointer-events-none absolute -left-6 bottom-2 hidden h-32 w-52 text-gold-500/40 md:block lg:-left-2 lg:h-40 lg:w-64 xl:left-6"
       fill="none"
       aria-hidden="true"
     >
       {/* stacked books */}
-      <rect x="6" y="96" width="78" height="14" rx="2" fill="currentColor" opacity="0.5" />
-      <rect x="14" y="82" width="66" height="14" rx="2" fill="currentColor" opacity="0.65" />
-      <rect x="10" y="68" width="72" height="14" rx="2" fill="currentColor" opacity="0.8" />
+      <rect x="6" y="96" width="78" height="14" rx="2" fill="currentColor" opacity="0.55" />
+      <rect x="14" y="82" width="66" height="14" rx="2" fill="currentColor" opacity="0.7" />
+      <rect x="10" y="68" width="72" height="14" rx="2" fill="currentColor" opacity="0.85" />
       {/* oil lamp */}
-      <path d="M120 110h36M138 110V92M124 92h28a14 14 0 0 1-28 0Z" stroke="currentColor" strokeWidth="2.5" />
-      <path d="M138 92V78" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M120 110h36M138 110V92M124 92h28a14 14 0 0 1-28 0Z" stroke="currentColor" strokeWidth="3" />
+      <path d="M138 92V78" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
       <path d="M138 70c4 0 6 4 4 8-2-2-6-2-8 0-2-4 0-8 4-8Z" fill="currentColor" />
       {/* lotus */}
       <path
         d="M196 110c0-12 5-20 12-26 3 9 1 18-12 26Zm0 0c0-12-5-20-12-26-3 9-1 18 12 26Zm0 0c7-4 13-3 18 0-3 7-9 10-18 0Zm0 0c-7-4-13-3-18 0 3 7 9 10 18 0Z"
         stroke="currentColor"
-        strokeWidth="2"
+        strokeWidth="2.5"
       />
     </svg>
   );
@@ -39,23 +39,23 @@ function RightOrnament() {
   return (
     <svg
       viewBox="0 0 240 140"
-      className="pointer-events-none absolute -right-4 bottom-0 hidden h-28 w-44 text-gold-500/25 sm:block lg:h-32 lg:w-52"
+      className="pointer-events-none absolute -right-6 bottom-2 hidden h-32 w-52 text-gold-500/40 md:block lg:-right-2 lg:h-40 lg:w-64 xl:right-6"
       fill="none"
       aria-hidden="true"
     >
       {/* armillary sphere */}
-      <circle cx="170" cy="68" r="34" stroke="currentColor" strokeWidth="2" />
-      <ellipse cx="170" cy="68" rx="34" ry="13" stroke="currentColor" strokeWidth="1.6" />
-      <ellipse cx="170" cy="68" rx="13" ry="34" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M170 34v68M136 68h68" stroke="currentColor" strokeWidth="1.4" />
-      <path d="M170 102v18M150 120h40" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      <circle cx="170" cy="68" r="34" stroke="currentColor" strokeWidth="2.5" />
+      <ellipse cx="170" cy="68" rx="34" ry="13" stroke="currentColor" strokeWidth="2" />
+      <ellipse cx="170" cy="68" rx="13" ry="34" stroke="currentColor" strokeWidth="2" />
+      <path d="M170 34v68M136 68h68" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M170 102v18M150 120h40" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
       {/* candle */}
-      <rect x="34" y="86" width="22" height="24" rx="2" fill="currentColor" opacity="0.7" />
-      <path d="M45 86V74" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+      <rect x="34" y="86" width="22" height="24" rx="2" fill="currentColor" opacity="0.75" />
+      <path d="M45 86V74" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
       <path d="M45 66c4 0 6 4 4 8-2-2-6-2-8 0-2-4 0-8 4-8Z" fill="currentColor" />
       {/* petals scattered */}
-      <circle cx="14" cy="112" r="4" fill="currentColor" opacity="0.4" />
-      <circle cx="92" cy="120" r="3" fill="currentColor" opacity="0.4" />
+      <circle cx="14" cy="112" r="4.5" fill="currentColor" opacity="0.5" />
+      <circle cx="92" cy="120" r="3.5" fill="currentColor" opacity="0.5" />
     </svg>
   );
 }
@@ -73,7 +73,7 @@ export function CoursesHero() {
   return (
     <>
       {/* ---------------- compact hero banner ---------------- */}
-      <section className="relative overflow-hidden bg-cream pt-28 lg:pt-32">
+      <section className="relative overflow-hidden bg-cream pt-36 lg:pt-40">
         <LeftOrnament />
         <RightOrnament />
 
