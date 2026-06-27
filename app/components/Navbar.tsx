@@ -27,10 +27,10 @@ export function Navbar() {
   }) => {
     if (!item.children) {
       return (
-        <li>
+        <li className="shrink-0">
           <a
             href={item.href}
-            className={`text-sm font-medium tracking-wide transition-colors duration-300 ${linkTone}`}
+            className={`whitespace-nowrap text-sm font-medium tracking-wide transition-colors duration-300 ${linkTone}`}
           >
             {item.label.toUpperCase()}
           </a>
@@ -38,10 +38,10 @@ export function Navbar() {
       );
     }
     return (
-      <li className="group relative">
+      <li className="group relative shrink-0">
         <a
           href={item.href}
-          className={`inline-flex items-center gap-1.5 text-sm font-medium tracking-wide transition-colors duration-300 ${linkTone}`}
+          className={`inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-medium tracking-wide transition-colors duration-300 ${linkTone}`}
         >
           {item.label.toUpperCase()}
           <ChevronDownIcon className="h-3 w-3 opacity-70 transition-transform duration-300 group-hover:rotate-180" />
@@ -81,9 +81,9 @@ export function Navbar() {
       }`}
     >
       {/* full-width / stretched nav */}
-      <nav className="flex w-full items-center justify-between gap-4 px-5 py-3 sm:px-8 xl:grid xl:grid-cols-[1fr_auto_1fr] xl:items-center xl:gap-6 xl:px-10 xl:py-2.5 2xl:px-16">
+      <nav className="flex w-full items-center justify-between gap-4 px-5 py-3 sm:px-8 xl:grid xl:grid-cols-[minmax(min-content,1fr)_auto_minmax(min-content,1fr)] xl:items-center xl:gap-4 xl:px-8 xl:py-2.5 2xl:gap-6 2xl:px-16">
         {/* left menu */}
-        <ul className="hidden items-center gap-6 xl:flex 2xl:gap-8">
+        <ul className="hidden shrink-0 items-center gap-4 xl:flex 2xl:gap-8">
           {NAV_MENU.left.map((item) => (
             <MenuItem key={item.label} item={item} />
           ))}
@@ -95,17 +95,17 @@ export function Navbar() {
         </div>
 
         {/* right menu + language pill */}
-        <ul className="hidden items-center justify-end gap-6 xl:flex 2xl:gap-8">
+        <ul className="hidden shrink-0 items-center justify-end gap-4 xl:flex 2xl:gap-8">
           {NAV_MENU.right.map((item) => (
             <MenuItem key={item.label} item={item} align="right" />
           ))}
           {/* search */}
-          <li><SearchBox scrolled={scrolled} /></li>
+          <li className="shrink-0"><SearchBox scrolled={scrolled} /></li>
           {/* language selector */}
-          <li className="group relative">
+          <li className="group relative shrink-0">
             <button
               type="button"
-              className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium tracking-wide transition-colors ${
+              className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-xs font-medium tracking-wide transition-colors ${
                 scrolled
                   ? "border-ink/20 text-ink/80 hover:bg-ink/5"
                   : "border-cream/45 text-cream hover:bg-white/10"
