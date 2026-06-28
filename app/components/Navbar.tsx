@@ -75,20 +75,25 @@ export function Navbar({ overlay = false }: { overlay?: boolean }) {
           : "bg-transparent"
       }`}
     >
-      {/* max-width container keeps everything aligned and prevents overflow */}
-      <nav className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-3 px-4 py-2.5 sm:px-6 xl:gap-5 xl:px-8 2xl:px-12">
-        {/* logo (left) */}
-        <Logo variant={dark ? "dark" : "light"} className="shrink-0" />
-
-        {/* center menu */}
-        <ul className="hidden flex-1 items-center justify-center gap-3 xl:flex 2xl:gap-6">
-          {MENU.map((item) => (
+      {/* max-width container; 3-column grid on desktop (left menu | logo | right) */}
+      <nav className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-3 px-4 py-2.5 sm:px-6 xl:grid xl:grid-cols-[1fr_auto_1fr] xl:gap-5 xl:px-8 2xl:px-12">
+        {/* left menu */}
+        <ul className="hidden items-center justify-start gap-3 xl:flex 2xl:gap-6">
+          {NAV_MENU.left.map((item) => (
             <MenuItem key={item.label} item={item} />
           ))}
         </ul>
 
-        {/* right: search + language */}
-        <div className="hidden shrink-0 items-center gap-3 xl:flex">
+        {/* logo + name (center) */}
+        <Logo variant={dark ? "dark" : "light"} className="justify-self-start xl:justify-self-center" />
+
+        {/* right menu + search + language */}
+        <div className="hidden items-center justify-end gap-3 xl:flex 2xl:gap-5">
+          <ul className="flex items-center gap-3 2xl:gap-6">
+            {NAV_MENU.right.map((item) => (
+              <MenuItem key={item.label} item={item} />
+            ))}
+          </ul>
           <SearchBox scrolled={dark} />
           <div className="group relative">
             <button
