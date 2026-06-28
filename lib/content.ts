@@ -93,12 +93,12 @@ export const NAV_MENU: { left: NavMenuItem[]; right: NavMenuItem[] } = {
     },
     {
       label: "Free Calculators",
-      href: "/#home",
+      href: "/free-calculators",
       children: [
-        { label: "Free Birth Chart", href: "/#home" },
-        { label: "Compatibility Calculator", href: "/#home" },
-        { label: "Numerology Calculator", href: "/#home" },
-        { label: "Moon Sign Finder", href: "/#home" },
+        { label: "Kundli / Birth Chart", href: "/free-calculators" },
+        { label: "Kundli Matching", href: "/free-calculators" },
+        { label: "Numerology", href: "/free-calculators" },
+        { label: "Daily Horoscope", href: "/free-calculators" },
       ],
     },
   ],
