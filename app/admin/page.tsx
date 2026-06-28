@@ -31,6 +31,7 @@ import {
 import { CollectionManager, type FieldDef } from "../components/admin/CollectionManager";
 import { SlotsManager } from "../components/admin/SlotsManager";
 import { BookingsView } from "../components/admin/BookingsView";
+import { MessagesView } from "../components/admin/MessagesView";
 import { ReviewsManager } from "../components/admin/ReviewsManager";
 import type { Booking } from "@/lib/bookings";
 import { Logo } from "../components/ui/Logo";
@@ -219,7 +220,7 @@ const blankConsultation = (): Consultation => ({
   image: "",
 });
 
-type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "reviews" | "slots" | "bookings";
+type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "reviews" | "slots" | "bookings" | "messages";
 
 const GridIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -245,6 +246,7 @@ const NAV: { key: TabKey; label: string; icon: (p: { className?: string }) => Re
   { key: "reviews", label: "Reviews", icon: StarIcon },
   { key: "slots", label: "Slots", icon: GridIcon },
   { key: "bookings", label: "Bookings", icon: UsersIcon },
+  { key: "messages", label: "Messages", icon: UsersIcon },
 ];
 
 export default function AdminPage() {
@@ -453,6 +455,7 @@ export default function AdminPage() {
           {tab === "reviews" && <ReviewsManager />}
           {tab === "slots" && <SlotsManager />}
           {tab === "bookings" && <BookingsView />}
+          {tab === "messages" && <MessagesView />}
         </div>
       </main>
     </div>
@@ -478,16 +481,23 @@ const BOOKING_STATUS_STYLE: Record<Booking["status"], string> = {
 
 function Dashboard({ onOpen }: { counts: Record<string, number>; onOpen: (k: TabKey) => void }) {
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [messages, setMessages] = useState<{ id: string; name: string; subject?: string; message: string; status: string; createdAt: string }[]>([]);
   useEffect(() => {
     fetch("/api/bookings", { cache: "no-store" })
       .then((r) => r.json())
       .then((d) => setBookings(Array.isArray(d) ? d : []))
+      .catch(() => {});
+    fetch("/api/messages", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => setMessages(Array.isArray(d) ? d : []))
       .catch(() => {});
   }, []);
 
   const revenue = bookings.reduce((s, b) => s + (Number(String(b.amount).replace(/[^\d.]/g, "")) || 0), 0);
   const pending = bookings.filter((b) => b.status === "new").length;
   const completed = bookings.filter((b) => b.status === "completed").length;
+  const newMessages = messages.filter((m) => m.status === "new").length;
+  const recentMessages = messages.slice(0, 5);
   const upcoming = [...bookings]
     .sort((a, b) => (b.slotDate || b.createdAt || "").localeCompare(a.slotDate || a.createdAt || ""))
     .slice(0, 6);
@@ -496,6 +506,7 @@ function Dashboard({ onOpen }: { counts: Record<string, number>; onOpen: (k: Tab
     { label: "Total Orders", value: String(bookings.length), icon: BagIcon },
     { label: "Total Revenue", value: `₹${revenue.toLocaleString("en-IN")}`, icon: ChartIcon },
     { label: "Pending Orders", value: String(pending), icon: ClockIcon },
+    { label: "New Messages", value: String(newMessages), icon: UsersIcon },
     { label: "Completed Orders", value: String(completed), icon: CheckIcon },
   ];
 
@@ -504,7 +515,7 @@ function Dashboard({ onOpen }: { counts: Record<string, number>; onOpen: (k: Tab
       <h1 className="font-serif text-3xl font-bold text-ink">Dashboard Overview</h1>
       <p className="mt-1 text-sm text-ink/55">Welcome back. Here&rsquo;s what&rsquo;s happening today.</p>
 
-      <div className="mt-7 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {stats.map(({ label, value, icon: Icon }) => (
           <div key={label} className="rounded-2xl border border-ink/10 bg-white p-6 shadow-sm">
             <div className="flex items-start justify-between">
@@ -541,6 +552,42 @@ function Dashboard({ onOpen }: { counts: Record<string, number>; onOpen: (k: Tab
                 </div>
                 <span className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold ${BOOKING_STATUS_STYLE[b.status]}`}>
                   {b.status === "new" ? "pending" : b.status}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="mt-7 rounded-2xl border border-ink/10 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-ink/10 px-6 py-4">
+          <h2 className="flex items-center gap-2 font-serif text-lg font-bold text-ink">
+            📨 New Messages
+            {newMessages > 0 && (
+              <span className="rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">{newMessages}</span>
+            )}
+          </h2>
+          <button onClick={() => onOpen("messages")} className="text-sm font-semibold text-[#7c3aed] hover:underline">
+            View Messages →
+          </button>
+        </div>
+        {recentMessages.length === 0 ? (
+          <p className="px-6 py-10 text-center text-ink/50">No messages yet.</p>
+        ) : (
+          <ul>
+            {recentMessages.map((m) => (
+              <li key={m.id} className="flex items-center justify-between gap-4 border-b border-ink/5 px-6 py-4 last:border-0">
+                <div className="min-w-0">
+                  <p className="flex items-center gap-2 truncate font-bold text-ink">
+                    {m.name}
+                    {m.status === "new" && (
+                      <span className="rounded-full bg-rose-500 px-1.5 py-0.5 text-[0.6rem] font-bold uppercase text-white">new</span>
+                    )}
+                  </p>
+                  <p className="truncate text-sm text-ink/45">{m.subject ? `${m.subject} — ` : ""}{m.message}</p>
+                </div>
+                <span className="shrink-0 text-xs text-ink/45">
+                  {(() => { try { return new Date(m.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }); } catch { return ""; } })()}
                 </span>
               </li>
             ))}
