@@ -19,12 +19,7 @@ export function CoursesHero() {
   return (
     <>
       {/* ---------------- compact hero banner ---------------- */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-cream-dark to-cream pt-28 lg:pt-32">
-        {/* dark strip behind the fixed navbar so its light text stays readable
-            against this page's light hero (navbar switches to dark text only
-            after scrolling) */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-night/90 via-night/40 to-transparent lg:h-28" />
-
+      <section className="relative overflow-hidden bg-gradient-to-b from-cream-dark to-cream pt-24 lg:pt-28">
         {/* decoration images flanking the hero (books+lotus left, diya right) */}
         <HeroDecor id="courses-left" className="bottom-2 left-0 z-[1] hidden w-44 lg:block xl:w-56" />
         <HeroDecor id="courses-right" className="bottom-2 right-4 z-[1] hidden w-24 lg:block xl:w-32" />

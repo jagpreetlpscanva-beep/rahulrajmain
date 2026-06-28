@@ -3,7 +3,7 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/sections/Footer";
 import { ReportsGrid } from "../components/sections/ReportsGrid";
 import { ScrollToTop } from "../components/ui/ScrollToTop";
-import { Mandala } from "../components/ui/Mandala";
+import { BRAND_LOGO_SRC } from "../components/ui/Logo";
 
 export const metadata: Metadata = {
   title: "Astrology Reports — Rahul Raj, Vedic Astrologer",
@@ -15,47 +15,59 @@ export default function ReportsPage() {
   return (
     <>
       <Navbar />
-      <main>
-        {/* header band */}
-        <section className="relative flex flex-col overflow-hidden bg-sunset-orange pt-36 text-cream lg:pt-44">
-          <div className="pointer-events-none absolute inset-0 shadow-[inset_0_0_240px_60px_rgba(80,40,12,0.4)]" />
-          <div className="pointer-events-none absolute left-1/2 top-0 h-[36rem] w-[36rem] -translate-x-1/2 animate-glow-breathe bg-amber-radial opacity-60 blur-2xl" />
-          <Mandala className="pointer-events-none absolute -left-24 -top-16 h-72 w-72 text-cream/[0.08]" />
-          <Mandala className="pointer-events-none absolute -right-24 -top-20 h-80 w-80 text-cream/[0.07]" />
+      <main className="bg-[#FCF8F2]">
+        {/* ---------------- hero ---------------- */}
+        <section className="relative overflow-hidden pt-24 lg:pt-28">
+          {/* soft gold glow behind the brand mark */}
+          <div className="pointer-events-none absolute left-1/2 top-6 h-72 w-72 -translate-x-1/2 rounded-full bg-gold-400/15 blur-3xl" />
 
-          <div className="container-px relative pb-24 text-center lg:pb-28">
-            <span className="inline-flex items-center gap-2 rounded-full border border-cream/35 bg-white/5 px-4 py-2 text-xs font-medium tracking-wide text-cream backdrop-blur-sm">
-              <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-gold-200" aria-hidden="true">
-                <path d="M8 0 L9.6 6.4 L16 8 L9.6 9.6 L8 16 L6.4 9.6 L0 8 L6.4 6.4 Z" fill="currentColor" />
-              </svg>
-              Vedic Astrology &amp; Spiritual Guidance
+          <div className="container-px relative pb-8 text-center lg:pb-10">
+            {/* brand logo, centered above the heading */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={BRAND_LOGO_SRC}
+              alt="Rahul Raj Astro"
+              className="mx-auto h-20 w-20 select-none rounded-full object-cover shadow-[0_8px_30px_-8px_rgba(120,80,20,0.4)] ring-1 ring-gold-500/30 sm:h-24 sm:w-24"
+            />
+
+            <span className="mt-6 inline-flex items-center gap-2 text-[0.7rem] font-semibold uppercase tracking-[0.28em] text-gold-600">
+              <Spark /> Our Exclusive Reports <Spark />
             </span>
-            <h1 className="mx-auto mt-6 max-w-3xl font-serif text-4xl font-bold leading-[1.08] text-white sm:text-5xl lg:text-6xl">
-              Astrology Reports for Life&rsquo;s Biggest Questions
-            </h1>
-            <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-cream/85 sm:text-lg">
-              Choose a report below and receive clear, personalized guidance
-              prepared from your unique birth chart.
-            </p>
-          </div>
 
-          {/* curved divider into the reports grid */}
-          <div className="relative">
-            <svg
-              viewBox="0 0 1440 110"
-              preserveAspectRatio="none"
-              className="block h-[56px] w-full sm:h-[88px]"
-              aria-hidden="true"
-            >
-              <path d="M0 110 C 380 18, 1060 18, 1440 110 L1440 110 L0 110 Z" fill="#FAF4E8" />
-            </svg>
+            <h1 className="mx-auto mt-3 max-w-3xl font-serif text-3xl font-bold leading-[1.12] text-ink sm:text-4xl lg:text-5xl">
+              Guidance for <span className="text-gold-600">Every Chapter</span> of Your Life
+            </h1>
+
+            <p className="mt-4 text-base font-medium text-ink/70 sm:text-lg">
+              Detailed. Accurate. Personalized.
+            </p>
+
+            <div className="mx-auto mt-5 flex items-center justify-center gap-3 text-gold-500/70">
+              <span className="h-px w-12 bg-gradient-to-r from-transparent to-gold-500/60" />
+              <span className="h-1.5 w-1.5 rotate-45 bg-gold-500" />
+              <span className="h-px w-12 bg-gradient-to-l from-transparent to-gold-500/60" />
+            </div>
+
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-relaxed text-ink/60 sm:text-base">
+              Select a report below and get clear answers to your questions —
+              based on your unique birth chart.
+            </p>
           </div>
         </section>
 
+        {/* tabs + cards + trust */}
         <ReportsGrid />
       </main>
       <Footer />
       <ScrollToTop />
     </>
+  );
+}
+
+function Spark() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-3 w-3" aria-hidden="true">
+      <path d="M8 0 L9.6 6.4 L16 8 L9.6 9.6 L8 16 L6.4 9.6 L0 8 L6.4 6.4 Z" fill="currentColor" />
+    </svg>
   );
 }

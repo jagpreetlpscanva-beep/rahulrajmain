@@ -14,11 +14,7 @@ export default function OnlinePoojaPage() {
   return (
     <>
       <Navbar />
-      <main className="relative bg-[#faf4e8] pt-28 lg:pt-32">
-        {/* dark strip behind the fixed navbar so its light text stays readable
-            against the light page (navbar switches to dark text on scroll) */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-[2] h-24 bg-gradient-to-b from-night/95 via-night/55 to-transparent lg:h-28" />
-
+      <main className="relative bg-[#FCF8F2] pt-20 lg:pt-24">
         {/* categorized puja cards */}
         <PoojaGrid />
       </main>

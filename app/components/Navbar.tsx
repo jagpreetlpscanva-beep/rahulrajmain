@@ -8,31 +8,30 @@ import { Logo } from "./ui/Logo";
 import { SearchBox } from "./ui/SearchBox";
 import { CalendarIcon, CloseIcon, MenuIcon, ChevronDownIcon, GlobeIcon } from "./icons";
 
-export function Navbar() {
-  const scrolled = useScrolled(60);
+const MENU = [...NAV_MENU.left, ...NAV_MENU.right];
+
+export function Navbar({ overlay = false }: { overlay?: boolean }) {
+  const scrolled = useScrolled(40);
   const [open, setOpen] = useState(false);
   const [lang, setLang] = useState<string>(LANGUAGES[0]);
 
-  const linkTone = scrolled
-    ? "text-ink/80 hover:text-gold-600"
+  // dark text on a light header: always when not overlay, or once scrolled
+  const dark = !overlay || scrolled;
+
+  const linkTone = dark
+    ? "text-ink/75 hover:text-gold-600"
     : "text-cream/90 hover:text-white";
 
   // -------- desktop menu item (with optional dropdown) --------
-  const MenuItem = ({
-    item,
-    align = "left",
-  }: {
-    item: NavMenuItem;
-    align?: "left" | "right";
-  }) => {
+  const MenuItem = ({ item }: { item: NavMenuItem }) => {
     if (!item.children) {
       return (
         <li className="shrink-0">
           <a
             href={item.href}
-            className={`whitespace-nowrap text-sm font-medium tracking-wide transition-colors duration-300 ${linkTone}`}
+            className={`whitespace-nowrap text-[0.8rem] font-medium tracking-wide transition-colors duration-300 2xl:text-sm ${linkTone}`}
           >
-            {item.label.toUpperCase()}
+            {item.label}
           </a>
         </li>
       );
@@ -41,17 +40,13 @@ export function Navbar() {
       <li className="group relative shrink-0">
         <a
           href={item.href}
-          className={`inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-medium tracking-wide transition-colors duration-300 ${linkTone}`}
+          className={`inline-flex items-center gap-1 whitespace-nowrap text-[0.8rem] font-medium tracking-wide transition-colors duration-300 2xl:text-sm ${linkTone}`}
         >
-          {item.label.toUpperCase()}
+          {item.label}
           <ChevronDownIcon className="h-3 w-3 opacity-70 transition-transform duration-300 group-hover:rotate-180" />
         </a>
-        {/* dropdown — solid panel, aligned to the trigger edge (pt-3 bridges the hover gap) */}
-        <div
-          className={`invisible absolute top-full z-50 w-64 pt-3 opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 ${
-            align === "right" ? "right-0" : "left-0"
-          }`}
-        >
+        {/* dropdown — solid panel (pt-3 bridges the hover gap) */}
+        <div className="invisible absolute left-1/2 top-full z-50 w-60 -translate-x-1/2 pt-3 opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
           <ul className="overflow-hidden rounded-xl bg-white p-2 shadow-[0_26px_60px_-15px_rgba(45,27,18,0.55)] ring-1 ring-ink/10">
             {item.children.map((c) => (
               <li key={c.label}>
@@ -75,38 +70,31 @@ export function Navbar() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
       className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? "bg-ivory/95 shadow-[0_8px_30px_-14px_rgba(45,27,18,0.22)] backdrop-blur-md"
+        dark
+          ? "border-b border-gold-500/10 bg-gradient-to-b from-[#FCF8F2]/95 to-[#FBF3E6]/95 shadow-[0_8px_30px_-16px_rgba(45,27,18,0.25)] backdrop-blur-md"
           : "bg-transparent"
       }`}
     >
-      {/* full-width / stretched nav */}
-      <nav className="flex w-full items-center justify-between gap-4 px-5 py-3 sm:px-8 xl:grid xl:grid-cols-[minmax(min-content,1fr)_auto_minmax(min-content,1fr)] xl:items-center xl:gap-4 xl:px-8 xl:py-2.5 2xl:gap-6 2xl:px-16">
-        {/* left menu */}
-        <ul className="hidden shrink-0 items-center gap-4 xl:flex 2xl:gap-8">
-          {NAV_MENU.left.map((item) => (
+      {/* max-width container keeps everything aligned and prevents overflow */}
+      <nav className="mx-auto flex w-full max-w-[1600px] items-center justify-between gap-3 px-4 py-2.5 sm:px-6 xl:gap-5 xl:px-8 2xl:px-12">
+        {/* logo (left) */}
+        <Logo variant={dark ? "dark" : "light"} className="shrink-0" />
+
+        {/* center menu */}
+        <ul className="hidden flex-1 items-center justify-center gap-3 xl:flex 2xl:gap-6">
+          {MENU.map((item) => (
             <MenuItem key={item.label} item={item} />
           ))}
         </ul>
 
-        {/* logo */}
-        <div className="flex flex-1 justify-start xl:flex-none xl:justify-center">
-          <Logo variant={scrolled ? "dark" : "light"} />
-        </div>
-
-        {/* right menu + language pill */}
-        <ul className="hidden shrink-0 items-center justify-end gap-4 xl:flex 2xl:gap-8">
-          {NAV_MENU.right.map((item) => (
-            <MenuItem key={item.label} item={item} align="right" />
-          ))}
-          {/* search */}
-          <li className="shrink-0"><SearchBox scrolled={scrolled} /></li>
-          {/* language selector */}
-          <li className="group relative shrink-0">
+        {/* right: search + language */}
+        <div className="hidden shrink-0 items-center gap-3 xl:flex">
+          <SearchBox scrolled={dark} />
+          <div className="group relative">
             <button
               type="button"
-              className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-xs font-medium tracking-wide transition-colors ${
-                scrolled
+              className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1.5 text-xs font-medium tracking-wide transition-colors ${
+                dark
                   ? "border-ink/20 text-ink/80 hover:bg-ink/5"
                   : "border-cream/45 text-cream hover:bg-white/10"
               }`}
@@ -132,8 +120,8 @@ export function Navbar() {
                 ))}
               </ul>
             </div>
-          </li>
-        </ul>
+          </div>
+        </div>
 
         {/* mobile toggle */}
         <button
@@ -141,8 +129,8 @@ export function Navbar() {
           aria-label={open ? "Close menu" : "Open menu"}
           aria-expanded={open}
           onClick={() => setOpen((v) => !v)}
-          className={`grid h-11 w-11 place-items-center rounded-lg transition-colors xl:hidden ${
-            scrolled ? "text-espresso hover:bg-espresso/5" : "text-cream hover:bg-white/10"
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-lg transition-colors xl:hidden ${
+            dark ? "text-espresso hover:bg-espresso/5" : "text-cream hover:bg-white/10"
           }`}
         >
           {open ? <CloseIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
@@ -157,13 +145,13 @@ export function Navbar() {
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="max-h-[80vh] overflow-y-auto border-t border-gold-500/15 bg-cream/98 backdrop-blur-md xl:hidden"
+            className="max-h-[80vh] overflow-y-auto border-t border-gold-500/15 bg-[#FCF8F2]/98 backdrop-blur-md xl:hidden"
           >
             <ul className="flex flex-col gap-1 px-5 py-4 sm:px-8">
               <li className="pb-2">
                 <SearchBox inline />
               </li>
-              {[...NAV_MENU.left, ...NAV_MENU.right].map((item) => (
+              {MENU.map((item) => (
                 <li key={item.label}>
                   <a
                     href={item.href}

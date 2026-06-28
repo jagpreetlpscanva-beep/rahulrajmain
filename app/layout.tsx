@@ -43,6 +43,11 @@ export const metadata: Metadata = {
   authors: [{ name: "Rahul Raj" }],
   creator: "Rahul Raj",
   alternates: { canonical: "/" },
+  icons: {
+    icon: "/brand/logo.png",
+    shortcut: "/brand/logo.png",
+    apple: "/brand/logo.png",
+  },
   openGraph: {
     type: "website",
     locale: "en_IN",

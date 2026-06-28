@@ -23,7 +23,7 @@ export default async function Home() {
   }
   return (
     <>
-      <Navbar />
+      <Navbar overlay />
       <main>
         <Hero initialSlides={heroSlides} />
         {/* quick-access tiles peeking up below the hero */}

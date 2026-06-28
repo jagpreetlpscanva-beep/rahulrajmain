@@ -17,7 +17,7 @@ export function Footer() {
         <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1.2fr]">
           {/* brand */}
           <div>
-            <Logo variant="light" className="!items-start" />
+            <Logo variant="light" layout="row" />
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-cream/65">
               Personalized Vedic guidance for your relationships, career,
               business, finances and overall well-being. Begin your journey to

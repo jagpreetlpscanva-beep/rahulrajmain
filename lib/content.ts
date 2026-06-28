@@ -122,6 +122,17 @@ export const LANGUAGES = ["English", "हिन्दी", "मराठी", "�
 
 /* ---------------- Reports page ---------------- */
 
+/** Report category tabs shown above the grid ("All" selects everything). */
+export const REPORT_CATEGORIES = [
+  "All",
+  "Life Guidance",
+  "Relationships",
+  "Career & Finance",
+  "Wellness",
+  "Kids & Family",
+] as const;
+export type ReportCategory = (typeof REPORT_CATEGORIES)[number];
+
 export interface Report {
   title: string;
   tagline: string;
@@ -132,7 +143,12 @@ export interface Report {
   /** Fallback cover gradient (used until an image is provided). */
   accent: [string, string];
   badge?: string;
+  /** Current/sale price, e.g. "₹799". */
   price?: string;
+  /** Optional struck-through original price, e.g. "₹1,499". */
+  oldPrice?: string;
+  /** Which category tab this report belongs to (omit = shows only under "All"). */
+  category?: Exclude<ReportCategory, "All">;
 }
 
 export const REPORTS: Report[] = [
@@ -143,8 +159,10 @@ export const REPORTS: Report[] = [
       "Discover where your strengths truly shine and the most favorable timing for jobs, promotions, and business moves.",
     highlights: ["Ideal career paths", "Favorable & risky periods", "Business & partnership timing"],
     accent: ["#3B5BA9", "#1E2F66"],
-    badge: "Most Popular",
-    price: "₹1,499",
+    badge: "Bestseller",
+    category: "Career & Finance",
+    oldPrice: "₹1,499",
+    price: "₹799",
   },
   {
     title: "Marriage & Love Report",
@@ -153,7 +171,10 @@ export const REPORTS: Report[] = [
       "Understand compatibility, timing of marriage, and how to nurture lasting harmony in your relationships.",
     highlights: ["Marriage timing", "Compatibility analysis", "Remedies for harmony"],
     accent: ["#A23B5B", "#5E1B33"],
-    price: "₹1,499",
+    badge: "Popular",
+    category: "Relationships",
+    oldPrice: "₹1,499",
+    price: "₹799",
   },
   {
     title: "Health & Wellness Report",
@@ -162,7 +183,9 @@ export const REPORTS: Report[] = [
       "Insights into your constitution, sensitive periods for health, and lifestyle guidance aligned to your chart.",
     highlights: ["Vulnerable periods", "Preventive guidance", "Balancing remedies"],
     accent: ["#1F7A6B", "#0C3B34"],
-    price: "₹1,299",
+    category: "Wellness",
+    oldPrice: "₹1,299",
+    price: "₹699",
   },
   {
     title: "Wealth & Finance Report",
@@ -171,8 +194,10 @@ export const REPORTS: Report[] = [
       "Map your wealth potential, auspicious windows for investment, and remedies to remove financial blockages.",
     highlights: ["Wealth potential", "Investment timing", "Money remedies"],
     accent: ["#C08A2E", "#7A5212"],
-    badge: "High Demand",
-    price: "₹1,499",
+    badge: "New",
+    category: "Career & Finance",
+    oldPrice: "₹1,499",
+    price: "₹799",
   },
   {
     title: "Personalized Fortune Report",
@@ -182,7 +207,9 @@ export const REPORTS: Report[] = [
     highlights: ["12-month forecast", "All life areas", "Custom remedies"],
     accent: ["#6B3FA0", "#36205C"],
     badge: "Best Value",
-    price: "₹2,499",
+    category: "Life Guidance",
+    oldPrice: "₹2,499",
+    price: "₹1,299",
   },
   {
     title: "Education & Child Report",
@@ -191,7 +218,9 @@ export const REPORTS: Report[] = [
       "Support your child's growth with insights into aptitude, ideal study streams, and supportive timing.",
     highlights: ["Aptitude & strengths", "Ideal study streams", "Supportive periods"],
     accent: ["#2B6CB0", "#163E66"],
-    price: "₹1,299",
+    category: "Kids & Family",
+    oldPrice: "₹1,299",
+    price: "₹699",
   },
 ];
 
