@@ -44,8 +44,8 @@ export const metadata: Metadata = {
   creator: "Rahul Raj",
   alternates: { canonical: "/" },
   icons: {
-    icon: "/brand/logo.png",
-    shortcut: "/brand/logo.png",
+    icon: "/brand/icon.png",
+    shortcut: "/brand/icon.png",
     apple: "/brand/logo.png",
   },
   openGraph: {
