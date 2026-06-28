@@ -10,7 +10,7 @@ import {
   type PoojaCategory,
 } from "@/lib/adminStore";
 import { Mandala } from "../ui/Mandala";
-import { LotusDivider, Diamond } from "../ui/Dividers";
+import { LotusDivider, Diamond, Lotus } from "../ui/Dividers";
 import { CalendarIcon, OmIcon } from "../icons";
 
 const FEATURES = [
@@ -38,8 +38,13 @@ export function PoojaGrid() {
   const visible = items.filter((p) => p.category === tab);
 
   return (
-    <section id="poojas" className="paper-bg relative py-16 lg:py-20">
-      <div className="container-px">
+    <section id="poojas" className="paper-bg relative overflow-hidden py-16 lg:py-20">
+      {/* decorative ornaments flanking the heading */}
+      <Mandala className="pointer-events-none absolute -left-20 top-4 h-64 w-64 text-gold-600/15" />
+      <Lotus className="pointer-events-none absolute left-8 top-28 hidden h-16 w-24 text-gold-500/30 lg:block" />
+      <Mandala className="pointer-events-none absolute -right-20 top-4 h-64 w-64 text-gold-600/15" />
+      <Lotus className="pointer-events-none absolute right-8 top-28 hidden h-16 w-24 text-gold-500/30 lg:block" />
+      <div className="container-px relative">
         <div className="text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-gold-500/30 bg-gold-50 px-4 py-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-gold-700">
             <Diamond className="h-2.5 w-2.5" /> Experience Real Blessings <Diamond className="h-2.5 w-2.5" />
