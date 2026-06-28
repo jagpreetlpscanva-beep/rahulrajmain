@@ -8,7 +8,10 @@ const OFFSETS = ["mt-0", "mt-10", "mt-20", "mt-10", "mt-0"];
 /** The fanned-out hero tiles on /online-pooja — custom images set in admin (Pooja Banner). */
 export function PoojaArcTiles() {
   const { items } = useCollection<ArcTile>("poojaBanner", DEFAULT_ARC_TILES);
-  const tiles = items.slice(0, 5);
+  // only show tiles that have an image (avoids empty red placeholder cards);
+  // fall back to whatever exists if none have images yet
+  const withImg = items.filter((t) => t.image);
+  const tiles = (withImg.length ? withImg : items).slice(0, 5);
 
   return (
     <div className="mt-12 flex items-start justify-center gap-3 pb-2 sm:gap-5">

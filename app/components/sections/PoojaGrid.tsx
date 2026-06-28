@@ -10,7 +10,7 @@ import {
   type PoojaCategory,
 } from "@/lib/adminStore";
 import { Mandala } from "../ui/Mandala";
-import { LotusDivider, Diamond, Lotus } from "../ui/Dividers";
+import { LotusDivider, Diamond } from "../ui/Dividers";
 import { HeroDecor } from "../ui/HeroDecor";
 import { CalendarIcon, OmIcon } from "../icons";
 
@@ -40,11 +40,6 @@ export function PoojaGrid() {
 
   return (
     <section id="poojas" className="paper-bg relative overflow-hidden py-16 lg:py-20">
-      {/* decorative ornaments flanking the heading */}
-      <Mandala className="pointer-events-none absolute -left-20 top-4 h-64 w-64 text-gold-600/15" />
-      <Lotus className="pointer-events-none absolute left-8 top-28 hidden h-16 w-24 text-gold-500/30 lg:block" />
-      <Mandala className="pointer-events-none absolute -right-20 top-4 h-64 w-64 text-gold-600/15" />
-      <Lotus className="pointer-events-none absolute right-8 top-28 hidden h-16 w-24 text-gold-500/30 lg:block" />
       {/* decoration images flanking the heading (thali left, books+lotus right) */}
       <HeroDecor id="pooja-left" className="-left-6 top-0 z-[1] hidden w-56 lg:block xl:w-80" />
       <HeroDecor id="pooja-right" className="-right-2 top-2 z-[1] hidden w-36 lg:block xl:w-48" />
