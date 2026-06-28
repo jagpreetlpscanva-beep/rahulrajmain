@@ -29,8 +29,20 @@ const SunIcon = (p: IconProps) => (
 );
 
 const NumerologyIcon = (p: IconProps) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" {...p}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M5 4h3v7M5 11h3M5 20l3-7M13 4h2.5a2.5 2.5 0 0 1 0 5H13V4Zm0 5h2a3 3 0 0 1 0 6h-2" />
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" {...p}>
+    <rect x="3.5" y="3.5" width="17" height="17" rx="3" />
+    <text
+      x="12"
+      y="16"
+      textAnchor="middle"
+      fontSize="9.5"
+      fontWeight="700"
+      fontFamily="ui-sans-serif, system-ui, sans-serif"
+      fill="currentColor"
+      stroke="none"
+    >
+      123
+    </text>
   </svg>
 );
 

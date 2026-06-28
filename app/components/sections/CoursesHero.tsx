@@ -19,7 +19,7 @@ export function CoursesHero() {
   return (
     <>
       {/* ---------------- compact hero banner ---------------- */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-cream-dark to-cream pt-36 lg:pt-40">
+      <section className="relative overflow-hidden bg-gradient-to-b from-cream-dark to-cream pt-28 lg:pt-32">
         {/* dark strip behind the fixed navbar so its light text stays readable
             against this page's light hero (navbar switches to dark text only
             after scrolling) */}
@@ -29,7 +29,7 @@ export function CoursesHero() {
         <HeroDecor id="courses-left" className="bottom-2 left-0 z-[1] hidden w-44 lg:block xl:w-56" />
         <HeroDecor id="courses-right" className="bottom-2 right-4 z-[1] hidden w-24 lg:block xl:w-32" />
 
-        <div className="container-px relative pb-10 text-center lg:pb-12">
+        <div className="container-px relative pb-6 text-center lg:pb-8">
           <span className="inline-flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-gold-600">
             <svg viewBox="0 0 16 16" className="h-3 w-3" aria-hidden="true">
               <path d="M8 0 L9.6 6.4 L16 8 L9.6 9.6 L8 16 L6.4 9.6 L0 8 L6.4 6.4 Z" fill="currentColor" />
