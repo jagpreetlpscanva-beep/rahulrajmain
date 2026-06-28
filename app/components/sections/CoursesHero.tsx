@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { CoursesGrid, CATEGORY_ICONS } from "./CoursesGrid";
 import { COURSE_CATEGORIES, type CourseCategory } from "@/lib/adminStore";
 import { HeroDecor } from "../ui/HeroDecor";
+import { IconImage } from "../ui/IconImage";
 
 /**
  * Client-side hero + tabs + grid for the courses page. Kept as a single
@@ -61,7 +62,9 @@ export function CoursesHero() {
                         : "border-ink/10 text-ink/45 hover:text-ink/70"
                     }`}
                   >
-                    <Icon className="h-5 w-5" />
+                    <IconImage src={`/categories/${cat.toLowerCase()}.png`} alt={cat} className="h-6 w-6">
+                      <Icon className="h-5 w-5" />
+                    </IconImage>
                   </span>
                   <span className={`text-xs font-semibold ${active ? "text-gold-600" : "text-ink/55"}`}>
                     {cat}

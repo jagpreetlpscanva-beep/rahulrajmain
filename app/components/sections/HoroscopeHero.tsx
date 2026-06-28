@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { IconImage } from "../ui/IconImage";
 
 type Sign = { name: string; sanskrit: string; symbol: string; today: string };
 
@@ -58,7 +59,9 @@ export function HoroscopeHero() {
           {/* selected sign */}
           <div className="flex flex-col items-center text-center">
             <span className="grid h-24 w-24 place-items-center rounded-full bg-gold-gradient text-5xl text-night shadow-gold-btn">
-              {sign.symbol}
+              <IconImage src={`/zodiac/${sign.name.toLowerCase()}.png`} alt={sign.name} className="h-14 w-14">
+                {sign.symbol}
+              </IconImage>
             </span>
             <h2 className="mt-3 font-serif text-2xl font-bold text-ink">{sign.name}</h2>
             <p className="text-sm text-ink/55">({sign.sanskrit})</p>
@@ -92,7 +95,9 @@ export function HoroscopeHero() {
                     : "border border-gold-500/20 text-ink/55 hover:border-gold-500/50 hover:text-gold-600"
                 }`}
               >
-                {s.symbol}
+                <IconImage src={`/zodiac/${s.name.toLowerCase()}.png`} alt={s.name} className="h-6 w-6">
+                  {s.symbol}
+                </IconImage>
               </button>
             ))}
           </div>
