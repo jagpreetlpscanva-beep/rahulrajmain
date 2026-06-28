@@ -87,9 +87,9 @@ export function CoursesHero() {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-night/90 via-night/40 to-transparent lg:h-28" />
 
         <HeroOrnamentBand />
-        {/* admin-uploaded decoration images */}
-        <HeroDecor id="courses-left" className="bottom-0 left-0 z-[1] hidden w-48 lg:block xl:w-60" />
-        <HeroDecor id="courses-right" className="bottom-0 right-0 z-[1] hidden w-48 lg:block xl:w-60" />
+        {/* decoration images flanking the hero (books+lotus left, diya right) */}
+        <HeroDecor id="courses-left" className="bottom-2 left-0 z-[1] hidden w-44 lg:block xl:w-56" />
+        <HeroDecor id="courses-right" className="bottom-2 right-4 z-[1] hidden w-24 lg:block xl:w-32" />
 
         <div className="container-px relative pb-10 text-center lg:pb-12">
           <span className="inline-flex items-center gap-2 text-[0.65rem] font-semibold uppercase tracking-[0.25em] text-gold-600">

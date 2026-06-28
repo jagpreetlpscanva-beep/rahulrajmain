@@ -45,9 +45,9 @@ export function PoojaGrid() {
       <Lotus className="pointer-events-none absolute left-8 top-28 hidden h-16 w-24 text-gold-500/30 lg:block" />
       <Mandala className="pointer-events-none absolute -right-20 top-4 h-64 w-64 text-gold-600/15" />
       <Lotus className="pointer-events-none absolute right-8 top-28 hidden h-16 w-24 text-gold-500/30 lg:block" />
-      {/* admin-uploaded decoration images (override the SVG ornaments when set) */}
-      <HeroDecor id="pooja-left" className="left-0 top-2 z-[1] hidden w-44 lg:block xl:w-56" />
-      <HeroDecor id="pooja-right" className="right-0 top-2 z-[1] hidden w-44 lg:block xl:w-56" />
+      {/* decoration images flanking the heading (thali left, books+lotus right) */}
+      <HeroDecor id="pooja-left" className="-left-6 top-0 z-[1] hidden w-56 lg:block xl:w-80" />
+      <HeroDecor id="pooja-right" className="-right-2 top-2 z-[1] hidden w-36 lg:block xl:w-48" />
       <div className="container-px relative">
         <div className="text-center">
           <span className="inline-flex items-center gap-2 rounded-full border border-gold-500/30 bg-gold-50 px-4 py-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-gold-700">
