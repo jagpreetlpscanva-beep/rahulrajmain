@@ -83,12 +83,12 @@ export const NAV_MENU: { left: NavMenuItem[]; right: NavMenuItem[] } = {
     },
     {
       label: "Horoscopes",
-      href: "/#home",
+      href: "/horoscope",
       children: [
-        { label: "Daily Horoscope", href: "/#home" },
-        { label: "Weekly Horoscope", href: "/#home" },
-        { label: "Monthly Horoscope", href: "/#home" },
-        { label: "Yearly Horoscope", href: "/#home" },
+        { label: "Daily Horoscope", href: "/horoscope" },
+        { label: "Weekly Horoscope", href: "/horoscope" },
+        { label: "Monthly Horoscope", href: "/horoscope" },
+        { label: "Yearly Horoscope", href: "/horoscope" },
       ],
     },
     {
