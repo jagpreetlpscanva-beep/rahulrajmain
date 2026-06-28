@@ -16,6 +16,7 @@ export {
   DEFAULT_ARC_TILES,
   DEFAULT_REVIEWS,
   DEFAULT_PODCASTS,
+  DEFAULT_DECOR,
   COLLECTIONS,
   POOJA_CATEGORIES,
   COURSE_CATEGORIES,
@@ -36,6 +37,7 @@ export type {
   ArcTile,
   Review,
   Podcast,
+  DecorItem,
   CollectionKey,
 } from "./cms";
 

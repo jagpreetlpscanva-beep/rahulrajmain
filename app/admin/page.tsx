@@ -25,6 +25,8 @@ import {
   type ArcTile,
   DEFAULT_PODCASTS,
   type Podcast,
+  DEFAULT_DECOR,
+  type DecorItem,
 } from "@/lib/adminStore";
 import { CollectionManager, type FieldDef } from "../components/admin/CollectionManager";
 import { SlotsManager } from "../components/admin/SlotsManager";
@@ -198,6 +200,13 @@ const podcastFields: FieldDef[] = [
 
 const blankPodcast = (): Podcast => ({ id: newId("pod"), title: "", videoUrl: "", description: "" });
 
+const decorFields: FieldDef[] = [
+  { name: "title", label: "Label", type: "text", hint: "Which slot this image fills (do not change)." },
+  { name: "image", label: "Decoration image", type: "image", optional: true, hint: "Transparent PNG works best (lotus, diya, books, etc.)." },
+];
+
+const blankDecor = (): DecorItem => ({ id: newId("decor"), title: "" });
+
 const blankConsultation = (): Consultation => ({
   id: newId("consult"),
   title: "",
@@ -210,7 +219,7 @@ const blankConsultation = (): Consultation => ({
   image: "",
 });
 
-type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "reviews" | "slots" | "bookings";
+type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "reviews" | "slots" | "bookings";
 
 const GridIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -232,6 +241,7 @@ const NAV: { key: TabKey; label: string; icon: (p: { className?: string }) => Re
   { key: "reports", label: "Reports", icon: MedalIcon },
   { key: "addons", label: "Add-ons", icon: GiftIcon },
   { key: "gallery", label: "Gallery", icon: GiftIcon },
+  { key: "decor", label: "Decorations", icon: GiftIcon },
   { key: "reviews", label: "Reviews", icon: StarIcon },
   { key: "slots", label: "Slots", icon: GridIcon },
   { key: "bookings", label: "Bookings", icon: UsersIcon },
@@ -255,6 +265,7 @@ export default function AdminPage() {
   const hero = useCollection<HeroSlide>("hero", DEFAULT_HERO_SLIDES);
   const poojaBanner = useCollection<ArcTile>("poojaBanner", DEFAULT_ARC_TILES);
   const podcasts = useCollection<Podcast>("podcasts", DEFAULT_PODCASTS);
+  const decor = useCollection<DecorItem>("decor", DEFAULT_DECOR);
 
   useEffect(() => {
     fetch("/api/admin/session", { cache: "no-store" })
@@ -435,6 +446,9 @@ export default function AdminPage() {
           )}
           {tab === "podcasts" && (
             <CollectionManager<Podcast> label="Podcast" items={podcasts.items} fields={podcastFields} blank={blankPodcast} onChange={podcasts.save} onReset={podcasts.reset} previewHref="/" />
+          )}
+          {tab === "decor" && (
+            <CollectionManager<DecorItem> label="Decoration" items={decor.items} fields={decorFields} blank={blankDecor} onChange={decor.save} onReset={decor.reset} previewHref="/courses" />
           )}
           {tab === "reviews" && <ReviewsManager />}
           {tab === "slots" && <SlotsManager />}

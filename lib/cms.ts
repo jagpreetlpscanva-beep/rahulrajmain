@@ -688,6 +688,20 @@ export const DEFAULT_PODCASTS: Podcast[] = [
   },
 ];
 
+/** Hero side decorations (lotus, diya, books, etc.) uploaded in admin. */
+export interface DecorItem {
+  id: string;
+  title: string;
+  image?: string;
+}
+
+export const DEFAULT_DECOR: DecorItem[] = [
+  { id: "courses-left", title: "Courses hero — Left image" },
+  { id: "courses-right", title: "Courses hero — Right image" },
+  { id: "pooja-left", title: "Pooja hero — Left image" },
+  { id: "pooja-right", title: "Pooja hero — Right image" },
+];
+
 /** Collections exposed by the CMS API, with their seed data. */
 export const COLLECTIONS = {
   poojas: DEFAULT_POOJAS,
@@ -701,6 +715,7 @@ export const COLLECTIONS = {
   poojaBanner: DEFAULT_ARC_TILES,
   reviews: DEFAULT_REVIEWS,
   podcasts: DEFAULT_PODCASTS,
+  decor: DEFAULT_DECOR,
 } as const;
 
 export type CollectionKey = keyof typeof COLLECTIONS;
