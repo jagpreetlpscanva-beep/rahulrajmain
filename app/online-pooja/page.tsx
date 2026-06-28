@@ -75,7 +75,6 @@ export default function OnlinePoojaPage() {
           <div className="container-px grid items-center gap-10 lg:grid-cols-2 lg:gap-14">
             {/* astrologer portrait — fills the block */}
             <div className="relative aspect-[5/4] overflow-hidden rounded-2xl bg-gradient-to-br from-[#F2E3C4] to-[#E6D2A6]">
-              <Mandala className="pointer-events-none absolute inset-0 m-auto h-[120%] w-[120%] text-gold-600/15" />
               <AstroPhoto className="absolute inset-0 h-full w-full object-cover object-top" />
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/65 via-black/25 to-transparent p-4 text-center">
                 <p className="font-serif text-xl font-bold text-white">Rahul Raj</p>
