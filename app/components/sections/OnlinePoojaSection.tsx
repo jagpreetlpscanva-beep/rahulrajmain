@@ -5,13 +5,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useCollection, DEFAULT_POOJAS, type Pooja } from "@/lib/adminStore";
 import { Mandala } from "../ui/Mandala";
 import { LotusDivider, Diamond } from "../ui/Dividers";
+import { IconImage } from "../ui/IconImage";
 import { OmIcon, ArrowRightIcon } from "../icons";
 
 const BADGES = [
-  { icon: <ShieldSvg />, title: "Authentic Vedic Rituals" },
-  { icon: <PersonSvg />, title: "Experienced Pandits" },
-  { icon: <LockSvg />, title: "Secure & Private" },
-  { icon: <ClockSvg />, title: "Easy & Convenient" },
+  { id: "authentic", icon: <ShieldSvg />, title: "Authentic Vedic Rituals" },
+  { id: "pandits", icon: <PersonSvg />, title: "Experienced Pandits" },
+  { id: "secure", icon: <LockSvg />, title: "Secure & Private" },
+  { id: "easy", icon: <ClockSvg />, title: "Easy & Convenient" },
 ];
 
 export function OnlinePoojaSection() {
@@ -49,7 +50,9 @@ export function OnlinePoojaSection() {
           className="mx-auto mt-9 flex w-full max-w-4xl items-center gap-5 rounded-3xl border-2 border-gold-500/40 bg-white p-5 text-left shadow-card-hover transition-colors hover:border-gold-500/60 sm:p-6"
         >
           <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-gradient-to-br from-gold-500 to-[#7A5212] text-cream shadow-[0_10px_28px_-6px_rgba(192,138,46,0.8)] sm:h-20 sm:w-20">
-            <OmIcon className="h-9 w-9 sm:h-11 sm:w-11" />
+            <IconImage src="/online-pooja/main.png" alt="Online Pooja" className="h-10 w-10 sm:h-12 sm:w-12">
+              <OmIcon className="h-9 w-9 sm:h-11 sm:w-11" />
+            </IconImage>
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-serif text-2xl font-bold text-ink sm:text-3xl">Online Pooja</span>
@@ -131,7 +134,9 @@ export function OnlinePoojaSection() {
           {BADGES.map((b, i) => (
             <div key={b.title} className={`flex items-center gap-2.5 px-5 ${i > 0 ? "sm:border-l sm:border-gold-500/20" : ""}`}>
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-gold-500 to-[#7A5212] text-cream shadow-[0_6px_16px_-6px_rgba(192,138,46,0.7)]">
-                {b.icon}
+                <IconImage src={`/online-pooja/${b.id}.png`} alt={b.title} className="h-6 w-6">
+                  {b.icon}
+                </IconImage>
               </span>
               <span className="text-sm font-semibold leading-tight text-ink">{b.title}</span>
             </div>

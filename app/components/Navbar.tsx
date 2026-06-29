@@ -23,7 +23,7 @@ export function Navbar({ overlay = false }: { overlay?: boolean }) {
     : "text-cream/90 hover:text-white";
 
   // -------- desktop menu item (with optional dropdown) --------
-  const MenuItem = ({ item }: { item: NavMenuItem }) => {
+  const MenuItem = ({ item, align = "left" }: { item: NavMenuItem; align?: "left" | "right" }) => {
     if (!item.children) {
       return (
         <li className="shrink-0">
@@ -46,7 +46,7 @@ export function Navbar({ overlay = false }: { overlay?: boolean }) {
           <ChevronDownIcon className="h-3 w-3 opacity-70 transition-transform duration-300 group-hover:rotate-180" />
         </a>
         {/* dropdown — solid panel (pt-3 bridges the hover gap) */}
-        <div className="invisible absolute left-1/2 top-full z-50 w-60 -translate-x-1/2 pt-3 opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+        <div className={`invisible absolute top-full z-50 w-60 pt-3 opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 ${align === "right" ? "right-0" : "left-0"}`}>
           <ul className="overflow-hidden rounded-xl bg-white p-2 shadow-[0_26px_60px_-15px_rgba(45,27,18,0.55)] ring-1 ring-ink/10">
             {item.children.map((c) => (
               <li key={c.label}>
@@ -80,7 +80,7 @@ export function Navbar({ overlay = false }: { overlay?: boolean }) {
         {/* left menu */}
         <ul className="hidden items-center justify-start gap-3 xl:flex 2xl:gap-6">
           {NAV_MENU.left.map((item) => (
-            <MenuItem key={item.label} item={item} />
+            <MenuItem key={item.label} item={item} align="left" />
           ))}
         </ul>
 
@@ -91,7 +91,7 @@ export function Navbar({ overlay = false }: { overlay?: boolean }) {
         <div className="hidden items-center justify-end gap-3 xl:flex 2xl:gap-5">
           <ul className="flex items-center gap-3 2xl:gap-6">
             {NAV_MENU.right.map((item) => (
-              <MenuItem key={item.label} item={item} />
+              <MenuItem key={item.label} item={item} align="right" />
             ))}
           </ul>
           <SearchBox scrolled={dark} />
