@@ -115,3 +115,20 @@ body {
 .skiptranslate iframe {
   display: none !important;
 }
+
+/* ---- Hide the brief English flash until Google Translate applies ---- */
+html.gt-translating body {
+  visibility: hidden !important;
+}
+html.gt-translating::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: #FCF8F2 url("/brand/logo.png") center center / 96px 96px no-repeat;
+  animation: gt-splash-pulse 1.1s ease-in-out infinite;
+}
+@keyframes gt-splash-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}

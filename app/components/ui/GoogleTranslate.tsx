@@ -62,8 +62,6 @@ export function GoogleTranslate() {
       }
     };
 
-    // load the (heavy) translate script after the page is interactive so it
-    // doesn't compete with the initial render
     const load = () => {
       if (document.getElementById("google-translate-script")) return;
       const s = document.createElement("script");
@@ -71,9 +69,29 @@ export function GoogleTranslate() {
       s.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
       document.body.appendChild(s);
     };
-    const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: object) => number }).requestIdleCallback;
-    if (ric) ric(load, { timeout: 1500 });
-    else setTimeout(load, 800);
+
+    const root = document.documentElement;
+    const translating = root.classList.contains("gt-translating");
+
+    if (translating) {
+      // a non-English language is pending — load now and hide the splash once
+      // Google has applied the translation (it adds a `translated-*` class)
+      const reveal = () => root.classList.remove("gt-translating");
+      const obs = new MutationObserver(() => {
+        if (root.classList.contains("translated-ltr") || root.classList.contains("translated-rtl")) {
+          reveal();
+          obs.disconnect();
+        }
+      });
+      obs.observe(root, { attributes: true, attributeFilter: ["class"] });
+      setTimeout(reveal, 4000); // safety fallback
+      load();
+    } else {
+      // English: no rush — load after the page is interactive
+      const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: object) => number }).requestIdleCallback;
+      if (ric) ric(load, { timeout: 1500 });
+      else setTimeout(load, 800);
+    }
   }, []);
 
   return <div id="google_translate_element" className="hidden" aria-hidden />;

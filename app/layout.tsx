@@ -118,6 +118,14 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${poppins.variable}`}>
       <body>
+        {/* runs before paint: show the splash while a non-English language is pending */}
+        <script
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var m=document.cookie.match(/googtrans=\\/[^/]*\\/([^;]+)/);var l=m?m[1]:'hi';if(l&&l!=='en'){document.documentElement.classList.add('gt-translating')}}catch(e){}})();",
+          }}
+        />
         <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger
