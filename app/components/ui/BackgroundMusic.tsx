@@ -60,23 +60,24 @@ export function BackgroundMusic() {
           onClick={toggle}
           aria-label={playing ? "Mute background music" : "Play background music"}
           title={playing ? "Mute music" : "Play music"}
-          className="fixed bottom-5 left-5 z-40 grid h-12 w-12 place-items-center rounded-full bg-gold-gradient text-night shadow-gold-btn ring-1 ring-gold-300/50 transition-transform hover:-translate-y-0.5"
+          className="fixed bottom-5 left-5 z-40 grid h-11 w-11 place-items-center rounded-full bg-gold-gradient text-night shadow-gold-btn ring-1 ring-gold-300/50 transition-transform hover:-translate-y-0.5"
         >
-          {playing ? (
-            // playing — equalizer bars
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
-              <path d="M6 14v-4M10 18V6M14 16V8M18 13v-2">
-                <animate attributeName="opacity" values="1;0.4;1" dur="1.2s" repeatCount="indefinite" />
-              </path>
+          <span className="relative grid place-items-center">
+            {/* music note (beamed double note) — same icon in both states */}
+            <svg viewBox="0 0 24 24" className={`h-5 w-5 ${playing ? "animate-pulse" : "opacity-80"}`} fill="currentColor" aria-hidden="true">
+              <path d="M9 5.2 21 2.8V6.2L9 8.6V5.2Z" />
+              <rect x="8.4" y="5" width="1.8" height="12.6" rx="0.9" />
+              <rect x="19.2" y="2.9" width="1.8" height="12.6" rx="0.9" />
+              <ellipse cx="6.2" cy="17.5" rx="3.1" ry="2.5" />
+              <ellipse cx="17" cy="15.4" rx="3.1" ry="2.5" />
             </svg>
-          ) : (
-            // muted — note with slash
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18V6l10-2v12" />
-              <circle cx="6" cy="18" r="3" /><circle cx="16" cy="16" r="3" />
-              <path d="M3 3l18 18" />
-            </svg>
-          )}
+            {/* slash overlay when muted */}
+            {!playing && (
+              <svg viewBox="0 0 24 24" className="absolute h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M3 3l18 18" />
+              </svg>
+            )}
+          </span>
         </button>
       )}
     </>
