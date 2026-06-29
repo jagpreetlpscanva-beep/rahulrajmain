@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CALCULATORS, CITIES, ZODIAC_SIGNS, type CalcDef } from "@/lib/calculators";
+import { IconImage } from "../ui/IconImage";
 
 type BirthState = { name: string; date: string; time: string; cityIdx: number };
 const emptyBirth = (): BirthState => ({ name: "", date: "", time: "12:00", cityIdx: 0 });
@@ -39,7 +40,7 @@ export function Calculators() {
             className="group flex items-start gap-4 rounded-2xl border border-gold-500/15 bg-white p-5 text-left shadow-[0_14px_40px_-26px_rgba(120,80,20,0.45)] transition-transform hover:-translate-y-1.5"
           >
             <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-gold-50 text-2xl ring-1 ring-gold-500/20">
-              {c.icon}
+              <IconImage src={`/calculators/${c.id}.png`} alt={c.title} className="h-7 w-7">{c.icon}</IconImage>
             </span>
             <span className="min-w-0">
               <span className="block font-serif text-base font-bold text-ink">{c.title}</span>
@@ -115,7 +116,9 @@ function CalcModal({ def, onClose }: { def: CalcDef; onClose: () => void }) {
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="grid h-11 w-11 place-items-center rounded-full bg-gold-50 text-2xl ring-1 ring-gold-500/20">{def.icon}</span>
+            <span className="grid h-11 w-11 place-items-center rounded-full bg-gold-50 text-2xl ring-1 ring-gold-500/20">
+              <IconImage src={`/calculators/${def.id}.png`} alt={def.title} className="h-6 w-6">{def.icon}</IconImage>
+            </span>
             <h3 className="font-serif text-xl font-bold text-ink">{def.title}</h3>
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="grid h-9 w-9 place-items-center rounded-full text-ink/50 hover:bg-ink/5">✕</button>

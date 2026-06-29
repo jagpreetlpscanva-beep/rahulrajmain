@@ -3,6 +3,7 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/sections/Footer";
 import { ScrollToTop } from "../components/ui/ScrollToTop";
 import { HoroscopeHero } from "../components/sections/HoroscopeHero";
+import { IconImage } from "../components/ui/IconImage";
 
 export const metadata: Metadata = {
   title: "Horoscope — Rahul Raj Astro, Vedic Astrologer",
@@ -28,11 +29,11 @@ const HeartIcon = ({ className = "" }: IconProps) => (
 );
 
 const EXPLORE = [
-  { Icon: SunIcon, t: "Daily Horoscope", s: "Know what today has in store for you" },
-  { Icon: CalIcon, t: "Weekly Horoscope", s: "Plan your week with cosmic guidance" },
-  { Icon: MoonIcon, t: "Monthly Horoscope", s: "Discover key opportunities ahead" },
-  { Icon: StarIcon, t: "Yearly Horoscope", s: "Get an overview of your year" },
-  { Icon: HeartIcon, t: "Love Horoscope", s: "Understand love, relationships & more" },
+  { id: "daily", Icon: SunIcon, t: "Daily Horoscope", s: "Know what today has in store for you" },
+  { id: "weekly", Icon: CalIcon, t: "Weekly Horoscope", s: "Plan your week with cosmic guidance" },
+  { id: "monthly", Icon: MoonIcon, t: "Monthly Horoscope", s: "Discover key opportunities ahead" },
+  { id: "yearly", Icon: StarIcon, t: "Yearly Horoscope", s: "Get an overview of your year" },
+  { id: "love", Icon: HeartIcon, t: "Love Horoscope", s: "Understand love, relationships & more" },
 ];
 
 const PERSONALIZED = [
@@ -72,7 +73,9 @@ export default function HoroscopePage() {
               {EXPLORE.map((c) => (
                 <a key={c.t} href="#" className="group flex flex-col rounded-2xl border border-gold-500/15 bg-white p-5 shadow-[0_14px_40px_-26px_rgba(120,80,20,0.45)] transition-transform hover:-translate-y-1.5">
                   <span className="grid h-11 w-11 place-items-center rounded-full bg-gold-50 text-gold-600 ring-1 ring-gold-500/20">
-                    <c.Icon className="h-6 w-6" />
+                    <IconImage src={`/horoscope/${c.id}.png`} alt={c.t} className="h-6 w-6">
+                      <c.Icon className="h-6 w-6" />
+                    </IconImage>
                   </span>
                   <h3 className="mt-4 font-serif text-base font-bold leading-snug text-ink">{c.t}</h3>
                   <p className="mt-1 flex-1 text-xs leading-relaxed text-ink/55">{c.s}</p>
