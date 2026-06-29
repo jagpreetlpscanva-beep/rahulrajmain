@@ -21,15 +21,20 @@ export function FeatureTiles() {
             <a
               key={t.label}
               href={t.href}
-              className="group flex flex-col items-center gap-2.5 bg-white p-6 text-center transition-colors hover:bg-gold-50"
+              className="group flex flex-col items-center gap-2 bg-white p-6 text-center text-gold-600 transition-colors hover:bg-gold-50/60"
             >
-              <span className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-gold-50 to-gold-100 text-gold-600 shadow-[0_8px_18px_-6px_rgba(192,138,46,0.45)] ring-1 ring-gold-500/20 transition-all duration-300 group-hover:from-gold-100 group-hover:to-gold-200">
-                <IconImage src={`/features/${t.id}.png`} alt={t.label} className="h-9 w-9">
-                  <Icon name={t.icon} className="h-8 w-8" />
+              <span className="relative mb-1 grid h-20 w-20 place-items-center">
+                {/* soft gold glow behind the logo */}
+                <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(244,213,138,0.6),transparent_70%)] blur-[6px] transition-transform duration-300 group-hover:scale-110" />
+                <IconImage src={`/features/${t.id}.png`} alt={t.label} className="relative h-14 w-14 drop-shadow-[0_4px_10px_rgba(192,138,46,0.45)]">
+                  <Icon name={t.icon} className="h-9 w-9" />
                 </IconImage>
               </span>
               <span className="font-serif text-base font-bold leading-tight text-ink">{t.label}</span>
               <span className="text-xs leading-snug text-ink/55">{t.sub}</span>
+              <span className="mt-1.5 grid h-8 w-8 place-items-center rounded-full border border-gold-500/30 text-sm text-gold-600 transition-colors group-hover:bg-gold-gradient group-hover:text-night">
+                →
+              </span>
             </a>
           ))}
         </div>

@@ -9,10 +9,10 @@ import { IconImage } from "../ui/IconImage";
 import { OmIcon, ArrowRightIcon } from "../icons";
 
 const BADGES = [
-  { id: "authentic", icon: <ShieldSvg />, title: "Authentic Vedic Rituals" },
-  { id: "pandits", icon: <PersonSvg />, title: "Experienced Pandits" },
-  { id: "secure", icon: <LockSvg />, title: "Secure & Private" },
-  { id: "easy", icon: <ClockSvg />, title: "Easy & Convenient" },
+  { id: "authentic", icon: <ShieldSvg />, title: "Authentic Vedic Rituals", sub: "Traditional rituals with purity" },
+  { id: "pandits", icon: <PersonSvg />, title: "Experienced Pandits", sub: "Verified & seasoned experts" },
+  { id: "secure", icon: <LockSvg />, title: "Secure & Private", sub: "100% safe & confidential" },
+  { id: "easy", icon: <ClockSvg />, title: "Easy & Convenient", sub: "Puja at your time, from anywhere" },
 ];
 
 export function OnlinePoojaSection() {
@@ -49,9 +49,11 @@ export function OnlinePoojaSection() {
           aria-expanded={open}
           className="mx-auto mt-9 flex w-full max-w-4xl items-center gap-5 rounded-3xl border-2 border-gold-500/40 bg-white p-5 text-left shadow-card-hover transition-colors hover:border-gold-500/60 sm:p-6"
         >
-          <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-gradient-to-br from-gold-500 to-[#7A5212] text-cream shadow-[0_10px_28px_-6px_rgba(192,138,46,0.8)] sm:h-20 sm:w-20">
-            <IconImage src="/online-pooja/main.png" alt="Online Pooja" className="h-10 w-10 sm:h-12 sm:w-12">
-              <OmIcon className="h-9 w-9 sm:h-11 sm:w-11" />
+          <span className="relative grid h-20 w-20 shrink-0 place-items-center text-cream sm:h-24 sm:w-24">
+            {/* glowing gold disc behind the logo */}
+            <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(233,190,99,0.75),rgba(201,145,47,0.3)_60%,transparent_75%)] blur-[2px]" />
+            <IconImage src="/online-pooja/main.png" alt="Online Pooja" className="relative h-16 w-16 drop-shadow-[0_5px_14px_rgba(192,138,46,0.55)] sm:h-20 sm:w-20">
+              <span className="grid h-16 w-16 place-items-center rounded-full bg-gradient-to-br from-gold-500 to-[#7A5212] sm:h-20 sm:w-20"><OmIcon className="h-9 w-9 sm:h-11 sm:w-11" /></span>
             </IconImage>
           </span>
           <span className="min-w-0 flex-1">
@@ -130,15 +132,20 @@ export function OnlinePoojaSection() {
         </AnimatePresence>
 
         {/* trust badges */}
-        <div className="mx-auto mt-10 flex max-w-4xl flex-wrap items-center justify-center gap-y-4">
-          {BADGES.map((b, i) => (
-            <div key={b.title} className={`flex items-center gap-2.5 px-5 ${i > 0 ? "sm:border-l sm:border-gold-500/20" : ""}`}>
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-gold-500 to-[#7A5212] text-cream shadow-[0_6px_16px_-6px_rgba(192,138,46,0.7)]">
-                <IconImage src={`/online-pooja/${b.id}.png`} alt={b.title} className="h-6 w-6">
+        <div className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-4 sm:grid-cols-4">
+          {BADGES.map((b) => (
+            <div key={b.title} className="flex items-center gap-3 rounded-2xl border border-gold-500/15 bg-white/70 px-4 py-3 shadow-[0_12px_30px_-22px_rgba(120,80,20,0.6)]">
+              <span className="relative grid h-12 w-12 shrink-0 place-items-center text-gold-600">
+                {/* soft gold glow behind the logo */}
+                <span className="absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(244,213,138,0.6),transparent_70%)] blur-[4px]" />
+                <IconImage src={`/online-pooja/${b.id}.png`} alt={b.title} className="relative h-9 w-9 drop-shadow-[0_3px_8px_rgba(192,138,46,0.45)]">
                   {b.icon}
                 </IconImage>
               </span>
-              <span className="text-sm font-semibold leading-tight text-ink">{b.title}</span>
+              <span>
+                <span className="block text-sm font-bold leading-tight text-ink">{b.title}</span>
+                <span className="mt-0.5 block text-xs leading-snug text-ink/55">{b.sub}</span>
+              </span>
             </div>
           ))}
         </div>
