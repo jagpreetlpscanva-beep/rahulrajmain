@@ -17,20 +17,20 @@ export function getActiveLang(): string {
   return m ? m[1] : "en";
 }
 
-/** Switch the whole site to `code` via Google Translate (cookie + reload). */
+/**
+ * Switch the whole site to `code` via Google Translate.
+ * Uses a SINGLE host-only cookie (no domain variants) so we never end up with
+ * duplicate `googtrans` cookies that make the language flip randomly. English
+ * is stored explicitly as /en/en so the choice is remembered.
+ */
 export function setSiteLanguage(code: string) {
-  const value = `/en/${code}`;
+  // clear any stray domain-scoped cookies left over from older builds
   const host = window.location.hostname;
-  // clear any old cookie first (all common scopes)
   const expire = "expires=Thu, 01 Jan 1970 00:00:00 UTC";
-  document.cookie = `googtrans=;${expire};path=/`;
   document.cookie = `googtrans=;${expire};path=/;domain=${host}`;
   document.cookie = `googtrans=;${expire};path=/;domain=.${host}`;
-  // for English we still set an explicit /en/en so the choice is remembered
-  // (otherwise the no-cookie default would flip back to Hindi)
-  document.cookie = `googtrans=${value};path=/`;
-  document.cookie = `googtrans=${value};path=/;domain=${host}`;
-  document.cookie = `googtrans=${value};path=/;domain=.${host}`;
+  // the one cookie that actually drives translation
+  document.cookie = `googtrans=/en/${code};path=/`;
   window.location.reload();
 }
 
@@ -44,11 +44,9 @@ export function GoogleTranslate() {
 
     // Default new visitors (no choice yet) to Hindi — set the cookie BEFORE the
     // widget initialises so it translates on first load without a reload.
+    // Single host-only cookie (no domain variants) to avoid duplicates.
     if (!document.cookie.includes("googtrans=")) {
-      const host = window.location.hostname;
       document.cookie = "googtrans=/en/hi;path=/";
-      document.cookie = `googtrans=/en/hi;path=/;domain=${host}`;
-      document.cookie = `googtrans=/en/hi;path=/;domain=.${host}`;
     }
 
     // global init callback the script calls when ready
