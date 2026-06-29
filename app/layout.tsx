@@ -5,6 +5,7 @@ import { readCollection } from "@/lib/contentRepo";
 import { COLLECTIONS, type CollectionKey } from "@/lib/cms";
 import { CollectionsProvider } from "@/lib/collectionsContext";
 import { GoogleTranslate } from "./components/ui/GoogleTranslate";
+import { BackgroundMusic } from "./components/ui/BackgroundMusic";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -124,6 +125,7 @@ export default async function RootLayout({
         />
         <CollectionsProvider value={initialCollections}>{children}</CollectionsProvider>
         <GoogleTranslate />
+        <BackgroundMusic />
       </body>
     </html>
   );

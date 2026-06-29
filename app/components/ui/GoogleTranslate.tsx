@@ -26,11 +26,11 @@ export function setSiteLanguage(code: string) {
   document.cookie = `googtrans=;${expire};path=/`;
   document.cookie = `googtrans=;${expire};path=/;domain=${host}`;
   document.cookie = `googtrans=;${expire};path=/;domain=.${host}`;
-  if (code !== "en") {
-    document.cookie = `googtrans=${value};path=/`;
-    document.cookie = `googtrans=${value};path=/;domain=${host}`;
-    document.cookie = `googtrans=${value};path=/;domain=.${host}`;
-  }
+  // for English we still set an explicit /en/en so the choice is remembered
+  // (otherwise the no-cookie default would flip back to Hindi)
+  document.cookie = `googtrans=${value};path=/`;
+  document.cookie = `googtrans=${value};path=/;domain=${host}`;
+  document.cookie = `googtrans=${value};path=/;domain=.${host}`;
   window.location.reload();
 }
 
@@ -41,6 +41,15 @@ export function setSiteLanguage(code: string) {
 export function GoogleTranslate() {
   useEffect(() => {
     if (document.getElementById("google-translate-script")) return;
+
+    // Default new visitors (no choice yet) to Hindi — set the cookie BEFORE the
+    // widget initialises so it translates on first load without a reload.
+    if (!document.cookie.includes("googtrans=")) {
+      const host = window.location.hostname;
+      document.cookie = "googtrans=/en/hi;path=/";
+      document.cookie = `googtrans=/en/hi;path=/;domain=${host}`;
+      document.cookie = `googtrans=/en/hi;path=/;domain=.${host}`;
+    }
 
     // global init callback the script calls when ready
     (window as unknown as { googleTranslateElementInit?: () => void }).googleTranslateElementInit = () => {
