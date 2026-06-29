@@ -53,6 +53,13 @@ export function useCollection<T extends { id: string }>(key: string, defaults: T
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
+    // The root layout already fetches every collection server-side per request,
+    // so when that data is present it's fresh — skip the redundant client call
+    // (this removes many uncached API round-trips on every page load).
+    if (server && server.length) {
+      setLoaded(true);
+      return;
+    }
     let alive = true;
     fetch(`/api/content/${key}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
@@ -66,6 +73,7 @@ export function useCollection<T extends { id: string }>(key: string, defaults: T
     return () => {
       alive = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
   const save = useCallback(

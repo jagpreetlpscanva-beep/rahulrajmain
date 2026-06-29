@@ -62,10 +62,18 @@ export function GoogleTranslate() {
       }
     };
 
-    const s = document.createElement("script");
-    s.id = "google-translate-script";
-    s.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
-    document.body.appendChild(s);
+    // load the (heavy) translate script after the page is interactive so it
+    // doesn't compete with the initial render
+    const load = () => {
+      if (document.getElementById("google-translate-script")) return;
+      const s = document.createElement("script");
+      s.id = "google-translate-script";
+      s.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+      document.body.appendChild(s);
+    };
+    const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: object) => number }).requestIdleCallback;
+    if (ric) ric(load, { timeout: 1500 });
+    else setTimeout(load, 800);
   }, []);
 
   return <div id="google_translate_element" className="hidden" aria-hidden />;
