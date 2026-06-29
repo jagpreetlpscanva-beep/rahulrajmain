@@ -96,3 +96,22 @@
   border-radius: 99px;
   border: 2px solid #f3e9d5;
 }
+
+/* ---- Google Website Translate: hide its banner/gadget chrome ---- */
+.goog-te-banner-frame,
+.goog-te-gadget-icon,
+#goog-gt-tt,
+.goog-te-balloon-frame {
+  display: none !important;
+}
+.goog-te-gadget {
+  height: 0;
+  overflow: hidden;
+  font-size: 0 !important;
+}
+body {
+  top: 0 !important;
+}
+.skiptranslate iframe {
+  display: none !important;
+}

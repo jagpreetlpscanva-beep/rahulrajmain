@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { NAV_MENU, LANGUAGES, type NavMenuItem } from "@/lib/content";
 import { useScrolled } from "@/lib/hooks";
 import { Logo } from "./ui/Logo";
 import { SearchBox } from "./ui/SearchBox";
+import { LANGUAGE_CODES, setSiteLanguage, getActiveLang } from "./ui/GoogleTranslate";
 import { CalendarIcon, CloseIcon, MenuIcon, ChevronDownIcon, GlobeIcon } from "./icons";
 
 const MENU = [...NAV_MENU.left, ...NAV_MENU.right];
@@ -14,6 +15,18 @@ export function Navbar({ overlay = false }: { overlay?: boolean }) {
   const scrolled = useScrolled(40);
   const [open, setOpen] = useState(false);
   const [lang, setLang] = useState<string>(LANGUAGES[0]);
+
+  // reflect the active Google-Translate language in the pill on load
+  useEffect(() => {
+    const code = getActiveLang();
+    const label = (Object.keys(LANGUAGE_CODES) as string[]).find((l) => LANGUAGE_CODES[l] === code);
+    if (label) setLang(label);
+  }, []);
+
+  const chooseLang = (l: string) => {
+    setLang(l);
+    setSiteLanguage(LANGUAGE_CODES[l] ?? "en");
+  };
 
   // dark text on a light header: always when not overlay, or once scrolled
   const dark = !overlay || scrolled;
@@ -114,7 +127,7 @@ export function Navbar({ overlay = false }: { overlay?: boolean }) {
                   <li key={l}>
                     <button
                       type="button"
-                      onClick={() => setLang(l)}
+                      onClick={() => chooseLang(l)}
                       className={`block w-full rounded-lg px-3.5 py-2 text-left text-sm transition-colors hover:bg-gold-100/70 hover:text-gold-700 ${
                         l === lang ? "text-gold-700" : "text-ink/75"
                       }`}

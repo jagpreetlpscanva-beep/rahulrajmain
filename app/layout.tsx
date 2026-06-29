@@ -4,6 +4,7 @@ import "./globals.css";
 import { readCollection } from "@/lib/contentRepo";
 import { COLLECTIONS, type CollectionKey } from "@/lib/cms";
 import { CollectionsProvider } from "@/lib/collectionsContext";
+import { GoogleTranslate } from "./components/ui/GoogleTranslate";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -122,6 +123,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <CollectionsProvider value={initialCollections}>{children}</CollectionsProvider>
+        <GoogleTranslate />
       </body>
     </html>
   );
