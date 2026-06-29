@@ -41,11 +41,11 @@ export function Hero({ initialSlides }: { initialSlides?: HeroSlide[] }) {
       className="relative flex min-h-[94vh] flex-col overflow-hidden bg-sunset-orange pt-28 text-cream lg:pt-28"
     >
       {/* ---------- atmosphere ---------- */}
-      {/* dark curved header band (behind the nav) with a centre dip for the logo */}
+      {/* dark header band (behind the nav) — straight bottom edge */}
       <svg
         viewBox="0 0 1440 190"
         preserveAspectRatio="none"
-        className="pointer-events-none absolute inset-x-0 top-0 h-[150px] w-full sm:h-[180px]"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[130px] w-full sm:h-[150px]"
         aria-hidden="true"
       >
         <defs>
@@ -54,10 +54,7 @@ export function Hero({ initialSlides }: { initialSlides?: HeroSlide[] }) {
             <stop offset="1" stopColor="#6a3d12" />
           </linearGradient>
         </defs>
-        <path
-          fill="url(#hero-nav-band)"
-          d="M0,0 H1440 V108 C1080,108 900,140 720,140 C540,140 360,108 0,108 Z"
-        />
+        <path fill="url(#hero-nav-band)" d="M0,0 H1440 V190 H0 Z" />
       </svg>
       {/* light cream fade at the bottom into the tiles */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#f7ecd6] to-transparent" />
