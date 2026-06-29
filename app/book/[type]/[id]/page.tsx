@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { Navbar } from "../../../components/Navbar";
 import { Footer } from "../../../components/sections/Footer";
@@ -105,7 +105,7 @@ export default function BookingPage() {
     setSelectedAddons((prev) => (prev.includes(aid) ? prev.filter((x) => x !== aid) : [...prev, aid]));
 
   // build the step list
-  const steps = needsSlot ? (["Slot", "Payment", "Details"] as const) : (["Payment", "Details"] as const);
+  const steps = needsSlot ? (["Slot", "Details", "Payment"] as const) : (["Details", "Payment"] as const);
   const [stepIdx, setStepIdx] = useState(0);
   const step = steps[stepIdx];
 
@@ -117,8 +117,7 @@ export default function BookingPage() {
     return map;
   }, [slots]);
 
-  const confirm = async (e: FormEvent) => {
-    e.preventDefault();
+  const confirm = async () => {
     if (!form.name.trim() || !form.phone.trim()) return;
     setBusy(true);
     setError("");
@@ -233,7 +232,7 @@ export default function BookingPage() {
                       disabled={Object.keys(slotsByDate).length > 0 && !slot}
                       className="mt-6 w-full rounded-lg bg-gold-gradient px-6 py-3 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn disabled:opacity-50"
                     >
-                      Continue to Payment
+                      Continue
                     </button>
                   </div>
                 )}
@@ -306,24 +305,24 @@ export default function BookingPage() {
                       type="button"
                       onClick={() => {
                         setPaid(true);
-                        setStepIdx(needsSlot ? 2 : 1);
+                        confirm();
                       }}
-                      className="mt-6 w-full rounded-lg bg-gold-gradient px-6 py-3.5 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn"
+                      disabled={busy}
+                      className="mt-6 w-full rounded-lg bg-gold-gradient px-6 py-3.5 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn disabled:opacity-60"
                     >
-                      Pay {showAddons ? fmtINR(total) : item?.price || "₹499"} &amp; Continue
+                      {busy ? "Processing…" : `Pay ${showAddons ? fmtINR(total) : item?.price || "₹499"} & Confirm Booking`}
                     </button>
-                    <p className="mt-3 text-xs text-ink/40">Demo payment — connect Razorpay/Stripe for live payments.</p>
-                    {needsSlot && (
-                      <button type="button" onClick={() => setStepIdx(0)} className="mt-2 text-xs text-ink/50 underline">
-                        ← change slot
-                      </button>
-                    )}
+                    {error && <p className="mt-3 text-sm font-medium text-rose-600">{error}</p>}
+                    <p className="mt-3 text-xs text-ink/40">Demo payment — add Razorpay keys for live payments.</p>
+                    <button type="button" onClick={() => setStepIdx(needsSlot ? 1 : 0)} className="mt-2 text-xs text-ink/50 underline">
+                      ← back
+                    </button>
                   </div>
                 )}
 
                 {/* ---- details ---- */}
                 {step === "Details" && (
-                  <form onSubmit={confirm}>
+                  <div>
                     <h2 className="font-serif text-lg font-bold text-ink">Your details</h2>
                     <p className="mt-1 text-sm text-ink/55">We&rsquo;ll confirm your booking on this number.</p>
                     <div className="mt-4 space-y-3">
@@ -331,15 +330,20 @@ export default function BookingPage() {
                       <input className={inputCls} placeholder="Phone number *" value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
                       <input className={inputCls} placeholder="Email (optional)" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
                     </div>
-                    {error && <p className="mt-3 text-sm font-medium text-rose-600">{error}</p>}
                     <button
-                      type="submit"
-                      disabled={busy || !form.name.trim() || !form.phone.trim()}
+                      type="button"
+                      onClick={() => { if (form.name.trim() && form.phone.trim()) setStepIdx(needsSlot ? 2 : 1); }}
+                      disabled={!form.name.trim() || !form.phone.trim()}
                       className="mt-5 w-full rounded-lg bg-gold-gradient px-6 py-3.5 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn disabled:opacity-50"
                     >
-                      {busy ? "Confirming…" : "Confirm Booking"}
+                      Continue to Payment
                     </button>
-                  </form>
+                    {needsSlot && (
+                      <button type="button" onClick={() => setStepIdx(0)} className="mt-2 block w-full text-center text-xs text-ink/50 underline">
+                        ← change slot
+                      </button>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

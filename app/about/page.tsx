@@ -75,7 +75,7 @@ export default function AboutPage() {
               </div>
 
               <div className="mt-8 flex flex-wrap items-center gap-4">
-                <a href="/consultation" className="inline-flex items-center gap-2 rounded-xl bg-gold-gradient px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5">
+                <a href="/book/consultation/quick" className="inline-flex items-center gap-2 rounded-xl bg-gold-gradient px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5">
                   Book Consultation →
                 </a>
                 <a href="#story" className="inline-flex items-center gap-3 text-sm font-semibold text-ink/70 transition-colors hover:text-gold-600">
@@ -139,7 +139,7 @@ export default function AboutPage() {
             </div>
 
             <div className="mt-10 text-center">
-              <a href="/consultation" className="inline-flex items-center gap-2 rounded-xl bg-gold-gradient px-8 py-4 text-sm font-bold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5">
+              <a href="/book/consultation/quick" className="inline-flex items-center gap-2 rounded-xl bg-gold-gradient px-8 py-4 text-sm font-bold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5">
                 Book a Consultation →
               </a>
             </div>

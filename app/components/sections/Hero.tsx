@@ -51,7 +51,8 @@ export function Hero({ initialSlides }: { initialSlides?: HeroSlide[] }) {
         <defs>
           <linearGradient id="hero-nav-band" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#2a1407" />
-            <stop offset="1" stopColor="#6a3d12" />
+            <stop offset="0.5" stopColor="#5a3310" />
+            <stop offset="1" stopColor="#6a3d12" stopOpacity="0" />
           </linearGradient>
         </defs>
         <path fill="url(#hero-nav-band)" d="M0,0 H1440 V190 H0 Z" />

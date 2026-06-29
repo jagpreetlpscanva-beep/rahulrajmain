@@ -92,7 +92,7 @@ export default function HoroscopePage() {
               <p className="relative mt-3 text-sm leading-relaxed text-cream/75">
                 Go beyond generic predictions. Get a horoscope based on your unique birth chart.
               </p>
-              <a href="/consultation" className="relative mt-6 inline-block rounded-xl bg-gold-gradient px-6 py-3 text-sm font-bold text-night shadow-gold-btn transition-transform hover:-translate-y-0.5">
+              <a href="/book/consultation/quick" className="relative mt-6 inline-block rounded-xl bg-gold-gradient px-6 py-3 text-sm font-bold text-night shadow-gold-btn transition-transform hover:-translate-y-0.5">
                 Get Your Personalized Horoscope →
               </a>
             </div>
@@ -146,7 +146,7 @@ export default function HoroscopePage() {
               <div className="mt-6 rounded-3xl border border-gold-500/15 bg-gradient-to-r from-gold-50 to-[#FBF1D9] p-6">
                 <p className="font-serif text-lg font-bold text-ink">Your Horoscope, Anytime, Anywhere</p>
                 <p className="mt-1 text-sm text-ink/60">Access your daily, weekly &amp; monthly horoscopes on the go.</p>
-                <a href="/consultation" className="mt-4 inline-block rounded-xl bg-gold-gradient px-5 py-2.5 text-sm font-bold text-night shadow-gold-btn transition-transform hover:-translate-y-0.5">
+                <a href="/book/consultation/quick" className="mt-4 inline-block rounded-xl bg-gold-gradient px-5 py-2.5 text-sm font-bold text-night shadow-gold-btn transition-transform hover:-translate-y-0.5">
                   Get Started →
                 </a>
               </div>
