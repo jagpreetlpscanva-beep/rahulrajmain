@@ -28,23 +28,25 @@ export function BookConsultationGrid() {
         clarity to your questions.
       </p>
 
-      {/* cards */}
-      <div className="relative mt-16 lg:mt-12">
-        {/* decorative side images, hidden on small screens, sit clear of the cards and gently float */}
+      {/* decorative strip — fully clear of the cards, no overlap possible */}
+      <div className="pointer-events-none relative mx-auto hidden h-0 max-w-5xl xl:block">
         <img
           src="/decor/books-lotus.png"
           alt=""
           aria-hidden
-          className="pointer-events-none absolute -left-4 -top-16 hidden w-28 -translate-x-full animate-float select-none xl:block"
+          className="absolute -left-20 -top-[9.5rem] w-24 animate-float select-none"
         />
         <img
           src="/decor/diya.png"
           alt=""
           aria-hidden
-          className="pointer-events-none absolute -right-4 -top-20 hidden w-32 translate-x-full animate-float select-none xl:block"
+          className="absolute -right-16 -top-[10.5rem] w-28 animate-float select-none"
           style={{ animationDelay: "1.5s" }}
         />
+      </div>
 
+      {/* cards */}
+      <div className="relative z-10 mt-12">
         <div className="grid gap-6 lg:grid-cols-2">
           <ConsultationCard
             badge="OFFLINE"
