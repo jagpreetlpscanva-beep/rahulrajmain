@@ -7,6 +7,13 @@ import { CollectionsProvider } from "@/lib/collectionsContext";
 import { GoogleTranslate } from "./components/ui/GoogleTranslate";
 import { BackgroundMusic } from "./components/ui/BackgroundMusic";
 
+// Collections (consultations, slots, prices, images, etc.) are read fresh on
+// every request so admin edits go live immediately — without this, Next.js
+// would statically cache pages at build time and admin changes wouldn't
+// appear until the next deploy.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const playfair = Playfair_Display({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800", "900"],
