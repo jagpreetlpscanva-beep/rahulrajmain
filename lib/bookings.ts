@@ -21,6 +21,8 @@ export interface Booking {
   phone: string;
   email?: string;
   paid: boolean;
+  /** How the customer chose to pay. "cash" only applies to offline consultations. */
+  paymentMethod?: "cash" | "online";
   status: "new" | "completed" | "cancelled";
   createdAt: string;
 }
