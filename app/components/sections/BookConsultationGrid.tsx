@@ -1,8 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useCollection, DEFAULT_CONSULTATIONS, type Consultation } from "@/lib/adminStore";
 
 export function BookConsultationGrid() {
+  const { items: consultations } = useCollection<Consultation>("consultations", DEFAULT_CONSULTATIONS);
+  const offline = consultations.find((c) => c.id === "offline-consultation");
+  const online = consultations.find((c) => c.id === "online-consultation");
+
   return (
     <div className="mx-auto max-w-6xl">
       {/* breadcrumb */}
@@ -43,22 +48,22 @@ export function BookConsultationGrid() {
           <ConsultationCard
             badge="OFFLINE"
             badgeColor="bg-gold-gradient text-night"
-            imageSrc={OFFLINE_IMAGE}
+            imageSrc={offline?.image || OFFLINE_IMAGE}
             icon={<PinIcon />}
-            title="Offline Consultation"
+            title={offline?.title || "Offline Consultation"}
             subtitle="In-Person Meeting"
-            description="Meet personally for a detailed consultation and get direct, in-depth guidance."
+            description={offline?.description || "Meet personally for a detailed consultation and get direct, in-depth guidance."}
             points={["One-on-One Meeting", "Detailed Analysis", "Personalized Remedies"]}
             href="/book/consultation/offline-consultation"
           />
           <ConsultationCard
             badge="ONLINE"
             badgeColor="bg-gold-gradient text-night"
-            imageSrc={ONLINE_IMAGE}
+            imageSrc={online?.image || ONLINE_IMAGE}
             icon={<VideoIcon />}
-            title="Online Consultation"
+            title={online?.title || "Online Consultation"}
             subtitle="Virtual Meeting"
-            description="Connect from anywhere in the world and get expert guidance through a virtual session."
+            description={online?.description || "Connect from anywhere in the world and get expert guidance through a virtual session."}
             points={["Video Call Session", "Comfort of Your Space", "Detailed Guidance"]}
             href="/book/consultation/online-consultation"
           />
