@@ -78,18 +78,35 @@ export function useCollection<T extends { id: string }>(key: string, defaults: T
 
   const save = useCallback(
     async (next: T[]) => {
+      const prev = items; // remember in case we need to roll back
       setItems(next); // optimistic
       try {
-        await fetch(`/api/content/${key}`, {
+        const res = await fetch(`/api/content/${key}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(next),
         });
+        if (!res.ok) {
+          // The save didn't actually persist (e.g. admin session expired after
+          // 12h and the API returned 401). Without this check the UI kept
+          // showing the optimistic change forever, even though nothing was
+          // written — so additions silently "disappeared" on next load.
+          setItems(prev);
+          if (res.status === 401) {
+            alert("Your admin session has expired. Please log in again and retry — this change was NOT saved.");
+          } else {
+            alert("Save failed — this change was NOT saved. Please try again.");
+          }
+          return false;
+        }
       } catch {
-        /* network error — keep the optimistic copy on screen */
+        setItems(prev);
+        alert("Network error — this change was NOT saved. Please check your connection and try again.");
+        return false;
       }
+      return true;
     },
-    [key]
+    [key, items]
   );
 
   const reset = useCallback(async () => {
