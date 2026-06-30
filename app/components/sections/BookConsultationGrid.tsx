@@ -29,18 +29,18 @@ export function BookConsultationGrid() {
       </p>
 
       {/* decorative strip — fully clear of the cards, no overlap possible */}
-      <div className="pointer-events-none relative mx-auto hidden h-0 max-w-5xl xl:block">
+      <div className="pointer-events-none relative mx-auto hidden h-0 max-w-6xl xl:block">
         <img
           src="/decor/books-lotus.png"
           alt=""
           aria-hidden
-          className="absolute -left-20 -top-[9.5rem] w-24 animate-float select-none"
+          className="absolute -left-28 -top-[7.5rem] w-40 animate-float select-none"
         />
         <img
           src="/decor/diya.png"
           alt=""
           aria-hidden
-          className="absolute -right-16 -top-[10.5rem] w-28 animate-float select-none"
+          className="absolute -right-20 -top-[11rem] w-36 animate-float select-none"
           style={{ animationDelay: "1.5s" }}
         />
       </div>
@@ -124,17 +124,21 @@ function ConsultationCard({
   return (
     <Link
       href={href}
-      className="group flex flex-col overflow-hidden rounded-3xl border border-gold-500/20 bg-white shadow-card transition-shadow hover:shadow-gold-btn sm:flex-row"
+      className="group flex flex-col overflow-hidden rounded-3xl border border-gold-500/20 bg-white shadow-card transition-all duration-300 hover:-translate-y-1.5 hover:shadow-gold-btn sm:flex-row"
     >
-      <div className="relative h-48 w-full shrink-0 sm:h-auto sm:w-[42%]">
+      <div className="relative h-48 w-full shrink-0 overflow-hidden sm:h-auto sm:w-[42%]">
         <span className={`absolute left-3 top-3 z-10 rounded-md px-3 py-1 text-[0.65rem] font-bold tracking-wider ${badgeColor}`}>
           {badge}
         </span>
-        <img src={imageSrc} alt={title} className="h-full w-full object-cover" />
+        <img
+          src={imageSrc}
+          alt={title}
+          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+        />
       </div>
 
       <div className="flex flex-1 flex-col p-6">
-        <span className="grid h-11 w-11 place-items-center rounded-full border border-gold-300 bg-gold-50 text-gold-700">
+        <span className="grid h-11 w-11 place-items-center rounded-full border border-gold-300 bg-gold-50 text-gold-700 transition-transform duration-300 group-hover:scale-110 group-hover:bg-gold-100">
           {icon}
         </span>
         <h3 className="mt-3 font-serif text-xl font-bold text-ink">{title}</h3>
@@ -149,8 +153,11 @@ function ConsultationCard({
           ))}
         </ul>
 
-        <span className="mt-5 inline-block w-fit rounded-lg bg-gold-gradient px-6 py-3 text-xs font-semibold uppercase tracking-wider text-night shadow-gold-btn">
+        <span className="mt-5 inline-flex w-fit items-center gap-2 rounded-lg bg-gold-gradient px-6 py-3 text-xs font-semibold uppercase tracking-wider text-night shadow-gold-btn transition-transform duration-300 group-hover:scale-[1.04] group-hover:shadow-lg">
           Book {badge === "OFFLINE" ? "Offline" : "Online"} Consultation
+          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
         </span>
       </div>
     </Link>
