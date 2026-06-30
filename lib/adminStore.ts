@@ -17,6 +17,7 @@ export {
   DEFAULT_REVIEWS,
   DEFAULT_PODCASTS,
   DEFAULT_DECOR,
+  DEFAULT_COUPONS,
   COLLECTIONS,
   POOJA_CATEGORIES,
   COURSE_CATEGORIES,
@@ -38,6 +39,7 @@ export type {
   Review,
   Podcast,
   DecorItem,
+  Coupon,
   CollectionKey,
 } from "./cms";
 

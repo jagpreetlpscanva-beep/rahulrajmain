@@ -724,6 +724,21 @@ export const DEFAULT_DECOR: DecorItem[] = [
   { id: "pooja-right", title: "Pooja hero — Right image" },
 ];
 
+/** Discount coupon usable at checkout. `title` is the coupon code. */
+export interface Coupon {
+  id: string;
+  title: string; // the coupon CODE (case-insensitive)
+  type: "Percent" | "Flat";
+  value: number; // % when Percent, ₹ amount when Flat
+  minAmount?: number; // minimum order total to qualify
+  expires?: string; // ISO date (YYYY-MM-DD); empty = never expires
+  status: "Active" | "Disabled";
+}
+
+export const DEFAULT_COUPONS: Coupon[] = [
+  { id: "coupon-welcome", title: "WELCOME20", type: "Percent", value: 20, status: "Active" },
+];
+
 /** Collections exposed by the CMS API, with their seed data. */
 export const COLLECTIONS = {
   poojas: DEFAULT_POOJAS,
@@ -738,6 +753,7 @@ export const COLLECTIONS = {
   reviews: DEFAULT_REVIEWS,
   podcasts: DEFAULT_PODCASTS,
   decor: DEFAULT_DECOR,
+  coupons: DEFAULT_COUPONS,
 } as const;
 
 export type CollectionKey = keyof typeof COLLECTIONS;

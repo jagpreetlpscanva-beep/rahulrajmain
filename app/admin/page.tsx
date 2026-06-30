@@ -27,6 +27,8 @@ import {
   type Podcast,
   DEFAULT_DECOR,
   type DecorItem,
+  DEFAULT_COUPONS,
+  type Coupon,
 } from "@/lib/adminStore";
 import { CollectionManager, type FieldDef } from "../components/admin/CollectionManager";
 import { SlotsManager } from "../components/admin/SlotsManager";
@@ -201,6 +203,17 @@ const podcastFields: FieldDef[] = [
 
 const blankPodcast = (): Podcast => ({ id: newId("pod"), title: "", videoUrl: "", description: "" });
 
+const couponFields: FieldDef[] = [
+  { name: "title", label: "Coupon code", type: "text", placeholder: "WELCOME20", hint: "What customers type at checkout (case-insensitive)." },
+  { name: "type", label: "Discount type", type: "select", options: ["Percent", "Flat"] },
+  { name: "value", label: "Discount value", type: "number", hint: "Percent: e.g. 20 = 20% off. Flat: e.g. 100 = ₹100 off." },
+  { name: "minAmount", label: "Minimum order (₹)", type: "number", optional: true, hint: "Leave 0 for no minimum." },
+  { name: "expires", label: "Expiry date", type: "date", optional: true, hint: "Leave empty for no expiry. Coupon stops working after this date." },
+  { name: "status", label: "Status", type: "select", options: ["Active", "Disabled"] },
+];
+
+const blankCoupon = (): Coupon => ({ id: newId("coupon"), title: "", type: "Percent", value: 10, status: "Active" });
+
 const decorFields: FieldDef[] = [
   { name: "title", label: "Label", type: "text", hint: "Which slot this image fills (do not change)." },
   { name: "image", label: "Decoration image", type: "image", optional: true, hint: "Transparent PNG works best (lotus, diya, books, etc.)." },
@@ -220,7 +233,7 @@ const blankConsultation = (): Consultation => ({
   image: "",
 });
 
-type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "reviews" | "slots" | "bookings" | "messages";
+type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "coupons" | "reviews" | "slots" | "bookings" | "messages";
 
 const GridIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -243,6 +256,7 @@ const NAV: { key: TabKey; label: string; icon: (p: { className?: string }) => Re
   { key: "addons", label: "Add-ons", icon: GiftIcon },
   { key: "gallery", label: "Gallery", icon: GiftIcon },
   { key: "decor", label: "Decorations", icon: GiftIcon },
+  { key: "coupons", label: "Discounts", icon: GiftIcon },
   { key: "reviews", label: "Reviews", icon: StarIcon },
   { key: "slots", label: "Slots", icon: GridIcon },
   { key: "bookings", label: "Bookings", icon: UsersIcon },
@@ -268,6 +282,7 @@ export default function AdminPage() {
   const poojaBanner = useCollection<ArcTile>("poojaBanner", DEFAULT_ARC_TILES);
   const podcasts = useCollection<Podcast>("podcasts", DEFAULT_PODCASTS);
   const decor = useCollection<DecorItem>("decor", DEFAULT_DECOR);
+  const coupons = useCollection<Coupon>("coupons", DEFAULT_COUPONS);
 
   useEffect(() => {
     fetch("/api/admin/session", { cache: "no-store" })
@@ -451,6 +466,9 @@ export default function AdminPage() {
           )}
           {tab === "decor" && (
             <CollectionManager<DecorItem> label="Decoration" items={decor.items} fields={decorFields} blank={blankDecor} onChange={decor.save} onReset={decor.reset} previewHref="/courses" />
+          )}
+          {tab === "coupons" && (
+            <CollectionManager<Coupon> label="Discount Coupons" items={coupons.items} fields={couponFields} blank={blankCoupon} onChange={coupons.save} onReset={coupons.reset} previewHref="/book/consultation/quick" />
           )}
           {tab === "reviews" && <ReviewsManager />}
           {tab === "slots" && <SlotsManager />}

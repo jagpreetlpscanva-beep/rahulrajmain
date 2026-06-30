@@ -5,7 +5,8 @@ import { useParams } from "next/navigation";
 import { Navbar } from "../../../components/Navbar";
 import { Footer } from "../../../components/sections/Footer";
 import { ScrollToTop } from "../../../components/ui/ScrollToTop";
-import type { Slot, Addon } from "@/lib/adminStore";
+import type { Slot, Addon, Coupon } from "@/lib/adminStore";
+import { applyCoupon, type CouponResult } from "@/lib/coupons";
 
 const COLL: Record<string, string> = {
   consultation: "consultations",
@@ -96,6 +97,10 @@ export default function BookingPage() {
   const showPaymentChoice = type === "consultation" && consultationType === "offline";
   const [paymentMethod, setPaymentMethod] = useState<"cash" | "online" | null>(showPaymentChoice ? null : "online");
 
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponRes, setCouponRes] = useState<CouponResult | null>(null);
+
   useEffect(() => {
     const coll = COLL[type] || "consultations";
     fetch(`/api/content/${coll}`, { cache: "no-store" })
@@ -118,6 +123,10 @@ export default function BookingPage() {
         .then((a: Addon[]) => setAddons(Array.isArray(a) ? a : []))
         .catch(() => {});
     }
+    fetch(`/api/content/coupons`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((c: Coupon[]) => setCoupons(Array.isArray(c) ? c : []))
+      .catch(() => {});
   }, [type, id, needsSlot]);
 
   const chosenAddons = useMemo(
@@ -130,6 +139,14 @@ export default function BookingPage() {
   );
   const toggleAddon = (aid: string) =>
     setSelectedAddons((prev) => (prev.includes(aid) ? prev.filter((x) => x !== aid) : [...prev, aid]));
+
+  // base order amount (with add-ons) before any coupon
+  const baseTotal = showAddons ? total : parsePrice(item?.price);
+  const discount = couponRes?.ok ? couponRes.discount : 0;
+  const finalTotal = Math.max(0, baseTotal - discount);
+
+  const applyCode = () => setCouponRes(applyCoupon(coupons, couponCode, baseTotal));
+  const clearCoupon = () => { setCouponRes(null); setCouponCode(""); };
 
   // build the step list
   const steps = needsSlot ? (["Slot", "Details", "Payment"] as const) : (["Details", "Payment"] as const);
@@ -160,8 +177,9 @@ export default function BookingPage() {
           itemType: type,
           itemId: item?.id || id,
           itemTitle: item?.title || "",
-          amount: showAddons ? fmtINR(total) : item?.price || "",
+          amount: fmtINR(finalTotal),
           addons: chosenAddons.map((a) => a.title),
+          coupon: couponRes?.ok ? `${couponRes.coupon?.title} (−${fmtINR(discount)})` : "",
           slotId: slot?.id,
           slotDate: slot?.date,
           slotTime: slot?.time,
@@ -410,18 +428,50 @@ export default function BookingPage() {
                       </div>
                     )}
 
+                    {/* coupon */}
+                    <div className="mx-auto mt-5 max-w-xs text-left">
+                      <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink/55">Have a coupon?</label>
+                      {couponRes?.ok ? (
+                        <div className="flex items-center justify-between gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2.5 text-sm">
+                          <span className="font-semibold text-emerald-700">
+                            {couponRes.coupon?.title} applied · −{fmtINR(discount)}
+                          </span>
+                          <button type="button" onClick={clearCoupon} className="text-xs font-medium text-emerald-700 underline">remove</button>
+                        </div>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input
+                            className={`${inputCls} uppercase`}
+                            placeholder="Enter code"
+                            value={couponCode}
+                            onChange={(e) => setCouponCode(e.target.value)}
+                            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); applyCode(); } }}
+                          />
+                          <button type="button" onClick={applyCode} className="shrink-0 rounded-lg border border-gold-500/40 bg-gold-50 px-4 text-sm font-semibold text-gold-700 hover:bg-gold-100">
+                            Apply
+                          </button>
+                        </div>
+                      )}
+                      {couponRes && !couponRes.ok && (
+                        <p className="mt-1.5 text-xs font-medium text-rose-600">{couponRes.message}</p>
+                      )}
+                    </div>
+
                     <div className="mx-auto mt-5 max-w-xs rounded-2xl border border-gold-500/25 bg-gold-50/60 p-5">
                       <p className="text-sm text-ink/60">
                         {paymentMethod === "cash" ? "Amount due on consultation day" : "Amount payable"}
                       </p>
-                      <p className="font-serif text-4xl font-bold text-gold-700">
-                        {showAddons ? fmtINR(total) : item?.price || "₹499"}
-                      </p>
-                      {showAddons && chosenAddons.length > 0 && (
+                      {discount > 0 && (
+                        <p className="text-sm text-ink/40 line-through">{fmtINR(baseTotal)}</p>
+                      )}
+                      <p className="font-serif text-4xl font-bold text-gold-700">{fmtINR(finalTotal)}</p>
+                      {discount > 0 ? (
+                        <p className="mt-1 text-xs font-semibold text-emerald-600">You saved {fmtINR(discount)}!</p>
+                      ) : showAddons && chosenAddons.length > 0 ? (
                         <p className="mt-1 text-xs text-ink/50">
                           {item?.price || "—"} base + {chosenAddons.length} add-on{chosenAddons.length > 1 ? "s" : ""}
                         </p>
-                      )}
+                      ) : null}
                     </div>
                     <button
                       type="button"
@@ -436,7 +486,7 @@ export default function BookingPage() {
                         ? "Processing…"
                         : paymentMethod === "cash"
                         ? "Confirm Booking — Pay Cash on the Day"
-                        : `Pay ${showAddons ? fmtINR(total) : item?.price || "₹499"} & Confirm Booking`}
+                        : `Pay ${fmtINR(finalTotal)} & Confirm Booking`}
                     </button>
                     {error && <p className="mt-3 text-sm font-medium text-rose-600">{error}</p>}
                     {paymentMethod !== "cash" && (
