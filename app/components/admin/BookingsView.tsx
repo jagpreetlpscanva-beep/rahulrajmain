@@ -89,7 +89,10 @@ export function BookingsView() {
                   </td>
                   <td className="px-4 py-3">
                     <p className="font-medium">{b.itemTitle || b.itemType}</p>
-                    <p className="text-xs capitalize text-ink/50">{b.itemType}{b.paid ? " · paid" : ""}</p>
+                    <p className="text-xs capitalize text-ink/50">
+                      {b.itemType}
+                      {b.paymentMethod === "cash" ? " · 💵 cash on day" : b.paid ? " · 💳 paid online" : ""}
+                    </p>
                   </td>
                   <td className="px-4 py-3 text-xs">
                     {b.slotDate ? `${b.slotDate}, ${b.slotTime}` : "—"}
