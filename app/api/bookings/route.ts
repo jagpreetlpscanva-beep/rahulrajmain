@@ -63,6 +63,7 @@ export async function POST(req: Request) {
     phone,
     email: String(body.email || "").trim() || undefined,
     paid: String(body.paid) === "true",
+    paymentMethod: body.paymentMethod === "cash" ? "cash" : body.paymentMethod === "online" ? "online" : undefined,
     status: "new",
     createdAt: new Date().toISOString(),
   };
