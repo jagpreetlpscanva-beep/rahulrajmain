@@ -29,19 +29,20 @@ export function BookConsultationGrid() {
       </p>
 
       {/* cards */}
-      <div className="relative mt-12">
-        {/* decorative side images, hidden on small screens */}
+      <div className="relative mt-16 lg:mt-12">
+        {/* decorative side images, hidden on small screens, sit clear of the cards and gently float */}
         <img
           src="/decor/books-lotus.png"
           alt=""
           aria-hidden
-          className="pointer-events-none absolute -left-8 top-2 hidden w-32 select-none xl:block"
+          className="pointer-events-none absolute -left-4 -top-16 hidden w-28 -translate-x-full animate-float select-none xl:block"
         />
         <img
           src="/decor/diya.png"
           alt=""
           aria-hidden
-          className="pointer-events-none absolute -right-6 top-0 hidden w-36 select-none xl:block"
+          className="pointer-events-none absolute -right-4 -top-20 hidden w-32 translate-x-full animate-float select-none xl:block"
+          style={{ animationDelay: "1.5s" }}
         />
 
         <div className="grid gap-6 lg:grid-cols-2">
