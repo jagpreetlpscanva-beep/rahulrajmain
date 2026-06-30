@@ -273,13 +273,11 @@ export function SlotsManager() {
                       key={s.id}
                       className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${
                         s.booked
-                          ? "border-rose-200 bg-rose-50 text-rose-700"
-                          : isOnline
-                          ? "border-sky-200 bg-sky-50 text-sky-800"
-                          : "border-amber-200 bg-amber-50 text-amber-800"
+                          ? "border-rose-300 bg-rose-50 text-rose-700"
+                          : "border-emerald-300 bg-emerald-50 text-emerald-800"
                       }`}
                     >
-                      <span>🕐</span>
+                      <span>{isOnline ? "🌐" : "📍"}</span>
                       <span className="font-semibold">{s.time}</span>
                       {s.booked && <span className="text-xs font-medium">(Booked)</span>}
                       <button
