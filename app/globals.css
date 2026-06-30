@@ -132,3 +132,54 @@ html.gt-translating::before {
   0%, 100% { opacity: 0.55; }
   50% { opacity: 1; }
 }
+
+/* ============================================================
+   Premium button interactions (no theme/colour changes)
+   ============================================================ */
+button, a { -webkit-tap-highlight-color: transparent; }
+
+/* Primary gold CTA buttons: shine sweep + lift + glow + press */
+.shadow-gold-btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.shadow-gold-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  background-size: 250% 100%;
+  background-position: 160% 0;
+  transition: background-position .7s ease;
+  pointer-events: none;
+}
+.shadow-gold-btn:hover::after { background-position: -160% 0; }
+.shadow-gold-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -8px rgba(192, 138, 46, 0.65);
+}
+.shadow-gold-btn:active { transform: translateY(0) scale(0.97); }
+.shadow-gold-btn:disabled { transform: none; box-shadow: none; }
+.shadow-gold-btn:disabled::after { display: none; }
+
+/* Outline / secondary buttons (anchors & buttons with a gold border): gentle lift */
+a[class*="border-gold-500"], button[class*="border-gold-500"] {
+  transition: transform .25s ease, background-color .25s ease, color .25s ease, box-shadow .25s ease;
+}
+a[class*="border-gold-500"]:hover, button[class*="border-gold-500"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px -12px rgba(192, 138, 46, 0.5);
+}
+a[class*="border-gold-500"]:active, button[class*="border-gold-500"]:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Reduced-motion users: disable the movement */
+@media (prefers-reduced-motion: reduce) {
+  .shadow-gold-btn, .shadow-gold-btn::after,
+  a[class*="border-gold-500"], button[class*="border-gold-500"] {
+    transition: none;
+    transform: none;
+  }
+}
