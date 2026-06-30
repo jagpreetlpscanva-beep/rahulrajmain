@@ -109,7 +109,7 @@ export default function BookingPage() {
     if (needsSlot) {
       fetch(`/api/content/slots`, { cache: "no-store" })
         .then((r) => r.json())
-        .then((s: Slot[]) => setSlots(Array.isArray(s) ? s.filter((x) => !x.booked) : []))
+        .then((s: Slot[]) => setSlots(Array.isArray(s) ? s : []))
         .catch(() => {});
     }
     if (type !== "consultation") {
@@ -267,27 +267,44 @@ export default function BookingPage() {
 
                         {selectedDate && (
                           <div className="mt-6">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-ink/55">
-                              Available times for {fmtFull(selectedDate)}
-                            </p>
+                            <div className="flex items-center justify-between gap-3">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-ink/55">
+                                Available times for {fmtFull(selectedDate)}
+                              </p>
+                              <div className="flex shrink-0 items-center gap-3 text-[11px] text-ink/50">
+                                <span className="flex items-center gap-1.5">
+                                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Open
+                                </span>
+                                <span className="flex items-center gap-1.5">
+                                  <span className="h-2.5 w-2.5 rounded-full bg-rose-500" /> Booked
+                                </span>
+                              </div>
+                            </div>
                             {timesForSelectedDate.length === 0 ? (
                               <p className="mt-3 text-sm text-ink/60">No slots available for this date — try another date.</p>
                             ) : (
-                              <div className="mt-3 flex flex-wrap gap-2">
-                                {timesForSelectedDate.map((s) => (
-                                  <button
-                                    key={s.id}
-                                    type="button"
-                                    onClick={() => setSlot(s)}
-                                    className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
-                                      slot?.id === s.id
-                                        ? "border-gold-600 bg-gold-gradient text-night"
-                                        : "border-ink/15 text-ink/75 hover:border-gold-500"
-                                    }`}
-                                  >
-                                    {s.time}
-                                  </button>
-                                ))}
+                              <div className="mt-3 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                                {timesForSelectedDate.map((s) => {
+                                  const isSelected = slot?.id === s.id;
+                                  return (
+                                    <button
+                                      key={s.id}
+                                      type="button"
+                                      disabled={s.booked}
+                                      onClick={() => !s.booked && setSlot(s)}
+                                      className={`flex flex-col items-center gap-0.5 rounded-xl border px-3 py-2.5 text-sm font-semibold transition-colors ${
+                                        s.booked
+                                          ? "cursor-not-allowed border-rose-200 bg-rose-50 text-rose-400"
+                                          : isSelected
+                                          ? "border-gold-600 bg-gold-gradient text-night shadow-gold-btn"
+                                          : "border-emerald-300 bg-emerald-50 text-emerald-800 hover:border-emerald-500 hover:bg-emerald-100"
+                                      }`}
+                                    >
+                                      <span>{s.time}</span>
+                                      {s.booked && <span className="text-[10px] font-medium normal-case">(Booked)</span>}
+                                    </button>
+                                  );
+                                })}
                               </div>
                             )}
                           </div>
