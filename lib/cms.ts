@@ -557,6 +557,8 @@ export interface Slot {
   /** e.g. "10:30 AM" */
   time: string;
   booked?: boolean;
+  /** Which consultation mode this slot is for. Defaults to "online" if unset. */
+  type?: "online" | "offline";
 }
 
 export const DEFAULT_SLOTS: Slot[] = [
