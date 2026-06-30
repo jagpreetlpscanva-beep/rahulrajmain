@@ -118,12 +118,14 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${poppins.variable}`}>
       <body>
-        {/* runs before paint: show the splash while a non-English language is pending */}
+        {/* runs before paint: localStorage is the source of truth for language.
+            Clear any stray googtrans cookies, then set the single correct one
+            (or none for English) and flag the splash while translating. */}
         <script
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
             __html:
-              "(function(){try{var m=document.cookie.match(/googtrans=\\/[^/]*\\/([^;]+)/);var l=m?m[1]:'hi';if(l&&l!=='en'){document.documentElement.classList.add('gt-translating')}}catch(e){}})();",
+              "(function(){try{var l=localStorage.getItem('siteLang')||'hi';var h=location.hostname;var ex='expires=Thu, 01 Jan 1970 00:00:00 UTC';document.cookie='googtrans=;'+ex+';path=/';document.cookie='googtrans=;'+ex+';path=/;domain='+h;document.cookie='googtrans=;'+ex+';path=/;domain=.'+h;if(l&&l!=='en'){document.cookie='googtrans=/en/'+l+';path=/';document.documentElement.classList.add('gt-translating')}}catch(e){}})();",
           }}
         />
         <script
