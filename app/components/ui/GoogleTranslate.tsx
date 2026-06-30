@@ -59,24 +59,20 @@ export function GoogleTranslate() {
     };
 
     const root = document.documentElement;
-    if (root.classList.contains("gt-translating")) {
-      // a non-English language is pending — load now and hide the splash once
-      // Google applies the translation (it adds a `translated-*` class)
-      const reveal = () => root.classList.remove("gt-translating");
-      const obs = new MutationObserver(() => {
-        if (root.classList.contains("translated-ltr") || root.classList.contains("translated-rtl")) {
-          reveal();
-          obs.disconnect();
-        }
-      });
-      obs.observe(root, { attributes: true, attributeFilter: ["class"] });
-      setTimeout(reveal, 4000); // safety fallback
-      load();
-    } else {
-      const ric = (window as unknown as { requestIdleCallback?: (cb: () => void, o?: object) => number }).requestIdleCallback;
-      if (ric) ric(load, { timeout: 1500 });
-      else setTimeout(load, 800);
-    }
+    // Only load Google Translate when a non-English language is active. For
+    // English we never load it, so it can't re-translate the page back.
+    if (!root.classList.contains("gt-translating")) return;
+
+    const reveal = () => root.classList.remove("gt-translating");
+    const obs = new MutationObserver(() => {
+      if (root.classList.contains("translated-ltr") || root.classList.contains("translated-rtl")) {
+        reveal();
+        obs.disconnect();
+      }
+    });
+    obs.observe(root, { attributes: true, attributeFilter: ["class"] });
+    setTimeout(reveal, 4000); // safety fallback
+    load();
   }, []);
 
   return <div id="google_translate_element" className="hidden" aria-hidden />;
