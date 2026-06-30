@@ -444,6 +444,26 @@ export interface Consultation {
 
 export const DEFAULT_CONSULTATIONS: Consultation[] = [
   {
+    id: "offline-consultation",
+    title: "Offline Consultation",
+    description: "Meet Rahul Raj in person for a detailed, one-on-one consultation and direct guidance.",
+    duration: "45 mins",
+    mode: "In-Person Meeting",
+    price: "₹500",
+    accent: ["#A67320", "#5E4013"],
+    badge: "In-Person",
+  },
+  {
+    id: "online-consultation",
+    title: "Online Consultation",
+    description: "Connect with Rahul Raj from anywhere over a video call and get expert guidance.",
+    duration: "30 mins",
+    mode: "Virtual Meeting",
+    price: "₹1,000",
+    accent: ["#C8902C", "#82591A"],
+    badge: "Virtual",
+  },
+  {
     id: "consult-life",
     title: "Complete Life Reading",
     description: "A full birth-chart consultation covering career, money, marriage, health and timing.",
@@ -537,19 +557,17 @@ export interface Slot {
   /** e.g. "10:30 AM" */
   time: string;
   booked?: boolean;
-  /** Online (video/call) or in-person consultation. Defaults to "online" if absent. */
-  type?: "online" | "offline";
 }
 
 export const DEFAULT_SLOTS: Slot[] = [
-  { id: "s1", date: "2026-06-18", time: "10:30 AM", type: "online" },
-  { id: "s2", date: "2026-06-18", time: "11:30 AM", type: "online" },
-  { id: "s3", date: "2026-06-18", time: "04:00 PM", type: "offline" },
-  { id: "s4", date: "2026-06-19", time: "10:30 AM", type: "online" },
-  { id: "s5", date: "2026-06-19", time: "12:30 PM", type: "offline" },
-  { id: "s6", date: "2026-06-19", time: "05:00 PM", type: "online" },
-  { id: "s7", date: "2026-06-20", time: "11:00 AM", type: "offline" },
-  { id: "s8", date: "2026-06-20", time: "03:00 PM", type: "online" },
+  { id: "s1", date: "2026-06-18", time: "10:30 AM" },
+  { id: "s2", date: "2026-06-18", time: "11:30 AM" },
+  { id: "s3", date: "2026-06-18", time: "04:00 PM" },
+  { id: "s4", date: "2026-06-19", time: "10:30 AM" },
+  { id: "s5", date: "2026-06-19", time: "12:30 PM" },
+  { id: "s6", date: "2026-06-19", time: "05:00 PM" },
+  { id: "s7", date: "2026-06-20", time: "11:00 AM" },
+  { id: "s8", date: "2026-06-20", time: "03:00 PM" },
 ];
 
 /* ---------------- Hero slides (carousel) ---------------- */
