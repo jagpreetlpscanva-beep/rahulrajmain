@@ -48,6 +48,26 @@ function fmtDate(d: string) {
   }
 }
 
+function fmtFull(d: string) {
+  try {
+    return new Date(`${d}T00:00:00`).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" });
+  } catch {
+    return d;
+  }
+}
+
+/** Next 14 days, excluding Sundays — used as the date picker for consultation slots. */
+function buildAvailableDates(): string[] {
+  const dates: string[] = [];
+  const cur = new Date();
+  cur.setHours(0, 0, 0, 0);
+  while (dates.length < 14) {
+    if (cur.getDay() !== 0) dates.push(cur.toISOString().split("T")[0]);
+    cur.setDate(cur.getDate() + 1);
+  }
+  return dates;
+}
+
 export default function BookingPage() {
   const params = useParams<{ type: string; id: string }>();
   const type = params.type;
@@ -63,11 +83,18 @@ export default function BookingPage() {
   const showAddons = type !== "consultation";
 
   const [slot, setSlot] = useState<Slot | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>("");
   const [paid, setPaid] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", email: "" });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState(false);
+
+  // Whether this is the offline (in-person) or online consultation, derived from the item id.
+  // Used to filter slots by type and to offer "cash on the day" only for offline bookings.
+  const consultationType: "online" | "offline" = id === "offline-consultation" ? "offline" : "online";
+  const showPaymentChoice = type === "consultation" && consultationType === "offline";
+  const [paymentMethod, setPaymentMethod] = useState<"cash" | "online" | null>(showPaymentChoice ? null : "online");
 
   useEffect(() => {
     const coll = COLL[type] || "consultations";
@@ -109,13 +136,17 @@ export default function BookingPage() {
   const [stepIdx, setStepIdx] = useState(0);
   const step = steps[stepIdx];
 
-  const slotsByDate = useMemo(() => {
-    const map: Record<string, Slot[]> = {};
-    slots.forEach((s) => {
-      (map[s.date] ||= []).push(s);
-    });
-    return map;
-  }, [slots]);
+  // Only slots matching this consultation's mode (online/offline) are eligible.
+  // Untyped legacy slots default to "online" (matches the admin's own behaviour).
+  const slotsForType = useMemo(
+    () => slots.filter((s) => (s.type ?? "online") === consultationType),
+    [slots, consultationType]
+  );
+  const availableDates = useMemo(() => buildAvailableDates(), []);
+  const timesForSelectedDate = useMemo(
+    () => slotsForType.filter((s) => s.date === selectedDate),
+    [slotsForType, selectedDate]
+  );
 
   const confirm = async () => {
     if (!form.name.trim() || !form.phone.trim()) return;
@@ -137,7 +168,8 @@ export default function BookingPage() {
           name: form.name,
           phone: form.phone,
           email: form.email,
-          paid: "true",
+          paid: paymentMethod === "cash" ? "false" : "true",
+          paymentMethod: paymentMethod || "online",
         }),
       });
       const data = await res.json();
@@ -196,40 +228,76 @@ export default function BookingPage() {
                 {/* ---- slot ---- */}
                 {step === "Slot" && (
                   <div>
-                    <h2 className="font-serif text-lg font-bold text-ink">Choose a slot</h2>
-                    {Object.keys(slotsByDate).length === 0 ? (
-                      <p className="mt-3 text-sm text-ink/60">
-                        No open slots right now — continue and we&rsquo;ll call you to schedule.
-                      </p>
+                    {slotsForType.length === 0 ? (
+                      <>
+                        <h2 className="font-serif text-lg font-bold text-ink">Choose a slot</h2>
+                        <p className="mt-3 text-sm text-ink/60">
+                          No open slots right now — continue and we&rsquo;ll call you to schedule.
+                        </p>
+                      </>
                     ) : (
-                      <div className="mt-4 space-y-4">
-                        {Object.entries(slotsByDate).map(([date, list]) => (
-                          <div key={date}>
-                            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink/55">{fmtDate(date)}</p>
-                            <div className="flex flex-wrap gap-2">
-                              {list.map((s) => (
-                                <button
-                                  key={s.id}
-                                  type="button"
-                                  onClick={() => setSlot(s)}
-                                  className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
-                                    slot?.id === s.id
-                                      ? "border-gold-600 bg-gold-gradient text-night"
-                                      : "border-ink/15 text-ink/75 hover:border-gold-500"
-                                  }`}
-                                >
-                                  {s.time}
-                                </button>
-                              ))}
-                            </div>
+                      <>
+                        <h2 className="font-serif text-lg font-bold text-ink">Choose a Date</h2>
+                        <p className="mt-0.5 text-xs text-ink/50">Sundays excluded. Showing next 14 available days.</p>
+                        <div className="mt-4 grid grid-cols-4 gap-2 sm:grid-cols-5">
+                          {availableDates.map((d) => (
+                            <button
+                              key={d}
+                              type="button"
+                              onClick={() => {
+                                setSelectedDate(d);
+                                setSlot(null);
+                              }}
+                              className={`flex flex-col items-center rounded-xl border px-2 py-2.5 text-xs font-semibold transition-colors ${
+                                selectedDate === d
+                                  ? "border-gold-600 bg-gold-gradient text-night shadow-gold-btn"
+                                  : "border-ink/15 text-ink/70 hover:border-gold-500"
+                              }`}
+                            >
+                              <span className="text-[10px] uppercase tracking-wide opacity-70">
+                                {new Date(`${d}T00:00:00`).toLocaleDateString("en-IN", { weekday: "short" })}
+                              </span>
+                              <span className="text-base font-bold leading-tight">{new Date(`${d}T00:00:00`).getDate()}</span>
+                              <span className="text-[10px] opacity-70">
+                                {new Date(`${d}T00:00:00`).toLocaleDateString("en-IN", { month: "short" })}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+
+                        {selectedDate && (
+                          <div className="mt-6">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-ink/55">
+                              Available times for {fmtFull(selectedDate)}
+                            </p>
+                            {timesForSelectedDate.length === 0 ? (
+                              <p className="mt-3 text-sm text-ink/60">No slots available for this date — try another date.</p>
+                            ) : (
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {timesForSelectedDate.map((s) => (
+                                  <button
+                                    key={s.id}
+                                    type="button"
+                                    onClick={() => setSlot(s)}
+                                    className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
+                                      slot?.id === s.id
+                                        ? "border-gold-600 bg-gold-gradient text-night"
+                                        : "border-ink/15 text-ink/75 hover:border-gold-500"
+                                    }`}
+                                  >
+                                    {s.time}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        ))}
-                      </div>
+                        )}
+                      </>
                     )}
                     <button
                       type="button"
                       onClick={() => setStepIdx(1)}
-                      disabled={Object.keys(slotsByDate).length > 0 && !slot}
+                      disabled={slotsForType.length > 0 && !slot}
                       className="mt-6 w-full rounded-lg bg-gold-gradient px-6 py-3 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn disabled:opacity-50"
                     >
                       Continue
@@ -290,8 +358,45 @@ export default function BookingPage() {
                       </div>
                     )}
 
+                    {/* offline consultations: choose cash-on-the-day vs pay online now */}
+                    {showPaymentChoice && (
+                      <div className="mt-5 text-left">
+                        <p className="text-center text-xs font-semibold uppercase tracking-wider text-gold-700">
+                          How would you like to pay?
+                        </p>
+                        <div className="mt-3 grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMethod("cash")}
+                            className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-4 text-sm font-semibold transition-colors ${
+                              paymentMethod === "cash"
+                                ? "border-gold-600 bg-gold-50 text-gold-800 shadow-sm"
+                                : "border-ink/15 bg-white text-ink/70 hover:border-gold-400"
+                            }`}
+                          >
+                            <span className="text-2xl">💵</span>
+                            Cash on Consultation Day
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPaymentMethod("online")}
+                            className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-4 text-sm font-semibold transition-colors ${
+                              paymentMethod === "online"
+                                ? "border-gold-600 bg-gold-50 text-gold-800 shadow-sm"
+                                : "border-ink/15 bg-white text-ink/70 hover:border-gold-400"
+                            }`}
+                          >
+                            <span className="text-2xl">💳</span>
+                            Pay Online Now
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="mx-auto mt-5 max-w-xs rounded-2xl border border-gold-500/25 bg-gold-50/60 p-5">
-                      <p className="text-sm text-ink/60">Amount payable</p>
+                      <p className="text-sm text-ink/60">
+                        {paymentMethod === "cash" ? "Amount due on consultation day" : "Amount payable"}
+                      </p>
                       <p className="font-serif text-4xl font-bold text-gold-700">
                         {showAddons ? fmtINR(total) : item?.price || "₹499"}
                       </p>
@@ -304,16 +409,22 @@ export default function BookingPage() {
                     <button
                       type="button"
                       onClick={() => {
-                        setPaid(true);
+                        setPaid(paymentMethod !== "cash");
                         confirm();
                       }}
-                      disabled={busy}
+                      disabled={busy || (showPaymentChoice && !paymentMethod)}
                       className="mt-6 w-full rounded-lg bg-gold-gradient px-6 py-3.5 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn disabled:opacity-60"
                     >
-                      {busy ? "Processing…" : `Pay ${showAddons ? fmtINR(total) : item?.price || "₹499"} & Confirm Booking`}
+                      {busy
+                        ? "Processing…"
+                        : paymentMethod === "cash"
+                        ? "Confirm Booking — Pay Cash on the Day"
+                        : `Pay ${showAddons ? fmtINR(total) : item?.price || "₹499"} & Confirm Booking`}
                     </button>
                     {error && <p className="mt-3 text-sm font-medium text-rose-600">{error}</p>}
-                    <p className="mt-3 text-xs text-ink/40">Demo payment — add Razorpay keys for live payments.</p>
+                    {paymentMethod !== "cash" && (
+                      <p className="mt-3 text-xs text-ink/40">Demo payment — add Razorpay keys for live payments.</p>
+                    )}
                     <button type="button" onClick={() => setStepIdx(needsSlot ? 1 : 0)} className="mt-2 text-xs text-ink/50 underline">
                       ← back
                     </button>
