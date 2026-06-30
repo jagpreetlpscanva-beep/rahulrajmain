@@ -16,11 +16,26 @@ function fmtDate(d: string) {
   }
 }
 
-const DAY_TIMES = [
-  "09:00 AM", "09:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "11:30 AM",
-  "12:00 PM", "12:30 PM", "02:00 PM", "02:30 PM", "03:00 PM", "03:30 PM",
-  "04:00 PM", "04:30 PM", "05:00 PM",
-];
+// Working hours: 10:00 AM - 2:00 PM and 6:00 PM - 8:00 PM, 15-minute slots
+function buildDayTimes(): string[] {
+  const ranges: [number, number][] = [
+    [10 * 60, 14 * 60], // 10:00 AM - 2:00 PM
+    [18 * 60, 20 * 60], // 6:00 PM - 8:00 PM
+  ];
+  const times: string[] = [];
+  for (const [start, end] of ranges) {
+    for (let mins = start; mins < end; mins += 15) {
+      const h24 = Math.floor(mins / 60);
+      const m = mins % 60;
+      const suffix = h24 >= 12 ? "PM" : "AM";
+      const h12 = h24 % 12 || 12;
+      times.push(`${String(h12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${suffix}`);
+    }
+  }
+  return times;
+}
+
+const DAY_TIMES = buildDayTimes();
 
 function to12h(t: string) {
   // Accepts "HH:MM" (24h, from <input type="time">) and converts to "hh:mm AM/PM"
