@@ -68,7 +68,11 @@ export function SlotsManager() {
 
   const addFullDay = () => {
     if (!date) return;
-    const existingTimes = new Set(items.filter((s) => s.date === date).map((s) => s.time));
+    // only skip times that already exist for this date AND the SAME type — so an
+    // offline full-day still fills in even when online slots exist on that date
+    const existingTimes = new Set(
+      items.filter((s) => s.date === date && norm(s) === slotType).map((s) => s.time)
+    );
     const additions: Slot[] = DAY_TIMES.filter((t) => !existingTimes.has(t)).map((t) => ({
       id: newId("slot"),
       date,
