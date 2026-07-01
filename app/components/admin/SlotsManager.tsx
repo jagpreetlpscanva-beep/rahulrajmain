@@ -296,8 +296,10 @@ export function SlotsManager() {
                 )}
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                {slots.map((s) => {
+              {(() => {
+                const off = slots.filter((s) => norm(s) === "offline");
+                const on = slots.filter((s) => norm(s) === "online");
+                const pill = (s: Slot) => {
                   const isOnline = norm(s) === "online";
                   const tone = s.booked
                     ? "border-rose-300 bg-rose-50 text-rose-700"
@@ -305,33 +307,34 @@ export function SlotsManager() {
                     ? "border-sky-300 bg-sky-50 text-sky-800"
                     : "border-amber-400 bg-amber-50 text-amber-800";
                   return (
-                    <div
-                      key={s.id}
-                      className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${tone}`}
-                    >
+                    <div key={s.id} className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${tone}`}>
                       <span className={`grid h-5 w-5 place-items-center rounded-full text-[0.7rem] ${isOnline ? "bg-sky-100" : "bg-amber-100"}`}>{isOnline ? "🌐" : "📍"}</span>
-                      <span className="text-[0.6rem] font-bold uppercase tracking-wide opacity-70">{isOnline ? "Online" : "Offline"}</span>
                       <span className="font-semibold">{s.time}</span>
                       {s.booked && <span className="text-xs font-medium">(Booked)</span>}
-                      <button
-                        type="button"
-                        onClick={() => toggleBooked(s.id)}
-                        className="ml-1 text-xs font-semibold underline decoration-dotted hover:opacity-70"
-                      >
+                      <button type="button" onClick={() => toggleBooked(s.id)} className="ml-1 text-xs font-semibold underline decoration-dotted hover:opacity-70">
                         {s.booked ? "Free up" : "Disable"}
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => remove(s.id)}
-                        className="text-rose-500 hover:text-rose-700"
-                        aria-label="Delete slot"
-                      >
-                        🗑
-                      </button>
+                      <button type="button" onClick={() => remove(s.id)} className="text-rose-500 hover:text-rose-700" aria-label="Delete slot">🗑</button>
                     </div>
                   );
-                })}
-              </div>
+                };
+                return (
+                  <div className="space-y-3">
+                    {off.length > 0 && (
+                      <div className="rounded-xl bg-amber-50/50 p-3">
+                        <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-amber-700">📍 Offline · {off.length} slots</p>
+                        <div className="flex flex-wrap gap-2">{off.map(pill)}</div>
+                      </div>
+                    )}
+                    {on.length > 0 && (
+                      <div className="rounded-xl bg-sky-50/50 p-3">
+                        <p className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-sky-700">🌐 Online · {on.length} slots</p>
+                        <div className="flex flex-wrap gap-2">{on.map(pill)}</div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           );
         })}
