@@ -792,6 +792,58 @@ export const DEFAULT_BLOG: BlogPost[] = [
     category: "Kundli",
     status: "Published",
   },
+  {
+    id: "blog-griha-pravesh-2026",
+    title: "Griha Pravesh Muhurat 2026 for Lucknow Homes",
+    slug: "griha-pravesh-muhurat-2026-lucknow",
+    excerpt:
+      "How to pick an auspicious griha pravesh date in 2026 for your new home in Lucknow, and what to keep in mind.",
+    content:
+      "Moving into a new home is a fresh beginning. A griha pravesh done at the right muhurat invites peace, health and prosperity into the house.\n\n## What makes a good griha pravesh muhurat\nThe date should fall on a favourable tithi and nakshatra, avoid inauspicious periods, and ideally suit the head of the family's birth chart. Jupiter and the Sun's positions are given special importance.\n\n## Types of griha pravesh\n- Apoorva — entering a newly built house for the first time\n- Sapoorva — re-entering after travel or renovation\n- Dwandwah — entering after repairs\n\n## Get your personal date\nDr. Rahul Raj prepares personalised griha pravesh muhurat for families across Lucknow. Call +91 94153 12590 or book online.",
+    author: "Dr. Rahul Raj",
+    date: "2026-01-18",
+    category: "Muhurat",
+    status: "Published",
+  },
+  {
+    id: "blog-manglik-dosha",
+    title: "Manglik Dosha: Meaning, Check & Remedies",
+    slug: "manglik-dosha-check-remedies-lucknow",
+    excerpt:
+      "What Manglik (Mangal) Dosha means, how to check if you have it, and simple remedies — explained by a Lucknow astrologer.",
+    content:
+      "Manglik Dosha, or Mangal Dosha, forms when Mars sits in certain houses of the birth chart. It is often discussed at the time of marriage.\n\n## How to check\nManglik Dosha is judged from the position of Mars in the 1st, 4th, 7th, 8th or 12th house from the ascendant, moon and Venus. Only a proper chart reading can confirm it — online 'calculators' can be misleading.\n\n## Common remedies\n- Matching with a compatible chart\n- Specific pujas such as Mangal Shanti\n- Fasting and mantra as advised\n\n## Get a proper check in Lucknow\nBefore worrying, get your chart checked by Dr. Rahul Raj in Lucknow — in person at LDA Colony or online. Call +91 94153 12590.",
+    author: "Dr. Rahul Raj",
+    date: "2026-01-24",
+    category: "Dosha",
+    status: "Published",
+  },
+  {
+    id: "blog-vastu-lucknow",
+    title: "Vastu Tips for Homes & Shops in Lucknow",
+    slug: "vastu-tips-home-shop-lucknow",
+    excerpt:
+      "Simple, practical Vastu tips for your home or shop in Lucknow to invite positivity and prosperity.",
+    content:
+      "Vastu Shastra aligns your space with natural energies. Small corrections can improve the feel of a home or the footfall of a shop.\n\n## Quick tips\n- Keep the north-east corner clean, light and clutter-free\n- The main entrance should be well-lit and welcoming\n- Place the cash box or locker so it opens towards the north\n- Avoid keeping broken items and dead plants\n\n## Every space is different\nThese are general tips. A proper Vastu visit studies your exact layout and direction. Dr. Rahul Raj offers Vastu consultation for homes and shops across Lucknow. Book on +91 94153 12590.",
+    author: "Dr. Rahul Raj",
+    date: "2026-02-02",
+    category: "Vastu",
+    status: "Published",
+  },
+  {
+    id: "blog-vehicle-muhurat-2026",
+    title: "Auspicious Days to Buy a Vehicle in 2026",
+    slug: "vehicle-purchase-muhurat-2026-lucknow",
+    excerpt:
+      "How to choose a shubh muhurat for buying a car or bike in 2026, for buyers in Lucknow.",
+    content:
+      "Buying a vehicle is a happy milestone. A purchase made on an auspicious day is believed to bring safety and good use.\n\n## Favourable factors\nCertain weekdays, tithis and nakshatras are considered good for vehicle purchase, while a few are best avoided. Your own birth chart can further refine the timing.\n\n## A simple approach\n- Prefer bright, waxing-moon days over dark-moon periods\n- Avoid known inauspicious yogas\n- Confirm the date against your personal chart\n\n## Get your date\nFor a personalised vehicle-purchase muhurat in Lucknow, consult Dr. Rahul Raj on +91 94153 12590 or book online.",
+    author: "Dr. Rahul Raj",
+    date: "2026-02-10",
+    category: "Muhurat",
+    status: "Published",
+  },
 ];
 
 /** Collections exposed by the CMS API, with their seed data. */
