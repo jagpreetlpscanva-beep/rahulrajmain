@@ -299,16 +299,18 @@ export function SlotsManager() {
               <div className="flex flex-wrap gap-2">
                 {slots.map((s) => {
                   const isOnline = norm(s) === "online";
+                  const tone = s.booked
+                    ? "border-rose-300 bg-rose-50 text-rose-700"
+                    : isOnline
+                    ? "border-sky-300 bg-sky-50 text-sky-800"
+                    : "border-amber-400 bg-amber-50 text-amber-800";
                   return (
                     <div
                       key={s.id}
-                      className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${
-                        s.booked
-                          ? "border-rose-300 bg-rose-50 text-rose-700"
-                          : "border-emerald-300 bg-emerald-50 text-emerald-800"
-                      }`}
+                      className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${tone}`}
                     >
-                      <span>{isOnline ? "🌐" : "📍"}</span>
+                      <span className={`grid h-5 w-5 place-items-center rounded-full text-[0.7rem] ${isOnline ? "bg-sky-100" : "bg-amber-100"}`}>{isOnline ? "🌐" : "📍"}</span>
+                      <span className="text-[0.6rem] font-bold uppercase tracking-wide opacity-70">{isOnline ? "Online" : "Offline"}</span>
                       <span className="font-semibold">{s.time}</span>
                       {s.booked && <span className="text-xs font-medium">(Booked)</span>}
                       <button
