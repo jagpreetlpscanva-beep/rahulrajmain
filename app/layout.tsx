@@ -29,7 +29,7 @@ const poppins = Poppins({
   display: "swap",
 });
 
-const SITE_URL = "https://rahulrajastrologer.com";
+const SITE_URL = "https://astrorahulraj.in";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -40,8 +40,11 @@ export const metadata: Metadata = {
   description:
     "Personalized Vedic guidance for your relationships, career, business, finances and overall well-being. 20+ years of experience, 5000+ consultations, 4.9/5 client rating.",
   keywords: [
-    "Vedic astrologer",
-    "astrology consultation",
+    "best astrologer in Lucknow",
+    "Vedic astrologer Lucknow",
+    "astrologer near me Lucknow",
+    "kundli expert Lucknow",
+    "astrology consultation Lucknow",
     "Kundli",
     "Janam Kundli",
     "marriage astrology",
@@ -88,25 +91,48 @@ export const viewport: Viewport = {
 
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "ProfessionalService",
-  name: "Dr. Rahul Raj — Vedic Astrologer",
+  "@type": ["LocalBusiness", "ProfessionalService"],
+  "@id": `${SITE_URL}/#business`,
+  name: "Dr. Rahul Raj — Vedic Astrologer (Rahul Raj Astro)",
   description:
-    "Personalized Vedic guidance for relationships, career, business, finances and overall well-being.",
+    "Best Vedic astrologer in Lucknow — Kundli analysis, marriage & career guidance, dosha remedies, numerology and vastu. In-person and online consultations.",
   url: SITE_URL,
-  priceRange: "$$",
+  image: `${SITE_URL}/brand/logo.png`,
+  logo: `${SITE_URL}/brand/logo.png`,
+  telephone: "+91-94153-12590",
+  priceRange: "₹₹",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "Rahul Raj Astro, Chungi - Parag Rd, Sector E, Sector C1, LDA Colony",
+    addressLocality: "Lucknow",
+    addressRegion: "Uttar Pradesh",
+    postalCode: "226012",
+    addressCountry: "IN",
+  },
+  geo: { "@type": "GeoCoordinates", latitude: 26.7906, longitude: 80.8918 },
+  areaServed: { "@type": "City", name: "Lucknow" },
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      opens: "10:00",
+      closes: "14:00",
+    },
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+      opens: "18:00",
+      closes: "20:00",
+    },
+  ],
   aggregateRating: {
     "@type": "AggregateRating",
     ratingValue: "4.9",
     reviewCount: "5000",
     bestRating: "5",
   },
-  areaServed: "IN",
-  knowsAbout: [
-    "Vedic Astrology",
-    "Numerology",
-    "Marriage Compatibility",
-    "Career Guidance",
-  ],
+  founder: { "@type": "Person", name: "Dr. Rahul Raj", jobTitle: "Vedic Astrologer" },
+  knowsAbout: ["Vedic Astrology", "Kundli", "Numerology", "Vastu", "Marriage Compatibility", "Career Guidance"],
 };
 
 export default async function RootLayout({
