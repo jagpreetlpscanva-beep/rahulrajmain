@@ -57,17 +57,33 @@ export function SlotsManager() {
   const [time, setTime] = useState("");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
+  const [feedback, setFeedback] = useState<string>("");
 
   const norm = (s: Slot): "online" | "offline" => s.type ?? "online";
 
+  // make sure whatever we just added is actually visible (don't leave the user
+  // filtered to the other type / another date, which hides new slots)
+  const revealAdded = (d: string) => {
+    setTypeFilter(slotType);
+    setDateFilter(d);
+  };
+
   const add = () => {
-    if (!date || !time.trim()) return;
-    save([...items, { id: newId("slot"), date, time: to12h(time), type: slotType }]);
+    if (!date) { setFeedback("Please choose a date first."); return; }
+    if (!time.trim()) { setFeedback("Please choose a time first."); return; }
+    const t = to12h(time);
+    if (items.some((s) => s.date === date && s.time === t && norm(s) === slotType)) {
+      setFeedback(`That ${slotType} slot (${t}) already exists for this date.`);
+      return;
+    }
+    save([...items, { id: newId("slot"), date, time: t, type: slotType }]);
     setTime("");
+    revealAdded(date);
+    setFeedback(`✓ Added 1 ${slotType} slot (${t}) for ${date}.`);
   };
 
   const addFullDay = () => {
-    if (!date) return;
+    if (!date) { setFeedback("Please choose a date first."); return; }
     // only skip times that already exist for this date AND the SAME type — so an
     // offline full-day still fills in even when online slots exist on that date
     const existingTimes = new Set(
@@ -79,7 +95,13 @@ export function SlotsManager() {
       time: t,
       type: slotType,
     }));
-    if (additions.length) save([...items, ...additions]);
+    if (additions.length) {
+      save([...items, ...additions]);
+      revealAdded(date);
+      setFeedback(`✓ Added ${additions.length} ${slotType} slots for ${date}.`);
+    } else {
+      setFeedback(`All ${slotType} slots for ${date} already exist.`);
+    }
   };
 
   const remove = (id: string) => save(items.filter((s) => s.id !== id));
@@ -221,6 +243,11 @@ export function SlotsManager() {
             Add Full Day
           </button>
         </div>
+        {feedback && (
+          <p className={`mt-3 text-sm font-medium ${feedback.startsWith("✓") ? "text-emerald-600" : "text-rose-600"}`}>
+            {feedback}
+          </p>
+        )}
       </div>
 
       {/* filters */}
