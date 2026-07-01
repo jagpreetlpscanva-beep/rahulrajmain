@@ -18,6 +18,8 @@ export {
   DEFAULT_PODCASTS,
   DEFAULT_DECOR,
   DEFAULT_COUPONS,
+  DEFAULT_BLOG,
+  slugify,
   COLLECTIONS,
   POOJA_CATEGORIES,
   COURSE_CATEGORIES,
@@ -40,6 +42,7 @@ export type {
   Podcast,
   DecorItem,
   Coupon,
+  BlogPost,
   CollectionKey,
 } from "./cms";
 

@@ -739,6 +739,61 @@ export const DEFAULT_COUPONS: Coupon[] = [
   { id: "coupon-welcome", title: "WELCOME20", type: "Percent", value: 20, status: "Active" },
 ];
 
+/** Make a URL slug from a title. */
+export function slugify(s: string): string {
+  return s
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+/** A blog post (editable from admin). `content` is plain text: blank lines = new
+ * paragraph, lines starting with "## " become sub-headings, "- " become bullets. */
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  image?: string;
+  author: string;
+  date: string; // ISO date (YYYY-MM-DD)
+  category?: string;
+  status: "Published" | "Draft";
+}
+
+export const DEFAULT_BLOG: BlogPost[] = [
+  {
+    id: "blog-marriage-muhurat-2026",
+    title: "Best Marriage Muhurat in Lucknow 2026",
+    slug: "best-marriage-muhurat-lucknow-2026",
+    excerpt:
+      "Auspicious vivah muhurat dates for 2026 and how Dr. Rahul Raj helps Lucknow families choose the right time for marriage.",
+    content:
+      "Choosing the right marriage muhurat is one of the most important decisions for any family. In Vedic astrology, the shubh muhurat aligns the couple's charts with favourable planetary positions for a happy, lasting married life.\n\n## How a muhurat is chosen\nA good muhurat considers the bride and groom's birth charts, the tithi, nakshatra, and the position of Jupiter and Venus. A generic calendar date is not enough — the muhurat should suit your family's kundlis.\n\n## Book a personalised muhurat\nDr. Rahul Raj prepares personalised vivah muhurat for families across Lucknow — Gomti Nagar, Hazratganj, Aliganj and nearby areas. Call +91 94153 12590 or book a consultation online.",
+    author: "Dr. Rahul Raj",
+    date: "2026-01-05",
+    category: "Muhurat",
+    status: "Published",
+  },
+  {
+    id: "blog-kundli-lucknow",
+    title: "Where to Get Your Kundli Made in Lucknow",
+    slug: "get-kundli-made-lucknow",
+    excerpt:
+      "A simple guide to getting an accurate Janam Kundli in Lucknow, and what a good reading should include.",
+    content:
+      "Your Janam Kundli is the blueprint of your life. An accurate kundli needs your exact date, time and place of birth.\n\n## What a good reading includes\n- Planetary positions and dasha analysis\n- Career, marriage and health insights\n- Practical remedies you can follow\n\n## Get your kundli in Lucknow\nVisit Dr. Rahul Raj at LDA Colony, Lucknow, or get your kundli made online. Book on +91 94153 12590.",
+    author: "Dr. Rahul Raj",
+    date: "2026-01-12",
+    category: "Kundli",
+    status: "Published",
+  },
+];
+
 /** Collections exposed by the CMS API, with their seed data. */
 export const COLLECTIONS = {
   poojas: DEFAULT_POOJAS,
@@ -754,6 +809,7 @@ export const COLLECTIONS = {
   podcasts: DEFAULT_PODCASTS,
   decor: DEFAULT_DECOR,
   coupons: DEFAULT_COUPONS,
+  blog: DEFAULT_BLOG,
 } as const;
 
 export type CollectionKey = keyof typeof COLLECTIONS;

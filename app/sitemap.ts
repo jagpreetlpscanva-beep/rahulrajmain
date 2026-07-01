@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/free-calculators",
     "/online-pooja",
     "/courses",
+    "/blog",
     "/about",
     "/contact",
   ];

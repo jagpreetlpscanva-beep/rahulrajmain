@@ -105,6 +105,7 @@ export const NAV_MENU: { left: NavMenuItem[]; right: NavMenuItem[] } = {
   right: [
     { label: "Online Puja", href: "/online-pooja" },
     { label: "Courses", href: "/courses" },
+    { label: "Blog", href: "/blog" },
     {
       label: "About Us",
       href: "/about",

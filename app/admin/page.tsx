@@ -29,6 +29,8 @@ import {
   type DecorItem,
   DEFAULT_COUPONS,
   type Coupon,
+  DEFAULT_BLOG,
+  type BlogPost,
 } from "@/lib/adminStore";
 import { CollectionManager, type FieldDef } from "../components/admin/CollectionManager";
 import { SlotsManager } from "../components/admin/SlotsManager";
@@ -214,6 +216,30 @@ const couponFields: FieldDef[] = [
 
 const blankCoupon = (): Coupon => ({ id: newId("coupon"), title: "", type: "Percent", value: 10, status: "Active" });
 
+const blogFields: FieldDef[] = [
+  { name: "title", label: "Post title", type: "text", placeholder: "Best Marriage Muhurat in Lucknow 2026" },
+  { name: "slug", label: "URL slug", type: "text", optional: true, hint: "Leave empty to auto-generate from the title. Shown in the link: /blog/your-slug" },
+  { name: "category", label: "Category", type: "text", optional: true, placeholder: "Muhurat, Kundli, Vastu…" },
+  { name: "excerpt", label: "Short summary", type: "textarea", hint: "1–2 lines shown on the blog list and in search results." },
+  { name: "content", label: "Content", type: "textarea", hint: "Write freely. Blank line = new paragraph. Start a line with '## ' for a heading, '- ' for a bullet." },
+  { name: "image", label: "Cover image", type: "image", optional: true },
+  { name: "author", label: "Author", type: "text" },
+  { name: "date", label: "Date", type: "date" },
+  { name: "status", label: "Status", type: "select", options: ["Published", "Draft"] },
+];
+
+const blankBlog = (): BlogPost => ({
+  id: newId("blog"),
+  title: "",
+  slug: "",
+  excerpt: "",
+  content: "",
+  author: "Dr. Rahul Raj",
+  date: new Date().toISOString().slice(0, 10),
+  category: "",
+  status: "Draft",
+});
+
 const decorFields: FieldDef[] = [
   { name: "title", label: "Label", type: "text", hint: "Which slot this image fills (do not change)." },
   { name: "image", label: "Decoration image", type: "image", optional: true, hint: "Transparent PNG works best (lotus, diya, books, etc.)." },
@@ -233,7 +259,7 @@ const blankConsultation = (): Consultation => ({
   image: "",
 });
 
-type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "coupons" | "reviews" | "slots" | "bookings" | "messages";
+type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "coupons" | "blog" | "reviews" | "slots" | "bookings" | "messages";
 
 const GridIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -257,6 +283,7 @@ const NAV: { key: TabKey; label: string; icon: (p: { className?: string }) => Re
   { key: "gallery", label: "Gallery", icon: GiftIcon },
   { key: "decor", label: "Decorations", icon: GiftIcon },
   { key: "coupons", label: "Discounts", icon: GiftIcon },
+  { key: "blog", label: "Blog", icon: MedalIcon },
   { key: "reviews", label: "Reviews", icon: StarIcon },
   { key: "slots", label: "Slots", icon: GridIcon },
   { key: "bookings", label: "Bookings", icon: UsersIcon },
@@ -283,6 +310,7 @@ export default function AdminPage() {
   const podcasts = useCollection<Podcast>("podcasts", DEFAULT_PODCASTS);
   const decor = useCollection<DecorItem>("decor", DEFAULT_DECOR);
   const coupons = useCollection<Coupon>("coupons", DEFAULT_COUPONS);
+  const blog = useCollection<BlogPost>("blog", DEFAULT_BLOG);
 
   useEffect(() => {
     fetch("/api/admin/session", { cache: "no-store" })
@@ -469,6 +497,9 @@ export default function AdminPage() {
           )}
           {tab === "coupons" && (
             <CollectionManager<Coupon> label="Discount Coupons" items={coupons.items} fields={couponFields} blank={blankCoupon} onChange={coupons.save} onReset={coupons.reset} previewHref="/book/consultation/quick" />
+          )}
+          {tab === "blog" && (
+            <CollectionManager<BlogPost> label="Blog Posts" items={blog.items} fields={blogFields} blank={blankBlog} onChange={blog.save} onReset={blog.reset} previewHref="/blog" />
           )}
           {tab === "reviews" && <ReviewsManager />}
           {tab === "slots" && <SlotsManager />}
