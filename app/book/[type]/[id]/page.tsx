@@ -165,11 +165,12 @@ export default function BookingPage() {
     [slotsForType, selectedDate]
   );
 
-  const confirm = async () => {
+  const confirm = async (paymentId?: string) => {
     if (!form.name.trim() || !form.phone.trim()) return;
     setBusy(true);
     setError("");
     try {
+      const paidOnline = paymentMethod !== "cash" && !!paymentId;
       const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -186,8 +187,9 @@ export default function BookingPage() {
           name: form.name,
           phone: form.phone,
           email: form.email,
-          paid: paymentMethod === "cash" ? "false" : "true",
+          paid: paymentMethod === "cash" ? "false" : paidOnline ? "true" : "false",
           paymentMethod: paymentMethod || "online",
+          paymentId: paymentId || "",
         }),
       });
       const data = await res.json();
@@ -196,6 +198,89 @@ export default function BookingPage() {
     } catch {
       setError("Network error — please try again");
     } finally {
+      setBusy(false);
+    }
+  };
+
+  // ---- Razorpay online payment ----
+  const loadRazorpay = () =>
+    new Promise<boolean>((resolve) => {
+      if (typeof window === "undefined") return resolve(false);
+      if ((window as unknown as { Razorpay?: unknown }).Razorpay) return resolve(true);
+      const s = document.createElement("script");
+      s.src = "https://checkout.razorpay.com/v1/checkout.js";
+      s.onload = () => resolve(true);
+      s.onerror = () => resolve(false);
+      document.body.appendChild(s);
+    });
+
+  const payAndConfirm = async () => {
+    if (!form.name.trim() || !form.phone.trim()) {
+      setError("Please add your name and phone first.");
+      return;
+    }
+    // cash-on-day (offline consultations) — no online payment
+    if (paymentMethod === "cash") {
+      setPaid(false);
+      confirm();
+      return;
+    }
+
+    setBusy(true);
+    setError("");
+    try {
+      const orderRes = await fetch("/api/razorpay/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: finalTotal, name: form.name, phone: form.phone, item: item?.title }),
+      });
+      const order = await orderRes.json();
+
+      // if payments aren't configured yet, still capture the booking (unpaid)
+      if (!orderRes.ok || !order.ok) {
+        setPaid(false);
+        await confirm();
+        return;
+      }
+
+      const ok = await loadRazorpay();
+      if (!ok) {
+        setError("Couldn't load the payment window. Please try again.");
+        setBusy(false);
+        return;
+      }
+
+      const RZP = (window as unknown as { Razorpay: new (o: Record<string, unknown>) => { open: () => void } }).Razorpay;
+      const rzp = new RZP({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.orderId,
+        name: "Dr. Rahul Raj — Vedic Astrologer",
+        description: item?.title || "Consultation",
+        image: "/brand/logo.png",
+        prefill: { name: form.name, contact: form.phone, email: form.email },
+        theme: { color: "#C08A2E" },
+        handler: async (resp: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          const v = await fetch("/api/razorpay/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(resp),
+          });
+          const vr = await v.json();
+          if (vr.ok) {
+            setPaid(true);
+            await confirm(resp.razorpay_payment_id);
+          } else {
+            setError("Payment could not be verified. If money was deducted, contact us on WhatsApp.");
+            setBusy(false);
+          }
+        },
+        modal: { ondismiss: () => setBusy(false) },
+      });
+      rzp.open();
+    } catch {
+      setError("Could not start payment. Please try again.");
       setBusy(false);
     }
   };
@@ -475,10 +560,7 @@ export default function BookingPage() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => {
-                        setPaid(paymentMethod !== "cash");
-                        confirm();
-                      }}
+                      onClick={payAndConfirm}
                       disabled={busy || (showPaymentChoice && !paymentMethod)}
                       className="mt-6 w-full rounded-lg bg-gold-gradient px-6 py-3.5 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn disabled:opacity-60"
                     >
@@ -490,7 +572,10 @@ export default function BookingPage() {
                     </button>
                     {error && <p className="mt-3 text-sm font-medium text-rose-600">{error}</p>}
                     {paymentMethod !== "cash" && (
-                      <p className="mt-3 text-xs text-ink/40">Demo payment — add Razorpay keys for live payments.</p>
+                      <p className="mt-3 flex items-center justify-center gap-1.5 text-xs text-ink/40">
+                        <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" /></svg>
+                        Secure payment by Razorpay · UPI, cards, net-banking
+                      </p>
                     )}
                     <button type="button" onClick={() => setStepIdx(needsSlot ? 1 : 0)} className="mt-2 text-xs text-ink/50 underline">
                       ← back

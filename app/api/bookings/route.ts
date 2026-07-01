@@ -65,6 +65,7 @@ export async function POST(req: Request) {
     coupon: String(body.coupon || "").trim() || undefined,
     paid: String(body.paid) === "true",
     paymentMethod: body.paymentMethod === "cash" ? "cash" : body.paymentMethod === "online" ? "online" : undefined,
+    paymentId: String(body.paymentId || "").trim() || undefined,
     status: "new",
     createdAt: new Date().toISOString(),
   };

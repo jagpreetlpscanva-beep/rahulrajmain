@@ -94,6 +94,7 @@ export function BookingsView() {
                       {b.paymentMethod === "cash" ? " · 💵 cash on day" : b.paid ? " · 💳 paid online" : ""}
                     </p>
                     {b.coupon && <p className="text-xs font-medium text-emerald-600">🎟 {b.coupon}</p>}
+                    {b.paymentId && <p className="text-xs text-ink/40">💳 {b.paymentId}</p>}
                   </td>
                   <td className="px-4 py-3 text-xs">
                     {b.slotDate ? `${b.slotDate}, ${b.slotTime}` : "—"}

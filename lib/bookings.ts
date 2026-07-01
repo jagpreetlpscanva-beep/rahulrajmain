@@ -24,6 +24,8 @@ export interface Booking {
   paid: boolean;
   /** How the customer chose to pay. "cash" only applies to offline consultations. */
   paymentMethod?: "cash" | "online";
+  /** Razorpay payment id for online-paid bookings. */
+  paymentId?: string;
   status: "new" | "completed" | "cancelled";
   createdAt: string;
 }
