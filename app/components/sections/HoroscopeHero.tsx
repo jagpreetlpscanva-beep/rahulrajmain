@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { IconImage } from "../ui/IconImage";
 import { ZodiacWheel } from "../ui/ZodiacWheel";
 
@@ -61,6 +61,41 @@ export function HoroscopeHero() {
   const [idx, setIdx] = useState(5); // Virgo
   const sign = SIGNS[idx];
   const today = new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" });
+
+  // live daily prediction per sign (cached for the day so we don't re-spend credits)
+  const [predictions, setPredictions] = useState<Record<string, string>>({});
+  const dailyText = predictions[sign.name] ?? sign.today;
+
+  useEffect(() => {
+    if (predictions[sign.name]) return;
+    const dateKey = new Date().toISOString().slice(0, 10);
+    const cacheKey = `horo:${sign.name}:${dateKey}`;
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) { setPredictions((p) => ({ ...p, [sign.name]: cached })); return; }
+    } catch { /* ignore */ }
+    let alive = true;
+    fetch("/api/astrology", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ endpoint: `sun_sign_prediction/daily/${sign.name.toLowerCase()}`, payload: {} }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((json) => {
+        const text = json?.data?.prediction?.personal_life || json?.data?.prediction?.total_score
+          ? [json?.data?.prediction?.personal_life, json?.data?.prediction?.profession_life, json?.data?.prediction?.health]
+              .filter(Boolean).join(" ")
+          : json?.data?.prediction || json?.data?.bot_response;
+        const clean = typeof text === "string" && text.trim() ? text.trim() : null;
+        if (alive && clean) {
+          setPredictions((p) => ({ ...p, [sign.name]: clean }));
+          try { sessionStorage.setItem(cacheKey, clean); } catch { /* ignore */ }
+        }
+      })
+      .catch(() => { /* keep the static fallback line */ });
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idx]);
 
   return (
     <section className="relative overflow-hidden pt-24 lg:pt-28">
@@ -123,7 +158,7 @@ export function HoroscopeHero() {
             </div>
             <h2 className="mt-4 font-serif text-3xl font-bold text-ink">{sign.name}</h2>
             <p className="text-sm text-gold-700">({sign.sanskrit})</p>
-            <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink/65">{sign.today}</p>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink/65">{dailyText}</p>
           </div>
 
           {/* today / reading */}

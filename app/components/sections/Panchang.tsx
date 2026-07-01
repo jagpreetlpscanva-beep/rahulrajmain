@@ -4,6 +4,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { ZodiacWheel } from "../ui/ZodiacWheel";
 import { Mandala } from "../ui/Mandala";
 import { KundaliGenerator } from "./KundaliGenerator";
+import { CITIES } from "@/lib/calculators";
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const MONTHS = [
@@ -40,18 +41,31 @@ const BASE: { label: string; key: "tithi" | "nakshatra" | "yoga" | "karana"; ico
   { label: "Yoga", key: "yoga", icon: "yoga" },
   { label: "Karana", key: "karana", icon: "lotus" },
 ];
-const BASE_VALUES = { tithi: "Shukla Paksha, Dwitiya", nakshatra: "Punarvasu", yoga: "Vishkambha", karana: "Balava" };
 
-const CITIES: Record<string, { sunrise: string; sunset: string; rahu: string; abhijit: string }> = {
-  Delhi: { sunrise: "05:24 AM", sunset: "07:20 PM", rahu: "07:08 AM – 08:50 AM", abhijit: "11:58 AM – 12:52 PM" },
-  Mumbai: { sunrise: "06:02 AM", sunset: "07:18 PM", rahu: "07:38 AM – 09:14 AM", abhijit: "12:25 PM – 01:18 PM" },
-  Bengaluru: { sunrise: "05:54 AM", sunset: "06:48 PM", rahu: "07:28 AM – 09:02 AM", abhijit: "12:08 PM – 12:58 PM" },
-  Kolkata: { sunrise: "04:54 AM", sunset: "06:22 PM", rahu: "06:34 AM – 08:12 AM", abhijit: "11:32 AM – 12:24 PM" },
-  Chennai: { sunrise: "05:42 AM", sunset: "06:38 PM", rahu: "07:18 AM – 08:52 AM", abhijit: "12:04 PM – 12:54 PM" },
-  Pune: { sunrise: "06:00 AM", sunset: "07:14 PM", rahu: "07:36 AM – 09:11 AM", abhijit: "12:22 PM – 01:15 PM" },
-  Ujjain: { sunrise: "05:48 AM", sunset: "07:22 PM", rahu: "07:24 AM – 09:00 AM", abhijit: "12:10 PM – 01:03 PM" },
-  Varanasi: { sunrise: "05:08 AM", sunset: "06:52 PM", rahu: "06:50 AM – 08:28 AM", abhijit: "11:44 AM – 12:36 PM" },
+type Panch = { tithi: string; nakshatra: string; yoga: string; karana: string; sunrise: string; sunset: string };
+const FALLBACK: Panch = {
+  tithi: "—", nakshatra: "—", yoga: "—", karana: "—", sunrise: "—", sunset: "—",
 };
+
+/** Return the first primitive value found along the given object paths. */
+function pick(obj: unknown, paths: string[]): string | null {
+  for (const path of paths) {
+    const v = path.split(".").reduce<unknown>((a, k) => (a && typeof a === "object" ? (a as Record<string, unknown>)[k] : undefined), obj);
+    if ((typeof v === "string" && v.trim()) || typeof v === "number") return String(v);
+  }
+  return null;
+}
+
+function parsePanchang(d: unknown): Panch {
+  return {
+    tithi: pick(d, ["tithi.details.tithi_name", "tithi.name", "tithi_name", "tithi"]) ?? "—",
+    nakshatra: pick(d, ["nakshatra.details.nak_name", "nakshatra.name", "nakshatra_name", "nakshatra"]) ?? "—",
+    yoga: pick(d, ["yog.details.yog_name", "yog.name", "yog_name", "yoga"]) ?? "—",
+    karana: pick(d, ["karan.details.karan_name", "karan.name", "karan_name", "karana"]) ?? "—",
+    sunrise: pick(d, ["sunrise", "vedic_sunrise"]) ?? "—",
+    sunset: pick(d, ["sunset", "vedic_sunset"]) ?? "—",
+  };
+}
 
 const TRUST: { icon: GlyphName; title: string; sub: string }[] = [
   { icon: "shield", title: "100% Accurate", sub: "Vedic calculations you can trust" },
@@ -62,16 +76,61 @@ const TRUST: { icon: GlyphName; title: string; sub: string }[] = [
 
 export function Panchang() {
   const [today, setToday] = useState<Date | null>(null);
-  const [city, setCity] = useState("Delhi");
+  const [city, setCity] = useState("Lucknow");
+  const [panch, setPanch] = useState<Panch>(FALLBACK);
+  const [status, setStatus] = useState<"idle" | "loading" | "live" | "unavailable">("idle");
   useEffect(() => setToday(new Date()), []);
 
-  const loc = CITIES[city];
+  // Fetch real panchang for the selected city + today (cached per city/day so we
+  // don't spend an API credit on every page view).
+  useEffect(() => {
+    const c = CITIES.find((x) => x.name === city);
+    if (!c) return;
+    const now = new Date();
+    const dateKey = now.toISOString().slice(0, 10);
+    const cacheKey = `panchang:${city}:${dateKey}`;
+    try {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        setPanch(JSON.parse(cached));
+        setStatus("live");
+        return;
+      }
+    } catch {
+      /* ignore */
+    }
+    let alive = true;
+    setStatus("loading");
+    fetch("/api/astrology", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        endpoint: "basic_panchang",
+        payload: {
+          day: now.getDate(), month: now.getMonth() + 1, year: now.getFullYear(),
+          hour: 6, min: 0, lat: c.lat, lon: c.lon, tzone: c.tzone,
+        },
+      }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+      .then((json) => {
+        if (!alive) return;
+        const p = parsePanchang(json.data);
+        setPanch(p);
+        setStatus("live");
+        try { sessionStorage.setItem(cacheKey, JSON.stringify(p)); } catch { /* ignore */ }
+      })
+      .catch(() => { if (alive) setStatus("unavailable"); });
+    return () => { alive = false; };
+  }, [city]);
+
   const items: { label: string; value: string; icon: GlyphName }[] = [
-    ...BASE.map((b) => ({ label: b.label, value: BASE_VALUES[b.key], icon: b.icon })),
-    { label: "Sunrise", value: loc.sunrise, icon: "sunrise" },
-    { label: "Sunset", value: loc.sunset, icon: "sunset" },
-    { label: "Rahu Kaal", value: loc.rahu, icon: "clock" },
-    { label: "Abhijit Muhurat", value: loc.abhijit, icon: "clock" },
+    { label: "Tithi", value: panch.tithi, icon: "sun" },
+    { label: "Nakshatra", value: panch.nakshatra, icon: "moon" },
+    { label: "Yoga", value: panch.yoga, icon: "yoga" },
+    { label: "Karana", value: panch.karana, icon: "lotus" },
+    { label: "Sunrise", value: panch.sunrise, icon: "sunrise" },
+    { label: "Sunset", value: panch.sunset, icon: "sunset" },
   ];
 
   return (
@@ -101,8 +160,8 @@ export function Panchang() {
                 onChange={(e) => setCity(e.target.value)}
                 className="relative shrink-0 rounded-lg border border-espresso/15 bg-white px-3 py-2 text-sm font-medium text-espresso outline-none focus:border-gold-600"
               >
-                {Object.keys(CITIES).map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                {CITIES.map((c) => (
+                  <option key={c.name} value={c.name}>{c.name}</option>
                 ))}
               </select>
             </div>
@@ -125,7 +184,13 @@ export function Panchang() {
             {/* note */}
             <div className="flex items-start gap-2 border-t border-gold-500/15 px-5 py-3 text-xs leading-relaxed text-ink/45">
               <Glyph name="info" className="mt-0.5 h-4 w-4 shrink-0 text-gold-500/70" />
-              <span>Sunrise, sunset &amp; timings shown for {city}. Connect a panchang API for daily-accurate values.</span>
+              <span>
+                {status === "loading"
+                  ? `Loading today's panchang for ${city}…`
+                  : status === "live"
+                  ? `Live Vedic panchang for ${city}.`
+                  : `Panchang for ${city} will show here once the astrology API is connected.`}
+              </span>
             </div>
           </div>
 
