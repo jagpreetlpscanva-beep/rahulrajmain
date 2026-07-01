@@ -57,7 +57,7 @@ const TRUST: { icon: GlyphName; title: string; sub: string }[] = [
   { icon: "shield", title: "100% Accurate", sub: "Vedic calculations you can trust" },
   { icon: "check", title: "Personalized Report", sub: "Detailed Kundli just for you" },
   { icon: "lock", title: "Secure & Private", sub: "Your information is fully protected" },
-  { icon: "person", title: "Expert Guidance", sub: "Insights by Rahul Raj, Vedic Astrologer" },
+  { icon: "person", title: "Expert Guidance", sub: "Insights by Dr. Rahul Raj, Vedic Astrologer" },
 ];
 
 export function Panchang() {

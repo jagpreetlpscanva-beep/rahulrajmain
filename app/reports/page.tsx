@@ -6,7 +6,7 @@ import { ScrollToTop } from "../components/ui/ScrollToTop";
 import { BRAND_LOGO_SRC } from "../components/ui/Logo";
 
 export const metadata: Metadata = {
-  title: "Astrology Reports — Rahul Raj, Vedic Astrologer",
+  title: "Astrology Reports — Dr. Rahul Raj, Vedic Astrologer",
   description:
     "Personalized Vedic astrology reports for career, marriage, health, wealth and your year ahead — hand-prepared from your birth chart.",
 };

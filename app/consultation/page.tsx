@@ -7,9 +7,9 @@ import { ConsultationGrid } from "../components/sections/ConsultationGrid";
 import { ScrollToTop } from "../components/ui/ScrollToTop";
 
 export const metadata: Metadata = {
-  title: "Book a Consultation — Rahul Raj, Vedic Astrologer",
+  title: "Book a Consultation — Dr. Rahul Raj, Vedic Astrologer",
   description:
-    "Talk to Rahul Raj and get clear, trusted answers to your biggest life questions — career, marriage, health, wealth and more. 100% private, one-on-one.",
+    "Talk to Dr. Rahul Raj and get clear, trusted answers to your biggest life questions — career, marriage, health, wealth and more. 100% private, one-on-one.",
 };
 
 export default function ConsultationPage() {
@@ -19,7 +19,7 @@ export default function ConsultationPage() {
       <main>
         {/* hero matching the reference: photo, ₹499 offer, stats, trust badges, feature row */}
         <ConsultationHero />
-        {/* What people say about Rahul Raj */}
+        {/* What people say about Dr. Rahul Raj */}
         <Testimonials />
         {/* consultation types to book */}
         <ConsultationGrid />

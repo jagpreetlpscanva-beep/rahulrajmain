@@ -33,7 +33,7 @@ const CARDS = [
   { kind: "wa", Icon: WhatsAppIcon, title: "WhatsApp", main: PHONE, sub: "Chat instantly for quick answers and support", cta: "Chat Now", href: WHATSAPP, recommended: true },
   { kind: "call", Icon: PhoneIcon, title: "Call Us", main: PHONE, sub: "Speak directly with our astrology experts", cta: "Call Now", href: `tel:${PHONE_TEL}`, recommended: false },
   { kind: "mail", Icon: MailIcon, title: "Email Us", main: EMAIL, sub: "Drop us an email and we'll get back to you", cta: "Send Email", href: `mailto:${EMAIL}`, recommended: false },
-  { kind: "hours", Icon: ClockIcon, title: "Office Hours", main: "Mon – Sat: 10 AM – 7:30 PM", sub: "Sunday: Closed · We're here during these hours", cta: "View Timings", href: "#contact-form", recommended: false },
+  { kind: "hours", Icon: ClockIcon, title: "Office Hours", main: "Mon – Sat: 10 AM–2 PM & 6–8 PM", sub: "Sunday: Closed · We're here during these hours", cta: "View Timings", href: "#contact-form", recommended: false },
 ] as const;
 
 const TRUST = [

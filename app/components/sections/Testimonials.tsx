@@ -40,7 +40,7 @@ export function Testimonials() {
           <span className="hidden h-px w-10 bg-gold-400/50 sm:block" />
           <Diamond className="h-3 w-3" />
           <h2 className="text-center font-serif text-lg font-semibold uppercase tracking-[0.15em] text-ink sm:text-xl">
-            What People Say About Rahul Raj
+            What People Say About Dr. Rahul Raj
           </h2>
           <Diamond className="h-3 w-3" />
           <span className="hidden h-px w-10 bg-gold-400/50 sm:block" />

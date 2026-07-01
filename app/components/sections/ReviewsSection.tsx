@@ -74,7 +74,7 @@ export function ReviewsSection() {
       <div className="container-px">
         <div className="text-center">
           <h2 className="inline-flex items-center gap-3 font-serif text-3xl font-bold uppercase tracking-wide text-ink sm:text-4xl">
-            <Diamond className="h-3 w-3 text-gold-500" /> What People Say About Rahul Raj <Diamond className="h-3 w-3 text-gold-500" />
+            <Diamond className="h-3 w-3 text-gold-500" /> What People Say About Dr. Rahul Raj <Diamond className="h-3 w-3 text-gold-500" />
           </h2>
           <LotusDivider className="mx-auto mt-4" />
         </div>

@@ -55,7 +55,7 @@ export function KundaliGenerator() {
         <span className="h-px w-16 bg-gradient-to-l from-transparent to-gold-400" />
       </span>
       <p className="mt-3 text-sm leading-relaxed text-ink/65">
-        Enter your birth details and get your personalized Vedic Kundli prepared by Rahul Raj.
+        Enter your birth details and get your personalized Vedic Kundli prepared by Dr. Rahul Raj.
       </p>
 
       {done ? (
@@ -67,7 +67,7 @@ export function KundaliGenerator() {
           </span>
           <p className="mt-4 font-serif text-lg font-bold text-ink">Thank you, {form.name.split(" ")[0]}!</p>
           <p className="mt-1.5 text-sm text-ink/70">
-            Your details are received. Rahul Raj will prepare your Janam Kundli. For a detailed reading, book a consultation.
+            Your details are received. Dr. Rahul Raj will prepare your Janam Kundli. For a detailed reading, book a consultation.
           </p>
           <a href="/book/consultation/quick" className="mt-5 inline-flex items-center gap-2 rounded-lg bg-gold-gradient px-6 py-3 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn">
             Book Detailed Reading →

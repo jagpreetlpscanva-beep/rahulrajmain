@@ -4,7 +4,7 @@ import type { IconName } from "@/lib/content";
 
 const TILES: { id: string; label: string; sub: string; icon: IconName; href: string }[] = [
   { id: "reports", label: "Explore Reports", sub: "Detailed insights about your life", icon: "birth-chart", href: "/reports" },
-  { id: "consult", label: "Consult Now", sub: "One-on-one consultation with Rahul Raj", icon: "users", href: "/consultation" },
+  { id: "consult", label: "Consult Now", sub: "One-on-one consultation with Dr. Rahul Raj", icon: "users", href: "/consultation" },
   { id: "gemstones", label: "Gemstones & Remedies", sub: "Authentic gemstones for positive change", icon: "wealth", href: "/consultation" },
   { id: "poojas", label: "Powerful Poojas", sub: "Vedic rituals for peace, prosperity & success", icon: "om", href: "/online-pooja" },
   { id: "ask", label: "Ask Astrologer", sub: "Get answers to your most important questions", icon: "lotus-person", href: "/#contact" },

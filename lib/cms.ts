@@ -446,7 +446,7 @@ export const DEFAULT_CONSULTATIONS: Consultation[] = [
   {
     id: "offline-consultation",
     title: "Offline Consultation",
-    description: "Meet Rahul Raj in person for a detailed, one-on-one consultation and direct guidance.",
+    description: "Meet Dr. Rahul Raj in person for a detailed, one-on-one consultation and direct guidance.",
     duration: "45 mins",
     mode: "In-Person Meeting",
     price: "₹500",
@@ -456,7 +456,7 @@ export const DEFAULT_CONSULTATIONS: Consultation[] = [
   {
     id: "online-consultation",
     title: "Online Consultation",
-    description: "Connect with Rahul Raj from anywhere over a video call and get expert guidance.",
+    description: "Connect with Dr. Rahul Raj from anywhere over a video call and get expert guidance.",
     duration: "30 mins",
     mode: "Virtual Meeting",
     price: "₹1,000",

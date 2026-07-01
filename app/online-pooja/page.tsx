@@ -5,7 +5,7 @@ import { PoojaGrid } from "../components/sections/PoojaGrid";
 import { ScrollToTop } from "../components/ui/ScrollToTop";
 
 export const metadata: Metadata = {
-  title: "Online Puja Services — Rahul Raj, Vedic Astrologer",
+  title: "Online Puja Services — Dr. Rahul Raj, Vedic Astrologer",
   description:
     "Book authentic online pujas performed on your behalf by certified pandits — Grah Shanti, Dosh Nivaran, Vrat, festival and personalized pujas with sankalp in your name.",
 };

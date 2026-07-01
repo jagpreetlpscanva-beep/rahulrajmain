@@ -13,7 +13,7 @@ const FAQS = [
   },
   {
     q: "How soon will I get a response?",
-    a: "We usually reply within a few hours during working hours (Mon–Sat, 10:00 AM – 7:30 PM IST).",
+    a: "We usually reply within a few hours during working hours (Mon–Sat, 10 AM – 2 PM & 6 PM – 8 PM IST).",
   },
   {
     q: "Is my personal information safe?",

@@ -87,7 +87,7 @@ export function ConsultationPopup({ initialSlides }: { initialSlides?: HeroSlide
                   ✦ Limited-Time Offer
                 </span>
                 <h3 className="mt-4 font-serif text-3xl font-bold leading-tight text-espresso">
-                  <span className="border-b-4 border-gold-400">Talk</span> to Rahul Raj
+                  <span className="border-b-4 border-gold-400">Talk</span> to Dr. Rahul Raj
                 </h3>
                 <p className="mt-1.5 text-sm text-ink/65">Personal 1-on-1 Vedic consultation</p>
 
@@ -178,7 +178,7 @@ export function ConsultationPopup({ initialSlides }: { initialSlides?: HeroSlide
               ))}
             </div>
             <p className="mt-4 text-center text-sm text-ink/60">
-              👥 Join <strong className="text-ink">2,500+</strong> people who found clarity and direction with Rahul Raj
+              👥 Join <strong className="text-ink">2,500+</strong> people who found clarity and direction with Dr. Rahul Raj
             </p>
           </motion.div>
         </motion.div>

@@ -5,9 +5,9 @@ import { ScrollToTop } from "../components/ui/ScrollToTop";
 import { BookConsultationGrid } from "../components/sections/BookConsultationGrid";
 
 export const metadata: Metadata = {
-  title: "Book Your Consultation — Rahul Raj, Vedic Astrologer",
+  title: "Book Your Consultation — Dr. Rahul Raj, Vedic Astrologer",
   description:
-    "Choose offline or online consultation with Rahul Raj. Pick a slot, pay securely, and get personalized Vedic guidance.",
+    "Choose offline or online consultation with Dr. Rahul Raj. Pick a slot, pay securely, and get personalized Vedic guidance.",
 };
 
 export default function BookConsultationPage() {

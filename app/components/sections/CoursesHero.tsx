@@ -30,7 +30,7 @@ export function CoursesHero() {
             <svg viewBox="0 0 16 16" className="h-3 w-3" aria-hidden="true">
               <path d="M8 0 L9.6 6.4 L16 8 L9.6 9.6 L8 16 L6.4 9.6 L0 8 L6.4 6.4 Z" fill="currentColor" />
             </svg>
-            Learn with Rahul Raj
+            Learn with Dr. Rahul Raj
             <svg viewBox="0 0 16 16" className="h-3 w-3" aria-hidden="true">
               <path d="M8 0 L9.6 6.4 L16 8 L9.6 9.6 L8 16 L6.4 9.6 L0 8 L6.4 6.4 Z" fill="currentColor" />
             </svg>

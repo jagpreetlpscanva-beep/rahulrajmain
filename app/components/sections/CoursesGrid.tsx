@@ -161,7 +161,7 @@ type SortKey = (typeof SORTS)[number];
 const TRUST_STRIP = [
   { icon: InfinityIcon, title: "Lifetime Access", sub: "Learn at your own pace" },
   { icon: CertificateIcon, title: "Certificate", sub: "Upon Completion" },
-  { icon: GuideIcon, title: "Expert Guidance", sub: "From Rahul Raj" },
+  { icon: GuideIcon, title: "Expert Guidance", sub: "From Dr. Rahul Raj" },
   { icon: MobileIcon, title: "Mobile Friendly", sub: "Study Anywhere" },
   { icon: LockIcon, title: "Secure Payment", sub: "100% Safe & Secure" },
   { icon: HeadsetIcon, title: "24/7 Support", sub: "We're Here to Help" },

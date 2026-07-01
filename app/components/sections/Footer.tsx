@@ -76,14 +76,14 @@ export function Footer() {
               </li>
               <li>
                 <span className="block text-xs uppercase tracking-wider text-gold-400">Hours</span>
-                Mon – Sat, 10:00 AM – 7:00 PM IST
+                Mon – Sat · 10 AM – 2 PM & 6 PM – 8 PM
               </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-gold-400/15 pt-6 text-xs text-cream/50 sm:flex-row">
-          <p>© {year} Rahul Raj — Vedic Astrologer. All rights reserved.</p>
+          <p>© {year} Dr. Rahul Raj — Vedic Astrologer. All rights reserved.</p>
           <div className="flex items-center gap-4">
             <a href="/admin" className="transition-colors hover:text-gold-300">Admin</a>
             <p>Made with devotion &amp; the wisdom of the stars.</p>

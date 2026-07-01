@@ -108,7 +108,7 @@ export default function AboutPage() {
               <Spark className="h-3 w-3 text-gold-500" /> My Story <Spark className="h-3 w-3 text-gold-500" />
             </h2>
             <p className="mt-5 text-sm leading-relaxed text-ink/65 sm:text-base">
-              From a young age, Rahul Raj was drawn to the timeless science of Jyotish. What began as
+              From a young age, Dr. Rahul Raj was drawn to the timeless science of Jyotish. What began as
               curiosity grew into a lifelong devotion — studying classical texts, learning from
               respected gurus, and serving thousands of families. Today, his mission is simple: to make
               authentic Vedic guidance accessible, honest and genuinely useful for everyday life.

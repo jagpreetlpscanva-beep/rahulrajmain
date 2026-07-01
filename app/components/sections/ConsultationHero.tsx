@@ -43,7 +43,7 @@ export function ConsultationHero() {
             </span>
 
             <h1 className="mt-5 font-serif text-3xl font-bold leading-[1.1] sm:text-4xl lg:text-5xl">
-              <span className="text-white">Talk Directly With Rahul Raj —</span>
+              <span className="text-white">Talk Directly With Dr. Rahul Raj —</span>
               <br />
               <span className="text-luxe-gold">Get Answers About Career, Marriage &amp; Money</span>
             </h1>

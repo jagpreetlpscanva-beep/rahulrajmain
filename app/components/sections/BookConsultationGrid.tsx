@@ -24,7 +24,7 @@ export function BookConsultationGrid() {
         Book Your <span className="text-gold-600">Consultation</span>
       </h1>
       <p className="mx-auto mt-4 max-w-xl text-center text-sm text-ink/65 sm:text-base">
-        Choose the mode that suits you best. Get personalized guidance from Rahul Raj and bring
+        Choose the mode that suits you best. Get personalized guidance from Dr. Rahul Raj and bring
         clarity to your questions.
       </p>
 

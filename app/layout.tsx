@@ -6,6 +6,7 @@ import { COLLECTIONS, type CollectionKey } from "@/lib/cms";
 import { CollectionsProvider } from "@/lib/collectionsContext";
 import { GoogleTranslate } from "./components/ui/GoogleTranslate";
 import { BackgroundMusic } from "./components/ui/BackgroundMusic";
+import { ScrollReveal } from "./components/ui/ScrollReveal";
 
 // Collections (consultations, slots, prices, images, etc.) are read fresh on
 // every request so admin edits go live immediately — without this, Next.js
@@ -33,8 +34,8 @@ const SITE_URL = "https://rahulrajastrologer.com";
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Rahul Raj — Vedic Astrologer | Find Clarity. Create a Better Life.",
-    template: "%s | Rahul Raj — Vedic Astrologer",
+    default: "Dr. Rahul Raj — Vedic Astrologer | Find Clarity. Create a Better Life.",
+    template: "%s | Dr. Rahul Raj — Vedic Astrologer",
   },
   description:
     "Personalized Vedic guidance for your relationships, career, business, finances and overall well-being. 20+ years of experience, 5000+ consultations, 4.9/5 client rating.",
@@ -47,10 +48,10 @@ export const metadata: Metadata = {
     "career astrology",
     "numerology",
     "horoscope",
-    "Rahul Raj astrologer",
+    "Dr. Rahul Raj astrologer",
   ],
-  authors: [{ name: "Rahul Raj" }],
-  creator: "Rahul Raj",
+  authors: [{ name: "Dr. Rahul Raj" }],
+  creator: "Dr. Rahul Raj",
   alternates: { canonical: "/" },
   icons: {
     icon: "/brand/icon.png",
@@ -61,14 +62,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     url: SITE_URL,
-    siteName: "Rahul Raj — Vedic Astrologer",
-    title: "Rahul Raj — Vedic Astrologer | Find Clarity. Create a Better Life.",
+    siteName: "Dr. Rahul Raj — Vedic Astrologer",
+    title: "Dr. Rahul Raj — Vedic Astrologer | Find Clarity. Create a Better Life.",
     description:
       "Personalized Vedic guidance for relationships, career, business, finances and well-being.",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rahul Raj — Vedic Astrologer",
+    title: "Dr. Rahul Raj — Vedic Astrologer",
     description:
       "Personalized Vedic guidance for relationships, career, business, finances and well-being.",
   },
@@ -88,7 +89,7 @@ export const viewport: Viewport = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "ProfessionalService",
-  name: "Rahul Raj — Vedic Astrologer",
+  name: "Dr. Rahul Raj — Vedic Astrologer",
   description:
     "Personalized Vedic guidance for relationships, career, business, finances and overall well-being.",
   url: SITE_URL,
@@ -143,6 +144,7 @@ export default async function RootLayout({
         <CollectionsProvider value={initialCollections}>{children}</CollectionsProvider>
         <GoogleTranslate />
         <BackgroundMusic />
+        <ScrollReveal />
       </body>
     </html>
   );

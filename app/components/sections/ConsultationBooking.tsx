@@ -78,7 +78,7 @@ export function ConsultationBooking() {
               <StarSvg className="h-3.5 w-3.5" /> Personal Consultation
             </span>
             <h2 className="mt-4 font-serif text-3xl font-bold leading-tight text-ink sm:text-4xl lg:text-5xl">
-              Speak Directly With Rahul Raj
+              Speak Directly With Dr. Rahul Raj
             </h2>
             <p className="mt-3 max-w-md text-ink/65">
               Get clear answers and right guidance for a better tomorrow.
