@@ -61,6 +61,10 @@ export function SlotsManager() {
 
   const norm = (s: Slot): "online" | "offline" => s.type ?? "online";
 
+  // today in local (IST) YYYY-MM-DD — past dates are expired, hide them from the list
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
   // make sure whatever we just added is actually visible (don't leave the user
   // filtered to the other type / another date, which hides new slots)
   const revealAdded = (d: string) => {
@@ -118,11 +122,12 @@ export function SlotsManager() {
   const offlineSlots = items.filter((s) => norm(s) === "offline").length;
 
   const allDates = useMemo(
-    () => Array.from(new Set(items.map((s) => s.date))).sort(),
-    [items]
+    () => Array.from(new Set(items.filter((s) => s.date >= todayStr).map((s) => s.date))).sort(),
+    [items, todayStr]
   );
 
   const filtered = sorted.filter((s) => {
+    if (s.date < todayStr) return false; // hide expired (past) dates
     if (typeFilter !== "all" && norm(s) !== typeFilter) return false;
     if (dateFilter !== "all" && s.date !== dateFilter) return false;
     return true;
