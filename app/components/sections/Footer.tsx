@@ -25,7 +25,7 @@ export function Footer() {
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               <a
-                href="#contact"
+                href="/bookconsultation"
                 className="inline-flex items-center gap-2 rounded-lg bg-gold-gradient px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5"
               >
                 <CalendarIcon className="h-4 w-4" />
