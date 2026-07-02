@@ -300,7 +300,7 @@ export default function BookingPage() {
           {!loaded ? (
             <p className="mt-10 text-center text-ink/50">Loading…</p>
           ) : done ? (
-            <Confirmation item={item!} slot={slot} name={form.name} />
+            <Confirmation item={item!} slot={slot} name={form.name} type={type} consultationType={consultationType} />
           ) : (
             <div className="mt-4 rounded-3xl border border-gold-500/25 bg-white p-6 shadow-card sm:p-8">
               {/* header */}
@@ -619,7 +619,10 @@ export default function BookingPage() {
   );
 }
 
-function Confirmation({ item, slot, name }: { item: Item; slot: Slot | null; name: string }) {
+function Confirmation({
+  item, slot, name, type, consultationType,
+}: { item: Item; slot: Slot | null; name: string; type: string; consultationType: "online" | "offline" }) {
+  const isOnline = type !== "consultation" || consultationType === "online";
   return (
     <div className="mt-4 rounded-3xl border border-gold-500/25 bg-white p-8 text-center shadow-card">
       <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-gold-gradient text-night">
@@ -635,8 +638,27 @@ function Confirmation({ item, slot, name }: { item: Item; slot: Slot | null; nam
             {" "}for <strong>{fmtDate(slot.date)}, {slot.time}</strong>
           </>
         ) : null}
-        . We&rsquo;ll reach out shortly to confirm.
+        .
       </p>
+
+      {/* clear next steps so the person knows where to go */}
+      <div className="mt-6 rounded-2xl border border-gold-500/20 bg-gold-50/50 p-5 text-left">
+        <p className="text-sm font-bold text-ink">आगे क्या करें?</p>
+        {type === "consultation" && !isOnline ? (
+          <p className="mt-1.5 text-sm leading-relaxed text-ink/70">
+            Yeh ek <strong>offline / in-person</strong> consultation hai — apne booked slot par humare office pahunch jaayein.
+            Address aur exact location WhatsApp/SMS par bhej di jaayegi. Koi confusion ho toh call/WhatsApp karein:{" "}
+            <a href="https://wa.me/919415312590" className="font-semibold text-gold-700 underline">+91 94153 12590</a>.
+          </p>
+        ) : (
+          <p className="mt-1.5 text-sm leading-relaxed text-ink/70">
+            Yeh ek <strong>online</strong> session hai — aapke booked slot se pehle Google Meet/WhatsApp video-call ka link
+            aapke phone/email par bhej diya jaayega. Kahin jaane ki zaroorat nahi, bas apne slot time par phone/laptop ke paas rahein.
+            Koi query ho toh WhatsApp karein: <a href="https://wa.me/919415312590" className="font-semibold text-gold-700 underline">+91 94153 12590</a>.
+          </p>
+        )}
+      </div>
+
       <a href="/" className="mt-6 inline-block rounded-lg bg-gold-gradient px-6 py-3 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn">
         Back to Home
       </a>
