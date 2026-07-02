@@ -106,7 +106,7 @@ export default function ContactPage() {
               </p>
             </div>
             <div className="flex shrink-0 flex-col gap-3 sm:flex-row">
-              <a href="/book/consultation/quick" className="rounded-xl bg-gold-gradient px-6 py-3 text-sm font-bold text-night shadow-gold-btn transition-transform hover:-translate-y-0.5">
+              <a href="/bookconsultation" className="rounded-xl bg-gold-gradient px-6 py-3 text-sm font-bold text-night shadow-gold-btn transition-transform hover:-translate-y-0.5">
                 Book Consultation →
               </a>
               <a href={WHATSAPP} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-white px-6 py-3 text-sm font-bold text-emerald-700 transition-colors hover:bg-emerald-50">

@@ -197,7 +197,7 @@ export function Navbar({ overlay = false }: { overlay?: boolean }) {
               ))}
               <li className="pt-2">
                 <a
-                  href="/book/consultation/quick"
+                  href="/bookconsultation"
                   onClick={() => setOpen(false)}
                   className="flex items-center justify-center gap-2 rounded-lg bg-gold-gradient px-5 py-3.5 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn"
                 >

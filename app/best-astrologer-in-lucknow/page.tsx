@@ -118,7 +118,7 @@ export default function LucknowPage() {
               anywhere in Lucknow.
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-              <a href="/book/consultation/quick" className="rounded-xl bg-gold-gradient px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-night shadow-gold-btn">
+              <a href="/bookconsultation" className="rounded-xl bg-gold-gradient px-6 py-3.5 text-sm font-bold uppercase tracking-wider text-night shadow-gold-btn">
                 Book Consultation
               </a>
               <a href={`tel:${PHONE_TEL}`} className="rounded-xl border border-gold-500/40 bg-white px-6 py-3.5 text-sm font-bold text-gold-700">

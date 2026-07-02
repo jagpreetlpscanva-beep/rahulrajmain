@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useCollection, DEFAULT_HERO_SLIDES, type HeroSlide, type Slot, type Consultation } from "@/lib/adminStore";
 import { ZodiacWheel } from "../ui/ZodiacWheel";
 
-const BOOK_HREF = "/book/consultation/quick";
+const BOOK_HREF = "/bookconsultation";
 
 const STATS = [
   { value: "4.9/5", label: "Rating", icon: <StarSvg /> },

@@ -136,7 +136,7 @@ export function HoroscopeHero() {
           </ul>
 
           <a
-            href="/book/consultation/quick"
+            href="/bookconsultation"
             className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-b from-[#F4D58A] via-[#D4A03C] to-[#A9741E] px-8 py-4 text-sm font-bold uppercase tracking-wider text-[#3a2408] shadow-[0_10px_30px_-6px_rgba(196,144,46,0.75)] ring-1 ring-gold-300/60 transition-transform hover:-translate-y-0.5"
           >
             <SparkIcon className="h-4 w-4" /> Get Your Horoscope Now

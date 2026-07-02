@@ -33,8 +33,11 @@ export const CALCULATORS: CalcDef[] = [
   { id: "rudraksha", endpoint: "rudraksha_suggestion", title: "Rudraksha Suggestion", desc: "Rudraksha recommended for your planetary balance.", icon: "📿", input: "birth" },
 ];
 
+/** Extra astrologyapi endpoints used by on-page tools (not shown as cards). */
+export const EXTRA_ENDPOINTS = ["astro_details", "geo_details"];
+
 /** Endpoint prefixes the proxy is allowed to call (guards against abuse). */
-export const ALLOWED_ENDPOINTS = CALCULATORS.map((c) => c.endpoint);
+export const ALLOWED_ENDPOINTS = [...CALCULATORS.map((c) => c.endpoint), ...EXTRA_ENDPOINTS];
 
 export const ZODIAC_SIGNS = [
   "aries", "taurus", "gemini", "cancer", "leo", "virgo",
@@ -63,4 +66,54 @@ export const CITIES: { name: string; lat: number; lon: number; tzone: number }[]
   { name: "Surat", lat: 21.1702, lon: 72.8311, tzone: 5.5 },
   { name: "Chandigarh", lat: 30.7333, lon: 76.7794, tzone: 5.5 },
   { name: "Amritsar", lat: 31.634, lon: 74.8723, tzone: 5.5 },
+  { name: "Ludhiana", lat: 30.901, lon: 75.8573, tzone: 5.5 },
+  { name: "Agra", lat: 27.1767, lon: 78.0081, tzone: 5.5 },
+  { name: "Meerut", lat: 28.9845, lon: 77.7064, tzone: 5.5 },
+  { name: "Ghaziabad", lat: 28.6692, lon: 77.4538, tzone: 5.5 },
+  { name: "Noida", lat: 28.5355, lon: 77.391, tzone: 5.5 },
+  { name: "Gurugram", lat: 28.4595, lon: 77.0266, tzone: 5.5 },
+  { name: "Faridabad", lat: 28.4089, lon: 77.3178, tzone: 5.5 },
+  { name: "Prayagraj (Allahabad)", lat: 25.4358, lon: 81.8463, tzone: 5.5 },
+  { name: "Gorakhpur", lat: 26.7606, lon: 83.3732, tzone: 5.5 },
+  { name: "Bareilly", lat: 28.367, lon: 79.4304, tzone: 5.5 },
+  { name: "Aligarh", lat: 27.8974, lon: 78.088, tzone: 5.5 },
+  { name: "Moradabad", lat: 28.8386, lon: 78.7733, tzone: 5.5 },
+  { name: "Jodhpur", lat: 26.2389, lon: 73.0243, tzone: 5.5 },
+  { name: "Udaipur", lat: 24.5854, lon: 73.7125, tzone: 5.5 },
+  { name: "Kota", lat: 25.2138, lon: 75.8648, tzone: 5.5 },
+  { name: "Gwalior", lat: 26.2183, lon: 78.1828, tzone: 5.5 },
+  { name: "Jabalpur", lat: 23.1815, lon: 79.9864, tzone: 5.5 },
+  { name: "Raipur", lat: 21.2514, lon: 81.6296, tzone: 5.5 },
+  { name: "Ranchi", lat: 23.3441, lon: 85.3096, tzone: 5.5 },
+  { name: "Jamshedpur", lat: 22.8046, lon: 86.2029, tzone: 5.5 },
+  { name: "Dhanbad", lat: 23.7957, lon: 86.4304, tzone: 5.5 },
+  { name: "Guwahati", lat: 26.1445, lon: 91.7362, tzone: 5.5 },
+  { name: "Bhubaneswar", lat: 20.2961, lon: 85.8245, tzone: 5.5 },
+  { name: "Cuttack", lat: 20.4625, lon: 85.8828, tzone: 5.5 },
+  { name: "Visakhapatnam", lat: 17.6868, lon: 83.2185, tzone: 5.5 },
+  { name: "Vijayawada", lat: 16.5062, lon: 80.648, tzone: 5.5 },
+  { name: "Coimbatore", lat: 11.0168, lon: 76.9558, tzone: 5.5 },
+  { name: "Madurai", lat: 9.9252, lon: 78.1198, tzone: 5.5 },
+  { name: "Tiruchirappalli", lat: 10.7905, lon: 78.7047, tzone: 5.5 },
+  { name: "Kochi", lat: 9.9312, lon: 76.2673, tzone: 5.5 },
+  { name: "Thiruvananthapuram", lat: 8.5241, lon: 76.9366, tzone: 5.5 },
+  { name: "Kozhikode", lat: 11.2588, lon: 75.7804, tzone: 5.5 },
+  { name: "Mysuru", lat: 12.2958, lon: 76.6394, tzone: 5.5 },
+  { name: "Mangaluru", lat: 12.9141, lon: 74.856, tzone: 5.5 },
+  { name: "Hubli", lat: 15.3647, lon: 75.124, tzone: 5.5 },
+  { name: "Nashik", lat: 19.9975, lon: 73.7898, tzone: 5.5 },
+  { name: "Aurangabad", lat: 19.8762, lon: 75.3433, tzone: 5.5 },
+  { name: "Nagercoil", lat: 8.1833, lon: 77.4119, tzone: 5.5 },
+  { name: "Vadodara", lat: 22.3072, lon: 73.1812, tzone: 5.5 },
+  { name: "Rajkot", lat: 22.3039, lon: 70.8022, tzone: 5.5 },
+  { name: "Dehradun", lat: 30.3165, lon: 78.0322, tzone: 5.5 },
+  { name: "Haridwar", lat: 29.9457, lon: 78.1642, tzone: 5.5 },
+  { name: "Shimla", lat: 31.1048, lon: 77.1734, tzone: 5.5 },
+  { name: "Srinagar", lat: 34.0837, lon: 74.7973, tzone: 5.5 },
+  { name: "Jammu", lat: 32.7266, lon: 74.857, tzone: 5.5 },
+  { name: "Siliguri", lat: 26.7271, lon: 88.3953, tzone: 5.5 },
+  { name: "Durgapur", lat: 23.5204, lon: 87.3119, tzone: 5.5 },
+  { name: "Ajmer", lat: 26.4499, lon: 74.6399, tzone: 5.5 },
+  { name: "Bikaner", lat: 28.0229, lon: 73.3119, tzone: 5.5 },
+  { name: "Jhansi", lat: 25.4484, lon: 78.5685, tzone: 5.5 },
 ];

@@ -111,7 +111,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <div className="my-10 rounded-2xl border border-gold-500/20 bg-gradient-to-r from-gold-50 to-[#FBF1D9] p-6 text-center">
               <p className="font-serif text-xl font-bold text-ink">Need personal guidance?</p>
               <p className="mt-1 text-sm text-ink/65">Book a consultation with Dr. Rahul Raj — in person in Lucknow or online.</p>
-              <a href="/book/consultation/quick" className="mt-4 inline-block rounded-xl bg-gold-gradient px-6 py-3 text-sm font-bold text-night shadow-gold-btn">
+              <a href="/bookconsultation" className="mt-4 inline-block rounded-xl bg-gold-gradient px-6 py-3 text-sm font-bold text-night shadow-gold-btn">
                 Book Consultation →
               </a>
             </div>

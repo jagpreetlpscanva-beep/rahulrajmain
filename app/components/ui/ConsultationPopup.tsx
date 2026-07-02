@@ -7,7 +7,7 @@ import { ZodiacWheel } from "./ZodiacWheel";
 import { CalendarIcon, CloseIcon, WhatsAppIcon } from "../icons";
 
 const WHATSAPP_HREF = "https://wa.me/919415312590";
-const BOOK_HREF = "/book/consultation/quick";
+const BOOK_HREF = "/bookconsultation";
 
 const BULLETS = [
   "Get clear answers on career, marriage, health & money",

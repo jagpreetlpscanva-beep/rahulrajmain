@@ -28,12 +28,12 @@ export default async function Home() {
         <Hero initialSlides={heroSlides} />
         {/* quick-access tiles peeking up below the hero */}
         <FeatureTiles />
+        {/* panchang (left) + kundali generator (right) — right under the tiles */}
+        <Panchang />
         {/* online pooja (collapsed; slides open on click) */}
         <OnlinePoojaSection />
         {/* book a personal consultation (slots editable in admin) */}
         <ConsultationBooking />
-        {/* panchang (left) + kundali generator (right) */}
-        <Panchang />
         {/* reports + astrology tools + courses, with trust badges */}
         <ExploreSection />
         {/* youtube podcast video */}

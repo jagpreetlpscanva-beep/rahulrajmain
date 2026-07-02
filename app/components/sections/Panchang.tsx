@@ -155,15 +155,20 @@ export function Panchang() {
                 </p>
                 <p className="text-sm text-espresso/70">{today ? WEEKDAYS[today.getDay()] : ""}</p>
               </div>
-              <select
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                className="relative shrink-0 rounded-lg border border-espresso/15 bg-white px-3 py-2 text-sm font-medium text-espresso outline-none focus:border-gold-600"
-              >
-                {CITIES.map((c) => (
-                  <option key={c.name} value={c.name}>{c.name}</option>
-                ))}
-              </select>
+              <div className="relative shrink-0">
+                <input
+                  list="panchang-cities"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="Search city…"
+                  className="w-40 rounded-lg border border-espresso/15 bg-white px-3 py-2 text-sm font-medium text-espresso outline-none focus:border-gold-600"
+                />
+                <datalist id="panchang-cities">
+                  {CITIES.map((c) => (
+                    <option key={c.name} value={c.name} />
+                  ))}
+                </datalist>
+              </div>
             </div>
 
             {/* items */}

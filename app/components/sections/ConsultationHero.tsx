@@ -5,7 +5,7 @@ import { ZodiacWheel } from "../ui/ZodiacWheel";
 import { WhatsAppIcon, CalendarIcon } from "../icons";
 
 const WHATSAPP_HREF = "https://wa.me/919415312590";
-const BOOK_HREF = "/book/consultation/quick";
+const BOOK_HREF = "/bookconsultation";
 
 const STATS = [
   { value: "4.9/5", label: "Rating", icon: <StarSvg /> },
