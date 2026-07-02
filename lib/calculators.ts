@@ -34,7 +34,7 @@ export const CALCULATORS: CalcDef[] = [
 ];
 
 /** Extra astrologyapi endpoints used by on-page tools (not shown as cards). */
-export const EXTRA_ENDPOINTS = ["astro_details", "geo_details"];
+export const EXTRA_ENDPOINTS = ["astro_details", "geo_details", "advanced_panchang"];
 
 /** Endpoint prefixes the proxy is allowed to call (guards against abuse). */
 export const ALLOWED_ENDPOINTS = [...CALCULATORS.map((c) => c.endpoint), ...EXTRA_ENDPOINTS];

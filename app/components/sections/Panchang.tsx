@@ -35,19 +35,19 @@ function Glyph({ name, className = "" }: { name: GlyphName; className?: string }
   return <svg viewBox="0 0 24 24" className={className} aria-hidden="true">{inner[name]}</svg>;
 }
 
-const BASE: { label: string; key: "tithi" | "nakshatra" | "yoga" | "karana"; icon: GlyphName }[] = [
-  { label: "Tithi", key: "tithi", icon: "sun" },
-  { label: "Nakshatra", key: "nakshatra", icon: "moon" },
-  { label: "Yoga", key: "yoga", icon: "yoga" },
-  { label: "Karana", key: "karana", icon: "lotus" },
-];
-
-type Panch = { tithi: string; nakshatra: string; yoga: string; karana: string; sunrise: string; sunset: string };
+type Panch = {
+  tithi: string; nakshatra: string; yoga: string; karana: string;
+  sunrise: string; sunset: string; moonrise: string; moonset: string;
+  rahukaal: string; gulika: string; yamghanta: string; abhijit: string;
+};
+const DASH = "—";
 const FALLBACK: Panch = {
-  tithi: "—", nakshatra: "—", yoga: "—", karana: "—", sunrise: "—", sunset: "—",
+  tithi: DASH, nakshatra: DASH, yoga: DASH, karana: DASH,
+  sunrise: DASH, sunset: DASH, moonrise: DASH, moonset: DASH,
+  rahukaal: DASH, gulika: DASH, yamghanta: DASH, abhijit: DASH,
 };
 
-/** Return the first primitive value found along the given object paths. */
+/** First primitive value found along the given object paths. */
 function pick(obj: unknown, paths: string[]): string | null {
   for (const path of paths) {
     const v = path.split(".").reduce<unknown>((a, k) => (a && typeof a === "object" ? (a as Record<string, unknown>)[k] : undefined), obj);
@@ -56,14 +56,33 @@ function pick(obj: unknown, paths: string[]): string | null {
   return null;
 }
 
+/** A time value that may be a string or a { start, end } object. */
+function range(obj: unknown, key: string): string | null {
+  const v = (obj as Record<string, unknown> | undefined)?.[key];
+  if (typeof v === "string" && v.trim()) return v;
+  if (v && typeof v === "object") {
+    const o = v as Record<string, unknown>;
+    const s = o.start ?? o.start_time ?? o.starttime;
+    const e = o.end ?? o.end_time ?? o.endtime;
+    if (s && e) return `${s} - ${e}`;
+  }
+  return null;
+}
+
 function parsePanchang(d: unknown): Panch {
   return {
-    tithi: pick(d, ["tithi.details.tithi_name", "tithi.name", "tithi_name", "tithi"]) ?? "—",
-    nakshatra: pick(d, ["nakshatra.details.nak_name", "nakshatra.name", "nakshatra_name", "nakshatra"]) ?? "—",
-    yoga: pick(d, ["yog.details.yog_name", "yog.name", "yog_name", "yoga"]) ?? "—",
-    karana: pick(d, ["karan.details.karan_name", "karan.name", "karan_name", "karana"]) ?? "—",
-    sunrise: pick(d, ["sunrise", "vedic_sunrise"]) ?? "—",
-    sunset: pick(d, ["sunset", "vedic_sunset"]) ?? "—",
+    tithi: pick(d, ["tithi.details.tithi_name", "tithi.name", "tithi_name", "tithi"]) ?? DASH,
+    nakshatra: pick(d, ["nakshatra.details.nak_name", "nakshatra.name", "nakshatra_name", "nakshatra"]) ?? DASH,
+    yoga: pick(d, ["yog.details.yog_name", "yog.name", "yog_name", "yoga"]) ?? DASH,
+    karana: pick(d, ["karan.details.karan_name", "karan.name", "karan_name", "karana"]) ?? DASH,
+    sunrise: pick(d, ["sunrise", "vedic_sunrise"]) ?? DASH,
+    sunset: pick(d, ["sunset", "vedic_sunset"]) ?? DASH,
+    moonrise: pick(d, ["moonrise"]) ?? DASH,
+    moonset: pick(d, ["moonset"]) ?? DASH,
+    rahukaal: range(d, "rahukaal") ?? pick(d, ["rahukaal"]) ?? DASH,
+    gulika: range(d, "gulika") ?? pick(d, ["gulika"]) ?? DASH,
+    yamghanta: range(d, "yamghanta") ?? pick(d, ["yamghanta", "yamakanta"]) ?? DASH,
+    abhijit: range(d, "abhijit_muhurta") ?? range(d, "abhijit") ?? pick(d, ["abhijit"]) ?? DASH,
   };
 }
 
@@ -105,7 +124,7 @@ export function Panchang() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        endpoint: "basic_panchang",
+        endpoint: "advanced_panchang",
         payload: {
           day: now.getDate(), month: now.getMonth() + 1, year: now.getFullYear(),
           hour: 6, min: 0, lat: c.lat, lon: c.lon, tzone: c.tzone,
@@ -124,13 +143,17 @@ export function Panchang() {
     return () => { alive = false; };
   }, [city]);
 
-  const items: { label: string; value: string; icon: GlyphName }[] = [
-    { label: "Tithi", value: panch.tithi, icon: "sun" },
-    { label: "Nakshatra", value: panch.nakshatra, icon: "moon" },
-    { label: "Yoga", value: panch.yoga, icon: "yoga" },
-    { label: "Karana", value: panch.karana, icon: "lotus" },
-    { label: "Sunrise", value: panch.sunrise, icon: "sunrise" },
-    { label: "Sunset", value: panch.sunset, icon: "sunset" },
+  const rise = [
+    { label: "Sunrise", value: panch.sunrise, icon: "sunrise" as GlyphName },
+    { label: "Sunset", value: panch.sunset, icon: "sunset" as GlyphName },
+    { label: "Moonrise", value: panch.moonrise, icon: "moon" as GlyphName },
+    { label: "Moonset", value: panch.moonset, icon: "moon" as GlyphName },
+  ];
+  const timings = [
+    { t: "Abhijeet Muhurat", v: panch.abhijit, cls: "bg-sky-50 text-sky-900" },
+    { t: "Gulika Kaal", v: panch.gulika, cls: "bg-amber-50 text-amber-900" },
+    { t: "Rahu Kaal", v: panch.rahukaal, cls: "bg-rose-50 text-rose-900" },
+    { t: "Yamaghanta Kaal", v: panch.yamghanta, cls: "bg-indigo-50 text-indigo-900" },
   ];
 
   return (
@@ -140,7 +163,7 @@ export function Panchang() {
       <ZodiacWheel className="pointer-events-none absolute -right-44 bottom-0 h-[34rem] w-[34rem] text-gold-500/[0.05]" />
 
       <div className="container-px relative">
-        <div className="grid gap-6 lg:grid-cols-2 lg:items-stretch lg:gap-8">
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-start lg:gap-8">
           {/* ---- left: panchang ---- */}
           <div className="flex flex-col overflow-hidden rounded-3xl border border-gold-500/30 bg-white shadow-card">
             {/* gold header */}
@@ -171,19 +194,45 @@ export function Panchang() {
               </div>
             </div>
 
-            {/* items */}
-            <div className="grid flex-1 grid-cols-2 gap-px bg-gold-500/12">
-              {items.map((it) => (
-                <div key={it.label} className="flex items-center gap-3 bg-white p-4 sm:p-5">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gold-100 text-gold-600">
-                    <Glyph name={it.icon} className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-[0.65rem] font-semibold uppercase tracking-wide text-gold-600">{it.label}</p>
-                    <p className="mt-0.5 font-serif text-[0.95rem] font-bold leading-snug text-ink">{it.value}</p>
-                  </div>
+            {/* sunrise / sunset / moonrise / moonset */}
+            <div className="grid grid-cols-2 gap-px bg-gold-500/10 sm:grid-cols-4">
+              {rise.map((it) => (
+                <div key={it.label} className="flex flex-col items-center gap-1 bg-white p-4 text-center">
+                  <span className="text-gold-600"><Glyph name={it.icon} className="h-6 w-6" /></span>
+                  <p className="text-xs font-bold text-ink">{it.label}</p>
+                  <p className="text-xs text-ink/60">{it.value}</p>
                 </div>
               ))}
+            </div>
+
+            {/* auspicious / inauspicious */}
+            <div className="px-5 pt-5">
+              <p className="text-sm font-bold text-ink">Auspicious / Inauspicious Time</p>
+              <div className="mt-3 grid grid-cols-2 gap-3">
+                {timings.map((b) => (
+                  <div key={b.t} className={`rounded-xl p-3.5 ${b.cls}`}>
+                    <p className="text-sm font-bold">{b.t}</p>
+                    <p className="mt-1 text-xs opacity-80">{b.v}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* panchang details */}
+            <div className="px-5 py-5">
+              <p className="text-sm font-bold text-ink">Panchang</p>
+              <div className="mt-3 rounded-2xl border border-gold-500/20 p-4">
+                <p className="text-xs text-ink/50">Tithi</p>
+                <p className="font-serif text-lg font-bold text-ink">{panch.tithi}</p>
+                <div className="mt-3 grid grid-cols-3 gap-2 border-t border-gold-500/10 pt-3 text-center">
+                  {[["Nakshatra", panch.nakshatra], ["Yog", panch.yoga], ["Karan", panch.karana]].map(([l, v]) => (
+                    <div key={l}>
+                      <p className="text-[0.6rem] uppercase tracking-wide text-ink/50">{l}</p>
+                      <p className="mt-0.5 text-sm font-bold text-ink">{v}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
 
             {/* note */}
