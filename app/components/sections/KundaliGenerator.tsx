@@ -28,6 +28,7 @@ export function KundaliGenerator() {
   const [form, setForm] = useState({ name: "", dob: "", tob: "12:00", city: "Lucknow" });
   const [state, setState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
+  const [chartUrl, setChartUrl] = useState<string | null>(null);
   const [errMsg, setErrMsg] = useState("");
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -57,6 +58,27 @@ export function KundaliGenerator() {
         return;
       }
       setResult(json.data as Record<string, unknown>);
+
+      // Fetch the visual Lagna (D1) chart image
+      try {
+        const cr = await fetch("/api/astrology", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            endpoint: "horo_chart_image/D1",
+            payload: {
+              day: d, month: m, year: y, hour: hh || 0, min: mm || 0,
+              lat: c.lat, lon: c.lon, tzone: c.tzone, chart_style: "north",
+            },
+          }),
+        });
+        const cjson = await cr.json();
+        const url = cjson?.data?.chart_url || cjson?.data?.image_url || null;
+        if (url) setChartUrl(url);
+      } catch {
+        /* chart is optional; ignore failure */
+      }
+
       setState("done");
     } catch {
       setErrMsg("Could not connect. Please try again.");
@@ -98,6 +120,11 @@ export function KundaliGenerator() {
         <div className="mt-6 flex flex-1 flex-col">
           <p className="font-serif text-lg font-bold text-ink">Namaste, {form.name.split(" ")[0]} 🙏</p>
           <p className="mt-0.5 text-xs text-ink/55">Your Vedic birth details ({form.city}):</p>
+          {chartUrl && (
+            <div className="mt-3 flex justify-center rounded-2xl border border-gold-500/20 bg-white p-3">
+              <img src={chartUrl} alt="Lagna Chart" className="h-56 w-56 object-contain" />
+            </div>
+          )}
           <div className="mt-3 max-h-72 space-y-1.5 overflow-y-auto rounded-2xl border border-gold-500/20 bg-gold-50/40 p-4">
             {rows.length ? rows.map((r) => (
               <div key={r.label} className="flex items-center justify-between gap-3 border-b border-gold-500/10 py-1.5 last:border-0">
