@@ -7,6 +7,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "",
     "/best-astrologer-in-lucknow",
     "/reports",
+    "/kundli-report",
     "/consultation",
     "/horoscope",
     "/free-calculators",

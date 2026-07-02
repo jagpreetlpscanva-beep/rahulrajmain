@@ -217,3 +217,10 @@ a[class*="border-gold-500"]:active, button[class*="border-gold-500"]:active {
   .reveal { opacity: 1; transform: none; transition: none; }
   .shimmer-text, .pulse-glow { animation: none; }
 }
+
+/* ---- Print: only the report document (clean PDF) ---- */
+@media print {
+  body * { visibility: hidden; }
+  #report-doc, #report-doc * { visibility: visible; }
+  #report-doc { position: absolute; left: 0; top: 0; width: 100%; }
+}

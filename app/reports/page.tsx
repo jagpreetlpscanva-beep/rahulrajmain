@@ -52,6 +52,13 @@ export default function ReportsPage() {
               Select a report below and get clear answers to your questions —
               based on your unique birth chart.
             </p>
+
+            <a
+              href="/kundli-report"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl border border-gold-500/40 bg-white px-6 py-3 text-sm font-bold text-gold-700 shadow-sm transition-transform hover:-translate-y-0.5"
+            >
+              ✦ मुफ़्त कुंडली रिपोर्ट (Hindi) — तुरंत जनरेट करें →
+            </a>
           </div>
         </section>
 
