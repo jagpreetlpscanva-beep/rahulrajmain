@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import { CITIES } from "@/lib/calculators";
 import { BRAND_LOGO_SRC } from "../ui/Logo";
 
@@ -33,6 +34,13 @@ export function KundaliGenerator() {
   const [navamsaUrl, setNavamsaUrl] = useState<string | null>(null);
   const [errMsg, setErrMsg] = useState("");
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  // Body-level node the printable doc gets portal-ed into (see layout.tsx +
+  // globals.css @media print) so window.print() only ever measures 1 page.
+  const [printPortal, setPrintPortal] = useState<HTMLElement | null>(null);
+  useEffect(() => {
+    setPrintPortal(document.getElementById("print-portal"));
+  }, []);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -119,17 +127,16 @@ export function KundaliGenerator() {
 
       {state === "done" ? (
         <div className="mt-6 flex flex-1 flex-col">
-          {/* actions (hidden on print) */}
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 print:hidden">
+          {/* actions */}
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <button type="button" onClick={() => { setState("idle"); setChartUrl(null); setNavamsaUrl(null); }} className="text-xs font-medium text-gold-700 underline">← Generate another</button>
             <button type="button" onClick={() => window.print()} className="rounded-lg bg-gold-gradient px-4 py-2 text-xs font-bold uppercase tracking-wider text-night shadow-gold-btn">
               ⬇ Download Kundli (PDF)
             </button>
           </div>
 
-          {/* branded downloadable kundli */}
-          <div id="kundli-doc" className="rounded-2xl border border-gold-500/20 bg-white p-5">
-            {/* branded header */}
+          {/* on-screen preview (compact card — the real print layout is portal-ed below) */}
+          <div className="rounded-2xl border border-gold-500/20 bg-white p-5">
             <div className="flex items-center gap-3 border-b border-gold-500/20 pb-4">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={BRAND_LOGO_SRC} alt="Dr. Rahul Raj Astro" className="h-12 w-12 rounded-full object-cover ring-1 ring-gold-500/30" />
@@ -138,11 +145,8 @@ export function KundaliGenerator() {
                 <p className="text-xs text-gold-700">astrorahulraj.in · +91 94153 12590</p>
               </div>
             </div>
-
             <p className="mt-3 font-serif text-lg font-bold text-ink">{form.name} — जन्म कुंडली</p>
             <p className="text-xs text-ink/55">जन्म: {form.dob} · {form.tob} · {form.city}</p>
-
-            {/* charts */}
             {(chartUrl || navamsaUrl) && (
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
                 {chartUrl && (
@@ -161,8 +165,6 @@ export function KundaliGenerator() {
                 )}
               </div>
             )}
-
-            {/* details */}
             {rows.length > 0 && (
               <div className="mt-4 grid gap-1.5 rounded-xl border border-gold-500/15 bg-gold-50/40 p-4 sm:grid-cols-2">
                 {rows.map((r) => (
@@ -173,12 +175,93 @@ export function KundaliGenerator() {
                 ))}
               </div>
             )}
-            <p className="mt-4 border-t border-gold-500/15 pt-3 text-center text-[0.7rem] text-ink/45">© Dr. Rahul Raj Astro · astrorahulraj.in</p>
           </div>
 
-          <a href="/bookconsultation" className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-gold-gradient px-6 py-3 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn print:hidden">
+          <a href="/bookconsultation" className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-gold-gradient px-6 py-3 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn">
             Get Full Kundli Reading →
           </a>
+
+          {/* ---- printable doc: portal-ed to <body> so it's the ONLY thing
+               measured on print (fixes the multi-blank-page bug) and can have
+               its own full-bleed, single-page premium design. ---- */}
+          {printPortal &&
+            createPortal(
+              <div id="kundli-print-doc" className="hidden print:block">
+                <div className="relative mx-auto flex min-h-[277mm] w-[210mm] flex-col overflow-hidden bg-[#fffdf7] p-[14mm]">
+                  {/* outer ornamental border */}
+                  <div className="pointer-events-none absolute inset-[6mm] border-2 border-gold-500/40" />
+                  <div className="pointer-events-none absolute inset-[8mm] border border-gold-500/25" />
+
+                  {/* header ribbon */}
+                  <div className="relative flex items-center gap-4 rounded-2xl bg-luxe-gold px-6 py-5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={BRAND_LOGO_SRC} alt="Dr. Rahul Raj Astro" className="h-16 w-16 rounded-full object-cover ring-2 ring-white/70" />
+                    <div>
+                      <p className="font-serif text-2xl font-bold text-espresso">Dr. Rahul Raj</p>
+                      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#7a5212]">Vedic Astrologer</p>
+                      <p className="mt-0.5 text-xs text-[#7a5212]">astrorahulraj.in · +91 94153 12590</p>
+                    </div>
+                  </div>
+
+                  {/* title block */}
+                  <div className="relative mt-8 text-center">
+                    <p className="text-[0.7rem] font-bold uppercase tracking-[0.35em] text-gold-600">जन्म कुंडली · Birth Chart</p>
+                    <h1 className="mt-2 font-serif text-4xl font-bold text-ink">{form.name}</h1>
+                    <p className="mt-2 text-sm text-ink/60">
+                      जन्म: {form.dob} · {form.tob} · {form.city}
+                    </p>
+                    <div className="mx-auto mt-4 h-px w-40 bg-gold-500/40" />
+                  </div>
+
+                  {/* charts */}
+                  {(chartUrl || navamsaUrl) && (
+                    <div className="relative mt-8 grid grid-cols-2 gap-8">
+                      {chartUrl && (
+                        <div className="rounded-2xl border border-gold-500/25 bg-white p-4 text-center shadow-sm">
+                          <p className="mb-3 font-serif text-sm font-bold text-gold-700">Lagna Chart (D1)</p>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={chartUrl} alt="Lagna Chart" className="mx-auto w-full max-w-[80mm] object-contain" />
+                        </div>
+                      )}
+                      {navamsaUrl && (
+                        <div className="rounded-2xl border border-gold-500/25 bg-white p-4 text-center shadow-sm">
+                          <p className="mb-3 font-serif text-sm font-bold text-gold-700">Navamsa Chart (D9)</p>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={navamsaUrl} alt="Navamsa Chart" className="mx-auto w-full max-w-[80mm] object-contain" />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* details table */}
+                  {rows.length > 0 && (
+                    <div className="relative mt-8 overflow-hidden rounded-2xl border border-gold-500/25">
+                      {rows.map((r, i) => (
+                        <div
+                          key={r.label}
+                          className={`flex items-center justify-between px-5 py-3 ${i % 2 === 0 ? "bg-gold-50/50" : "bg-white"}`}
+                        >
+                          <span className="text-sm font-semibold text-ink/60">{r.label}</span>
+                          <span className="font-serif text-base font-bold text-ink">{r.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* spacer pushes footer down so short reports still fill the page */}
+                  <div className="relative flex-1" />
+
+                  {/* footer */}
+                  <div className="relative mt-8 border-t border-gold-500/20 pt-4 text-center">
+                    <p className="text-xs text-ink/50">
+                      Generated on {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}
+                    </p>
+                    <p className="mt-1 font-serif text-sm font-bold text-gold-700">© Dr. Rahul Raj Astro · astrorahulraj.in</p>
+                  </div>
+                </div>
+              </div>,
+              printPortal
+            )}
         </div>
       ) : (
         <form onSubmit={submit} className="mt-6 flex flex-1 flex-col gap-4">
