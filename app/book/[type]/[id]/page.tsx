@@ -57,13 +57,18 @@ function fmtFull(d: string) {
   }
 }
 
-/** Next 14 days, excluding Sundays — used as the date picker for consultation slots. */
+/** Local YYYY-MM-DD (not UTC, so IST early-morning doesn't shift to "yesterday"). */
+function localYmd(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Next 14 days from today, excluding Sundays — date picker for consultation slots. */
 function buildAvailableDates(): string[] {
   const dates: string[] = [];
   const cur = new Date();
   cur.setHours(0, 0, 0, 0);
   while (dates.length < 14) {
-    if (cur.getDay() !== 0) dates.push(cur.toISOString().split("T")[0]);
+    if (cur.getDay() !== 0) dates.push(localYmd(cur));
     cur.setDate(cur.getDate() + 1);
   }
   return dates;
@@ -644,7 +649,12 @@ function Confirmation({
       {/* clear next steps so the person knows where to go */}
       <div className="mt-6 rounded-2xl border border-gold-500/20 bg-gold-50/50 p-5 text-left">
         <p className="text-sm font-bold text-ink">आगे क्या करें?</p>
-        {type === "consultation" && !isOnline ? (
+        {type === "report" ? (
+          <p className="mt-1.5 text-sm leading-relaxed text-ink/70">
+            Apni report ab <strong>My Account</strong> me phone number daal ke kabhi bhi dekh/download kar sakte hain.
+            Koi query ho toh WhatsApp karein: <a href="https://wa.me/919415312590" className="font-semibold text-gold-700 underline">+91 94153 12590</a>.
+          </p>
+        ) : type === "consultation" && !isOnline ? (
           <p className="mt-1.5 text-sm leading-relaxed text-ink/70">
             Yeh ek <strong>offline / in-person</strong> consultation hai — apne booked slot par humare office pahunch jaayein.
             Address aur exact location WhatsApp/SMS par bhej di jaayegi. Koi confusion ho toh call/WhatsApp karein:{" "}
@@ -659,9 +669,14 @@ function Confirmation({
         )}
       </div>
 
-      <a href="/" className="mt-6 inline-block rounded-lg bg-gold-gradient px-6 py-3 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn">
-        Back to Home
-      </a>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <a href="/my-account" className="inline-block rounded-lg bg-gold-gradient px-6 py-3 text-sm font-semibold uppercase tracking-wider text-night shadow-gold-btn">
+          Go to My Account →
+        </a>
+        <a href="/" className="inline-block rounded-lg border border-gold-500/40 bg-white px-6 py-3 text-sm font-semibold uppercase tracking-wider text-gold-700">
+          Back to Home
+        </a>
+      </div>
     </div>
   );
 }
