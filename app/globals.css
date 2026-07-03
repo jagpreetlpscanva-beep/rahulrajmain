@@ -218,9 +218,13 @@ a[class*="border-gold-500"]:active, button[class*="border-gold-500"]:active {
   .shimmer-text, .pulse-glow { animation: none; }
 }
 
-/* ---- Print: only the report document (clean PDF) ---- */
+/* ---- Print: only the #print-portal document (clean, single-page PDF) ----
+   Everything else on the page is a sibling of #print-portal at the body level,
+   so hiding "body > * except #print-portal" removes ALL of their layout height
+   too (not just their visibility) — that's what keeps this to exactly 1 page. */
 @media print {
-  body * { visibility: hidden; }
-  #report-doc, #report-doc *, #kundli-doc, #kundli-doc * { visibility: visible; }
-  #report-doc, #kundli-doc { position: absolute; left: 0; top: 0; width: 100%; }
+  @page { size: A4; margin: 0; }
+  html, body { height: auto !important; background: #fff !important; }
+  body > *:not(#print-portal) { display: none !important; }
+  #print-portal { display: block !important; }
 }
