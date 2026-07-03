@@ -171,6 +171,11 @@ export default async function RootLayout({
         <GoogleTranslate />
         <BackgroundMusic />
         <ScrollReveal />
+        {/* Print target: Kundli/report PDFs portal their printable doc here so
+            window.print() only ever sees ONE element's height (fixes multi-page
+            blank-PDF bug caused by the rest of the page still occupying layout
+            space). See globals.css @media print. */}
+        <div id="print-portal" />
       </body>
     </html>
   );
