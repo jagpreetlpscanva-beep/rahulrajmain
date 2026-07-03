@@ -31,6 +31,38 @@ function name(v: unknown): string | undefined {
   return undefined;
 }
 
+/** {start,end} -> "HH:MM - HH:MM" (Prokerala sometimes nests these differently per field). */
+function asRange(v: unknown): string | undefined {
+  if (!v) return undefined;
+  if (typeof v === "string") return v;
+  if (typeof v === "object") {
+    const o = v as Record<string, unknown>;
+    const s = o.start ?? o.start_time ?? o.starttime;
+    const e = o.end ?? o.end_time ?? o.endtime;
+    if (s && e) return `${s} - ${e}`;
+  }
+  return undefined;
+}
+
+/** Try several possible key spellings (Prokerala's naming isn't fully consistent
+ *  across accounts/versions), then fall back to scanning any inauspicious/
+ *  auspicious period arrays for an entry whose name matches. */
+function findPeriod(raw: Record<string, unknown>, keyCandidates: string[], nameMatch: RegExp): string | undefined {
+  for (const k of keyCandidates) {
+    const v = asRange(raw[k]);
+    if (v) return v;
+  }
+  for (const listKey of ["inauspicious_period", "auspicious_period", "muhurat", "muhurta"]) {
+    const list = raw[listKey];
+    if (Array.isArray(list)) {
+      const hit = list.find((it) => nameMatch.test(String((it as Record<string, unknown>)?.name ?? "")));
+      const v = asRange(hit);
+      if (v) return v;
+    }
+  }
+  return undefined;
+}
+
 async function handlePanchang(payload: Payload) {
   const datetime = toProkeralaDatetime({
     day: payload.day!, month: payload.month!, year: payload.year!,
@@ -44,6 +76,13 @@ async function handlePanchang(payload: Payload) {
   })) as Record<string, unknown>;
 
   // Normalize into the shape Panchang.tsx's parsePanchang() already understands.
+  const gulika = findPeriod(raw, ["gulika_kaal", "gulikai_kaal", "gulika_kaalam", "gulikakalam"], /gulik/i);
+  const yamghanta = findPeriod(raw, ["yamaganda_kaal", "yama_gandam", "yamagandam", "yamaganda_kaalam"], /yama/i);
+  if (!gulika || !yamghanta) {
+    // eslint-disable-next-line no-console
+    console.warn("[prokerala panchang] gulika/yamaganda not found, raw keys:", Object.keys(raw));
+  }
+
   return {
     tithi: { details: { tithi_name: name(raw.tithi) } },
     nakshatra: { details: { nak_name: name(raw.nakshatra) } },
@@ -53,10 +92,10 @@ async function handlePanchang(payload: Payload) {
     sunset: raw.sunset,
     moonrise: raw.moonrise,
     moonset: raw.moonset,
-    rahukaal: raw.rahu_kaal,
-    gulika: raw.gulika_kaal,
-    yamghanta: raw.yamaganda_kaal,
-    abhijit_muhurta: raw.abhijit_muhurat,
+    rahukaal: findPeriod(raw, ["rahu_kaal", "rahu_kaalam", "rahukaal"], /rahu/i),
+    gulika,
+    yamghanta,
+    abhijit_muhurta: findPeriod(raw, ["abhijit_muhurat", "abhijit_muhurta", "abhijeet_muhurat"], /abhijit|abhijeet/i),
   };
 }
 
