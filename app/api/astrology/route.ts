@@ -1,17 +1,150 @@
 import { NextResponse } from "next/server";
 import { ALLOWED_ENDPOINTS } from "@/lib/calculators";
+import { prokeralaGet, prokeralaChartSvg, toProkeralaDatetime } from "@/lib/prokerala";
 
 export const dynamic = "force-dynamic";
 
-const BASE = "https://json.astrologyapi.com/v1/";
+const ASTROLOGYAPI_BASE = "https://json.astrologyapi.com/v1/";
+
+/** These logical endpoint names (used by the frontend) now run on Prokerala
+ *  instead of astrologyapi.com — Panchang + Kundli/chart generation. */
+const PROKERALA_ENDPOINTS = new Set(["advanced_panchang", "astro_details", "horo_chart_image/D1", "horo_chart_image/D9"]);
+
+type Payload = {
+  day?: number; month?: number; year?: number; hour?: number; min?: number;
+  lat?: number; lon?: number; tzone?: number;
+};
+
+function coords(p: Payload) {
+  return `${p.lat},${p.lon}`;
+}
+
+/** pull a value out of Prokerala's nested {name:..} / {en:..} / array shapes */
+function name(v: unknown): string | undefined {
+  if (!v) return undefined;
+  if (typeof v === "string") return v;
+  if (Array.isArray(v)) return name(v[0]);
+  if (typeof v === "object") {
+    const o = v as Record<string, unknown>;
+    return (o.name as string) ?? (o.en as string) ?? undefined;
+  }
+  return undefined;
+}
+
+async function handlePanchang(payload: Payload) {
+  const datetime = toProkeralaDatetime({
+    day: payload.day!, month: payload.month!, year: payload.year!,
+    hour: payload.hour ?? 6, min: payload.min ?? 0, tzone: payload.tzone ?? 5.5,
+  });
+  const raw = (await prokeralaGet("/v2/astrology/panchang", {
+    ayanamsa: "1",
+    coordinates: coords(payload),
+    datetime,
+    la: "en",
+  })) as Record<string, unknown>;
+
+  // Normalize into the shape Panchang.tsx's parsePanchang() already understands.
+  return {
+    tithi: { details: { tithi_name: name(raw.tithi) } },
+    nakshatra: { details: { nak_name: name(raw.nakshatra) } },
+    yog: { details: { yog_name: name(raw.yoga) } },
+    karan: { details: { karan_name: name(raw.karana) } },
+    sunrise: raw.sunrise,
+    sunset: raw.sunset,
+    moonrise: raw.moonrise,
+    moonset: raw.moonset,
+    rahukaal: raw.rahu_kaal,
+    gulika: raw.gulika_kaal,
+    yamghanta: raw.yamaganda_kaal,
+    abhijit_muhurta: raw.abhijit_muhurat,
+  };
+}
+
+async function handleAstroDetails(payload: Payload) {
+  const datetime = toProkeralaDatetime({
+    day: payload.day!, month: payload.month!, year: payload.year!,
+    hour: payload.hour ?? 12, min: payload.min ?? 0, tzone: payload.tzone ?? 5.5,
+  });
+  const raw = (await prokeralaGet("/v2/astrology/kundli", {
+    ayanamsa: "1",
+    coordinates: coords(payload),
+    datetime,
+    la: "en",
+  })) as Record<string, unknown>;
+
+  // Normalize into the flat shape KundaliGenerator.tsx's pick() expects.
+  const nak = raw.nakshatra_details as Record<string, unknown> | undefined;
+  return {
+    ascendant: name((raw as Record<string, unknown>).lagna) ?? name((nak as any)?.chandra_rasi),
+    sign: name((nak as any)?.chandra_rasi) ?? name((raw as any).chandra_rasi),
+    nakshatra: name((nak as any)?.nakshatra) ?? name((raw as any).nakshatra),
+    nakshatra_lord: name(((nak as any)?.nakshatra as any)?.lord),
+    sign_lord: name(((nak as any)?.chandra_rasi as any)?.lord),
+    charan: (nak as any)?.nakshatra?.pada,
+    tithi: undefined,
+    yog: undefined,
+    karan: undefined,
+    _raw: raw,
+  };
+}
+
+async function handleChart(div: "D1" | "D9", payload: Payload) {
+  const datetime = toProkeralaDatetime({
+    day: payload.day!, month: payload.month!, year: payload.year!,
+    hour: payload.hour ?? 12, min: payload.min ?? 0, tzone: payload.tzone ?? 5.5,
+  });
+  const svg = await prokeralaChartSvg({
+    ayanamsa: "1",
+    coordinates: coords(payload),
+    datetime,
+    chart_type: div === "D1" ? "rasi" : "navamsa",
+    chart_style: "north-indian",
+  });
+  // KundaliGenerator.tsx reads cjson?.data?.svg — feed it as a data: URI so <img src> works directly.
+  const dataUri = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  return { svg: dataUri };
+}
 
 /**
- * Proxy to astrologyapi.com. Keeps the API credentials server-side.
  * Body: { endpoint: string, payload: object }
- * The endpoint must match (or extend, for path params like the daily-horoscope
- * sign) one of the allow-listed calculator endpoints.
+ * Panchang + Kundli/chart endpoints -> Prokerala (one-time credits).
+ * Everything else (Manglik, Kaal Sarp, Numerology, Daily Horoscope, etc.) -> astrologyapi.com, unchanged.
  */
 export async function POST(req: Request) {
+  let body: { endpoint?: string; payload?: Record<string, unknown> } = {};
+  try {
+    body = await req.json();
+  } catch {
+    /* ignore */
+  }
+
+  const endpoint = String(body.endpoint || "").replace(/^\/+/, "");
+  const payload = (body.payload || {}) as Payload;
+
+  // ---- Prokerala path (Panchang + Kundli) ----
+  if (PROKERALA_ENDPOINTS.has(endpoint)) {
+    if (!process.env.PROKERALA_CLIENT_ID || !process.env.PROKERALA_CLIENT_SECRET) {
+      return NextResponse.json(
+        { error: "not_configured", message: "Kundli/Panchang service is being set up. Please check back soon." },
+        { status: 503 }
+      );
+    }
+    try {
+      let data: unknown;
+      if (endpoint === "advanced_panchang") data = await handlePanchang(payload);
+      else if (endpoint === "astro_details") data = await handleAstroDetails(payload);
+      else data = await handleChart(endpoint.endsWith("D9") ? "D9" : "D1", payload);
+      return NextResponse.json({ ok: true, data });
+    } catch (e) {
+      const err = e as Error & { data?: unknown };
+      return NextResponse.json(
+        { error: "api_error", message: err.message, data: err.data },
+        { status: 502 }
+      );
+    }
+  }
+
+  // ---- astrologyapi.com path (all other calculators, unchanged) ----
   const userId = process.env.ASTROLOGY_API_USER_ID;
   const apiKey = process.env.ASTROLOGY_API_KEY;
 
@@ -22,14 +155,6 @@ export async function POST(req: Request) {
     );
   }
 
-  let body: { endpoint?: string; payload?: Record<string, unknown> } = {};
-  try {
-    body = await req.json();
-  } catch {
-    /* ignore */
-  }
-
-  const endpoint = String(body.endpoint || "").replace(/^\/+/, "");
   const ok = ALLOWED_ENDPOINTS.some((e) => endpoint === e || endpoint.startsWith(`${e}/`));
   if (!endpoint || !ok) {
     return NextResponse.json({ error: "invalid_endpoint" }, { status: 400 });
@@ -38,14 +163,14 @@ export async function POST(req: Request) {
   const auth = Buffer.from(`${userId}:${apiKey}`).toString("base64");
 
   try {
-    const r = await fetch(BASE + endpoint, {
+    const r = await fetch(ASTROLOGYAPI_BASE + endpoint, {
       method: "POST",
       headers: {
         Authorization: `Basic ${auth}`,
         "Content-Type": "application/json",
         "Accept-Language": "en",
       },
-      body: JSON.stringify(body.payload || {}),
+      body: JSON.stringify(payload),
       cache: "no-store",
     });
 
