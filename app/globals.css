@@ -221,6 +221,6 @@ a[class*="border-gold-500"]:active, button[class*="border-gold-500"]:active {
 /* ---- Print: only the report document (clean PDF) ---- */
 @media print {
   body * { visibility: hidden; }
-  #report-doc, #report-doc * { visibility: visible; }
-  #report-doc { position: absolute; left: 0; top: 0; width: 100%; }
+  #report-doc, #report-doc *, #kundli-doc, #kundli-doc * { visibility: visible; }
+  #report-doc, #kundli-doc { position: absolute; left: 0; top: 0; width: 100%; }
 }
