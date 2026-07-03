@@ -23,6 +23,28 @@ export function ReportGenerator() {
   const [data, setData] = useState<Data | null>(null);
   const [errMsg, setErrMsg] = useState("");
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const [pdfBusy, setPdfBusy] = useState(false);
+
+  const downloadPdf = async () => {
+    const c = CITIES.find((x) => x.name === form.city) ?? CITIES[0];
+    const [y, m, d] = form.dob.split("-").map(Number);
+    const [hh, mm] = (form.tob || "12:00").split(":").map(Number);
+    setPdfBusy(true);
+    try {
+      const r = await fetch("/api/astrology-pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: form.name, place: form.city, day: d, month: m, year: y, hour: hh || 0, min: mm || 0, lat: c.lat, lon: c.lon, tzone: c.tzone }),
+      });
+      const j = await r.json();
+      if (j.pdf_url) window.open(j.pdf_url, "_blank");
+      else alert("Official PDF service abhi set nahi hui (astrologyapi PDF endpoint chahiye). Filhaal neeche 'Print (PDF)' se report download kar lein.");
+    } catch {
+      alert("PDF nahi ban payi — dobara try karein.");
+    } finally {
+      setPdfBusy(false);
+    }
+  };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -66,8 +88,11 @@ export function ReportGenerator() {
         {/* actions (hidden when printing) */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
           <button type="button" onClick={() => setState("idle")} className="text-sm text-ink/55 hover:text-gold-700">← नई रिपोर्ट</button>
-          <button type="button" onClick={() => window.print()} className="rounded-xl bg-gold-gradient px-6 py-3 text-sm font-bold text-night shadow-gold-btn">
-            ⬇ डाउनलोड / प्रिंट करें (PDF)
+          <button type="button" onClick={downloadPdf} disabled={pdfBusy} className="rounded-xl bg-gold-gradient px-5 py-3 text-sm font-bold text-night shadow-gold-btn disabled:opacity-60">
+            {pdfBusy ? "बन रही है…" : "⬇ Official PDF (Hindi)"}
+          </button>
+          <button type="button" onClick={() => window.print()} className="rounded-xl border border-gold-500/40 bg-white px-5 py-3 text-sm font-bold text-gold-700">
+            प्रिंट (PDF)
           </button>
         </div>
 
