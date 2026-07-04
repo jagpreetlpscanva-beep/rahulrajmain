@@ -85,20 +85,25 @@ async function handlePanchang(payload: Payload) {
     day: payload.day!, month: payload.month!, year: payload.year!,
     hour: payload.hour ?? 6, min: payload.min ?? 0, tzone: payload.tzone ?? 5.5,
   });
-  const raw = (await prokeralaGet("/v2/astrology/panchang", {
-    ayanamsa: "1",
-    coordinates: coords(payload),
-    datetime,
-    la: "en",
-  })) as Record<string, unknown>;
+  const params = { ayanamsa: "1", coordinates: coords(payload), datetime, la: "en" };
+  // The basic panchang endpoint has tithi/nakshatra/sunrise etc. but NOT the
+  // Rahu/Gulika/Yamaganda/Abhijit windows — those live in the (in)auspicious
+  // period endpoints, so fetch all three together. The extras are best-effort:
+  // if the plan doesn't include them we still return the core panchang.
+  const [raw, inaus, aus] = await Promise.all([
+    prokeralaGet("/v2/astrology/panchang", params) as Promise<Record<string, unknown>>,
+    prokeralaGet("/v2/astrology/inauspicious-period", params).catch(() => ({})) as Promise<Record<string, unknown>>,
+    prokeralaGet("/v2/astrology/auspicious-period", params).catch(() => ({})) as Promise<Record<string, unknown>>,
+  ]);
 
-  // Normalize into the shape Panchang.tsx's parsePanchang() already understands.
-  const gulika = findPeriod(raw, ["gulika_kaal", "gulikai_kaal", "gulika_kaalam", "gulikakalam"], /gulik/i);
-  const yamghanta = findPeriod(raw, ["yamaganda_kaal", "yama_gandam", "yamagandam", "yamaganda_kaalam"], /yama/i);
-  if (!gulika || !yamghanta) {
-    // eslint-disable-next-line no-console
-    console.warn("[prokerala panchang] gulika/yamaganda not found, raw keys:", Object.keys(raw));
-  }
+  // Merge the muhurat lists so findPeriod() can match Rahu/Gulika/Yamaganda/Abhijit by name.
+  const periods: Record<string, unknown> = {
+    ...raw,
+    inauspicious_period: (inaus as { muhurat?: unknown })?.muhurat ?? inaus,
+    auspicious_period: (aus as { muhurat?: unknown })?.muhurat ?? aus,
+  };
+  const gulika = findPeriod(periods, ["gulika_kaal", "gulikai_kaal", "gulika_kaalam", "gulikakalam"], /gulik/i);
+  const yamghanta = findPeriod(periods, ["yamaganda_kaal", "yama_gandam", "yamagandam", "yamaganda_kaalam"], /yama/i);
 
   return {
     tithi: { details: { tithi_name: name(raw.tithi) } },
@@ -109,10 +114,10 @@ async function handlePanchang(payload: Payload) {
     sunset: fmtTime(raw.sunset) ?? raw.sunset,
     moonrise: fmtTime(raw.moonrise) ?? raw.moonrise,
     moonset: fmtTime(raw.moonset) ?? raw.moonset,
-    rahukaal: findPeriod(raw, ["rahu_kaal", "rahu_kaalam", "rahukaal"], /rahu/i),
+    rahukaal: findPeriod(periods, ["rahu_kaal", "rahu_kaalam", "rahukaal"], /rahu/i),
     gulika,
     yamghanta,
-    abhijit_muhurta: findPeriod(raw, ["abhijit_muhurat", "abhijit_muhurta", "abhijeet_muhurat"], /abhijit|abhijeet/i),
+    abhijit_muhurta: findPeriod(periods, ["abhijit_muhurat", "abhijit_muhurta", "abhijeet_muhurat"], /abhijit|abhijeet/i),
   };
 }
 
