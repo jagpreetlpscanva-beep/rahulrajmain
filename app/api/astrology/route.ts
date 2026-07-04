@@ -31,15 +31,32 @@ function name(v: unknown): string | undefined {
   return undefined;
 }
 
-/** {start,end} -> "HH:MM - HH:MM" (Prokerala sometimes nests these differently per field). */
+/** Prokerala returns ISO like "2026-07-04T05:21:13+05:30" — show the local
+ *  wall-clock time (already in the location's timezone), e.g. "5:21 AM". */
+function fmtTime(v: unknown): string | undefined {
+  if (typeof v !== "string" || !v.trim()) return undefined;
+  const iso = v.match(/T(\d{2}):(\d{2})/);
+  const plain = v.match(/^(\d{1,2}):(\d{2})/);
+  const m = iso ?? plain;
+  if (!m) return v;
+  const hh = Number(m[1]);
+  const mm = m[2];
+  const ap = hh >= 12 ? "PM" : "AM";
+  const h12 = ((hh + 11) % 12) + 1;
+  return `${h12}:${mm} ${ap}`;
+}
+
+/** {start,end} -> "5:21 AM - 6:45 AM". Prokerala v2 nests the window under
+ *  period: [{ start, end }]; older shapes put start/end directly on the object. */
 function asRange(v: unknown): string | undefined {
   if (!v) return undefined;
-  if (typeof v === "string") return v;
+  if (typeof v === "string") return fmtTime(v);
   if (typeof v === "object") {
     const o = v as Record<string, unknown>;
+    if (Array.isArray(o.period) && o.period[0]) return asRange(o.period[0]);
     const s = o.start ?? o.start_time ?? o.starttime;
     const e = o.end ?? o.end_time ?? o.endtime;
-    if (s && e) return `${s} - ${e}`;
+    if (s && e) return `${fmtTime(s) ?? s} - ${fmtTime(e) ?? e}`;
   }
   return undefined;
 }
@@ -88,10 +105,10 @@ async function handlePanchang(payload: Payload) {
     nakshatra: { details: { nak_name: name(raw.nakshatra) } },
     yog: { details: { yog_name: name(raw.yoga) } },
     karan: { details: { karan_name: name(raw.karana) } },
-    sunrise: raw.sunrise,
-    sunset: raw.sunset,
-    moonrise: raw.moonrise,
-    moonset: raw.moonset,
+    sunrise: fmtTime(raw.sunrise) ?? raw.sunrise,
+    sunset: fmtTime(raw.sunset) ?? raw.sunset,
+    moonrise: fmtTime(raw.moonrise) ?? raw.moonrise,
+    moonset: fmtTime(raw.moonset) ?? raw.moonset,
     rahukaal: findPeriod(raw, ["rahu_kaal", "rahu_kaalam", "rahukaal"], /rahu/i),
     gulika,
     yamghanta,

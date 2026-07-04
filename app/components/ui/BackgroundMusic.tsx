@@ -51,7 +51,7 @@ export function BackgroundMusic() {
           onClick={toggle}
           aria-label={playing ? "Mute background music" : "Play background music"}
           title={playing ? "Mute music" : "Play music"}
-          className="fixed bottom-5 left-5 z-40 grid h-11 w-11 place-items-center rounded-full bg-gold-gradient text-night shadow-gold-btn ring-1 ring-gold-300/50 transition-transform hover:-translate-y-0.5"
+          className="fixed bottom-5 left-5 z-50 grid h-11 w-11 place-items-center rounded-full bg-gold-gradient text-night shadow-gold-btn ring-1 ring-gold-300/50 transition-transform hover:-translate-y-0.5"
         >
           <span className="relative grid place-items-center">
             {/* music note (beamed double note) — same icon in both states */}

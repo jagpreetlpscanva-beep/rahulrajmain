@@ -107,7 +107,7 @@ export function Panchang() {
     if (!c) return;
     const now = new Date();
     const dateKey = now.toISOString().slice(0, 10);
-    const cacheKey = `panchang:${city}:${dateKey}`;
+    const cacheKey = `panchang:v2:${city}:${dateKey}`;
     try {
       const cached = sessionStorage.getItem(cacheKey);
       if (cached) {
