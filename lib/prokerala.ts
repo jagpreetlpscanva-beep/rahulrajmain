@@ -40,30 +40,41 @@ async function getProkeralaToken(): Promise<string> {
   return cachedToken.token;
 }
 
-/** Call a Prokerala v2 astrology JSON endpoint. Returns parsed JSON `data` field. */
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** Call a Prokerala v2 astrology JSON endpoint. Returns parsed JSON `data` field.
+ *  Retries on 429 (rate limit) / 503 with backoff — Prokerala's free tier limits
+ *  concurrent requests, so a transient 429 shouldn't fail the whole panchang. */
 export async function prokeralaGet(
   path: string,
-  params: Record<string, string>
+  params: Record<string, string>,
+  retries = 2
 ): Promise<unknown> {
   const token = await getProkeralaToken();
   const qs = new URLSearchParams(params).toString();
-  const res = await fetch(`https://api.prokerala.com${path}?${qs}`, {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  });
-  const text = await res.text();
-  let json: unknown;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    json = { raw: text };
+  for (let attempt = 0; ; attempt++) {
+    const res = await fetch(`https://api.prokerala.com${path}?${qs}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if ((res.status === 429 || res.status === 503) && attempt < retries) {
+      await sleep(700 * (attempt + 1));
+      continue;
+    }
+    const text = await res.text();
+    let json: unknown;
+    try {
+      json = JSON.parse(text);
+    } catch {
+      json = { raw: text };
+    }
+    if (!res.ok) {
+      const err = new Error(`prokerala_api_error_${res.status}`) as Error & { data?: unknown };
+      err.data = json;
+      throw err;
+    }
+    return (json as { data?: unknown }).data ?? json;
   }
-  if (!res.ok) {
-    const err = new Error(`prokerala_api_error_${res.status}`) as Error & { data?: unknown };
-    err.data = json;
-    throw err;
-  }
-  return (json as { data?: unknown }).data ?? json;
 }
 
 /** Call the Prokerala chart endpoint (returns raw SVG text, not JSON). */

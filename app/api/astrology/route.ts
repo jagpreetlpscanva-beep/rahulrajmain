@@ -80,21 +80,30 @@ function findPeriod(raw: Record<string, unknown>, keyCandidates: string[], nameM
   return undefined;
 }
 
+// Panchang for a given city+date is identical for everyone, so cache the
+// normalized result server-side. This means Prokerala is hit at most once per
+// city/day (per serverless instance) instead of on every visitor's page load —
+// which is what was tripping the free-tier rate limit (429). TTL 6h.
+const panchangCache = new Map<string, { data: unknown; ts: number }>();
+const PANCHANG_TTL_MS = 6 * 60 * 60 * 1000;
+
 async function handlePanchang(payload: Payload) {
   const datetime = toProkeralaDatetime({
     day: payload.day!, month: payload.month!, year: payload.year!,
     hour: payload.hour ?? 6, min: payload.min ?? 0, tzone: payload.tzone ?? 5.5,
   });
+  const cacheKey = `${coords(payload)}:${datetime.slice(0, 10)}`;
+  const hit = panchangCache.get(cacheKey);
+  if (hit && Date.now() - hit.ts < PANCHANG_TTL_MS) return hit.data;
+
   const params = { ayanamsa: "1", coordinates: coords(payload), datetime, la: "en" };
   // The basic panchang endpoint has tithi/nakshatra/sunrise etc. but NOT the
   // Rahu/Gulika/Yamaganda/Abhijit windows — those live in the (in)auspicious
-  // period endpoints, so fetch all three together. The extras are best-effort:
-  // if the plan doesn't include them we still return the core panchang.
-  const [raw, inaus, aus] = await Promise.all([
-    prokeralaGet("/v2/astrology/panchang", params) as Promise<Record<string, unknown>>,
-    prokeralaGet("/v2/astrology/inauspicious-period", params).catch(() => ({})) as Promise<Record<string, unknown>>,
-    prokeralaGet("/v2/astrology/auspicious-period", params).catch(() => ({})) as Promise<Record<string, unknown>>,
-  ]);
+  // period endpoints. Fetch sequentially (not in parallel) so the free tier's
+  // concurrency limit doesn't 429; the two extras are best-effort.
+  const raw = (await prokeralaGet("/v2/astrology/panchang", params)) as Record<string, unknown>;
+  const inaus = (await prokeralaGet("/v2/astrology/inauspicious-period", params).catch(() => ({}))) as Record<string, unknown>;
+  const aus = (await prokeralaGet("/v2/astrology/auspicious-period", params).catch(() => ({}))) as Record<string, unknown>;
 
   // Merge the muhurat lists so findPeriod() can match Rahu/Gulika/Yamaganda/Abhijit by name.
   const periods: Record<string, unknown> = {
@@ -105,7 +114,7 @@ async function handlePanchang(payload: Payload) {
   const gulika = findPeriod(periods, ["gulika_kaal", "gulikai_kaal", "gulika_kaalam", "gulikakalam"], /gulik/i);
   const yamghanta = findPeriod(periods, ["yamaganda_kaal", "yama_gandam", "yamagandam", "yamaganda_kaalam"], /yama/i);
 
-  return {
+  const result = {
     tithi: { details: { tithi_name: name(raw.tithi) } },
     nakshatra: { details: { nak_name: name(raw.nakshatra) } },
     yog: { details: { yog_name: name(raw.yoga) } },
@@ -119,6 +128,8 @@ async function handlePanchang(payload: Payload) {
     yamghanta,
     abhijit_muhurta: findPeriod(periods, ["abhijit_muhurat", "abhijit_muhurta", "abhijeet_muhurat"], /abhijit|abhijeet/i),
   };
+  panchangCache.set(cacheKey, { data: result, ts: Date.now() });
+  return result;
 }
 
 async function handleAstroDetails(payload: Payload) {
