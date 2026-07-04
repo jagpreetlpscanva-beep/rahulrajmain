@@ -71,7 +71,7 @@ export function GoogleTranslate() {
       }
     });
     obs.observe(root, { attributes: true, attributeFilter: ["class"] });
-    setTimeout(reveal, 4000); // safety fallback
+    setTimeout(reveal, 1800); // safety fallback — don't keep the page hidden long
     load();
   }, []);
 

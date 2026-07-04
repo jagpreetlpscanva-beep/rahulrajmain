@@ -7,21 +7,12 @@ const SRC = "/audio/bg.mp3";
 
 export function BackgroundMusic() {
   const ref = useRef<HTMLAudioElement>(null);
-  const [available, setAvailable] = useState(false);
+  const [available] = useState(true); // always show the control (file ships in /public)
   const [playing, setPlaying] = useState(false);
-
-  // only show the control if the audio file actually exists
-  useEffect(() => {
-    let alive = true;
-    fetch(SRC, { method: "HEAD" })
-      .then((r) => { if (alive) setAvailable(r.ok); })
-      .catch(() => { if (alive) setAvailable(false); });
-    return () => { alive = false; };
-  }, []);
 
   useEffect(() => {
     const a = ref.current;
-    if (!a || !available) return;
+    if (!a) return;
     a.volume = 0.25;
 
     // browsers block autoplay-with-sound until a user gesture — start on the

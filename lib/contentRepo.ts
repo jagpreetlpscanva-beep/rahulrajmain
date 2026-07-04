@@ -62,28 +62,60 @@ async function fileReset(key: CollectionKey): Promise<unknown[]> {
   return [...COLLECTIONS[key]];
 }
 
+/* ---------------- read cache ----------------
+   Every page render reads all 14 collections. Without a cache each request
+   pays ~14 DB round-trips (measured ~1s warm), so navigating the site felt
+   slow. We keep a short in-process cache: repeat reads within TTL are instant,
+   and any admin write/reset for that key busts it immediately, so edits made
+   on this instance show up right away and others appear within the TTL. */
+const CACHE_TTL_MS = 30_000;
+const cache = new Map<CollectionKey, { items: unknown[]; ts: number }>();
+
+function cacheGet(key: CollectionKey): unknown[] | null {
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.ts < CACHE_TTL_MS) return hit.items;
+  return null;
+}
+function cacheSet(key: CollectionKey, items: unknown[]) {
+  cache.set(key, { items, ts: Date.now() });
+}
+function cacheBust(key: CollectionKey) {
+  cache.delete(key);
+}
+
 /* ---------------- public API ---------------- */
 
 export async function readCollection(key: CollectionKey): Promise<unknown[]> {
+  const cached = cacheGet(key);
+  if (cached) return cached;
+
+  let items: unknown[];
   if (hasMongo()) {
     try {
-      return await mongoRead(key);
+      items = await mongoRead(key);
     } catch (err) {
       console.error("[cms] Mongo read failed, using defaults:", err);
-      return [...COLLECTIONS[key]];
+      return [...COLLECTIONS[key]]; // don't cache a failure
     }
+  } else {
+    items = await fileRead(key);
   }
-  return fileRead(key);
+  cacheSet(key, items);
+  return items;
 }
 
 export async function writeCollection(key: CollectionKey, items: unknown[]): Promise<void> {
-  if (hasMongo()) return mongoWrite(key, items);
-  return fileWrite(key, items);
+  cacheBust(key);
+  if (hasMongo()) await mongoWrite(key, items);
+  else await fileWrite(key, items);
+  cacheSet(key, items); // reflect the new value immediately on this instance
 }
 
 export async function resetCollection(key: CollectionKey): Promise<unknown[]> {
-  if (hasMongo()) return mongoReset(key);
-  return fileReset(key);
+  cacheBust(key);
+  const items = hasMongo() ? await mongoReset(key) : await fileReset(key);
+  cacheSet(key, items);
+  return items;
 }
 
 export function backend(): "mongodb" | "file" {
