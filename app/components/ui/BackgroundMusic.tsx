@@ -51,11 +51,11 @@ export function BackgroundMusic() {
           onClick={toggle}
           aria-label={playing ? "Mute background music" : "Play background music"}
           title={playing ? "Mute music" : "Play music"}
-          className="fixed bottom-5 left-5 z-50 grid h-11 w-11 place-items-center rounded-full bg-gold-gradient text-night shadow-gold-btn ring-1 ring-gold-300/50 transition-transform hover:-translate-y-0.5"
+          className="fixed bottom-5 left-5 z-[60] flex items-center gap-2 rounded-full bg-gold-gradient py-2.5 pl-3 pr-4 text-night shadow-[0_10px_30px_-6px_rgba(192,138,46,0.7)] ring-2 ring-white/70 transition-transform hover:-translate-y-0.5"
         >
-          <span className="relative grid place-items-center">
+          <span className="relative grid h-6 w-6 place-items-center">
             {/* music note (beamed double note) — same icon in both states */}
-            <svg viewBox="0 0 24 24" className={`h-5 w-5 ${playing ? "animate-pulse" : "opacity-80"}`} fill="currentColor" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className={`h-5 w-5 ${playing ? "animate-pulse" : "opacity-90"}`} fill="currentColor" aria-hidden="true">
               <path d="M9 5.2 21 2.8V6.2L9 8.6V5.2Z" />
               <rect x="8.4" y="5" width="1.8" height="12.6" rx="0.9" />
               <rect x="19.2" y="2.9" width="1.8" height="12.6" rx="0.9" />
@@ -69,6 +69,7 @@ export function BackgroundMusic() {
               </svg>
             )}
           </span>
+          <span className="text-xs font-bold">{playing ? "Music On" : "Music Off"}</span>
         </button>
       )}
     </>

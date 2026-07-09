@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/sections/Footer";
-import { ScrollToTop } from "../components/ui/ScrollToTop";
 import { BookConsultationGrid } from "../components/sections/BookConsultationGrid";
 
 export const metadata: Metadata = {
@@ -18,7 +17,6 @@ export default function BookConsultationPage() {
         <BookConsultationGrid />
       </main>
       <Footer />
-      <ScrollToTop />
     </>
   );
 }
