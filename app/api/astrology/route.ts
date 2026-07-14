@@ -192,6 +192,9 @@ export async function POST(req: Request) {
 
   const endpoint = String(body.endpoint || "").replace(/^\/+/, "");
   const payload = (body.payload || {}) as Payload;
+  // Language for astrologyapi report text ("hi" => Hindi). Defaults to English
+  // so existing callers are unaffected; the calculators pass "hi".
+  const lang = ((body as { lang?: string }).lang === "hi" ? "hi" : "en");
 
   // ---- Prokerala path (Panchang + Kundli) ----
   if (PROKERALA_ENDPOINTS.has(endpoint)) {
@@ -240,7 +243,7 @@ export async function POST(req: Request) {
       headers: {
         Authorization: `Basic ${auth}`,
         "Content-Type": "application/json",
-        "Accept-Language": "en",
+        "Accept-Language": lang,
       },
       body: JSON.stringify(payload),
       cache: "no-store",
