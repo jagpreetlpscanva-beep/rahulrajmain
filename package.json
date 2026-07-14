@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@vercel/blob": "^2.4.1",
+    "astronomy-engine": "^2.1.19",
     "framer-motion": "^11.18.2",
     "mongodb": "^7.3.0",
     "next": "^15.5.19",
