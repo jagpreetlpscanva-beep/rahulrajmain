@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { verifyToken, COOKIE_NAME } from "@/lib/auth";
 import { readBookings, addBooking, setBookingStatus, deleteBooking, type Booking } from "@/lib/bookings";
+import { notifyBookingWhatsApp } from "@/lib/notify";
 import { readCollection, writeCollection } from "@/lib/contentRepo";
 import { newId, type Slot } from "@/lib/cms";
 
@@ -75,6 +76,15 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ error: "Could not save your booking" }, { status: 500 });
   }
+
+  // Notify the owner on WhatsApp (free CallMeBot). Best-effort — a failed/absent
+  // alert must never fail the booking itself.
+  try {
+    await notifyBookingWhatsApp(booking);
+  } catch {
+    /* ignore */
+  }
+
   return NextResponse.json({ ok: true, id: booking.id });
 }
 
