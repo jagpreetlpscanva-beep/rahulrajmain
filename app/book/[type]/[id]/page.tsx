@@ -62,6 +62,17 @@ function localYmd(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+/** Parse a "hh:mm AM/PM" slot time to minutes since midnight (null if bad format). */
+function slotMinutes(t: string): number | null {
+  const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)/i.exec((t || "").trim());
+  if (!m) return null;
+  let h = Number(m[1]) % 12;
+  if (/PM/i.test(m[3])) h += 12;
+  return h * 60 + Number(m[2]);
+}
+/** Consultations start at 11:00 AM — anything earlier is hidden. */
+const DAY_START_MIN = 11 * 60;
+
 /** Next 14 days from today, excluding Sundays — date picker for consultation slots. */
 function buildAvailableDates(): string[] {
   const dates: string[] = [];
@@ -161,7 +172,12 @@ export default function BookingPage() {
   // Only slots matching this consultation's mode (online/offline) are eligible.
   // Untyped legacy slots default to "online" (matches the admin's own behaviour).
   const slotsForType = useMemo(
-    () => slots.filter((s) => (s.type ?? "online") === consultationType),
+    () =>
+      slots.filter(
+        (s) =>
+          (s.type ?? "online") === consultationType &&
+          (slotMinutes(s.time) ?? DAY_START_MIN) >= DAY_START_MIN
+      ),
     [slots, consultationType]
   );
   const availableDates = useMemo(() => buildAvailableDates(), []);
