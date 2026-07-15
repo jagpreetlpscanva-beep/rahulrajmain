@@ -129,7 +129,59 @@ export async function notifyBookingEmail(b: Booking): Promise<boolean> {
   }
 }
 
-/** Notify the owner of a new booking via every configured channel (best-effort). */
+/**
+ * Forward the booking to an automation webhook (n8n / Make / Zapier) as clean
+ * JSON. The webhook (with the owner's Meta WhatsApp credentials) then sends the
+ * WhatsApp confirmation to the CLIENT and an alert to the ASTROLOGER — so no
+ * WhatsApp token ever lives in this app. Set env BOOKING_WEBHOOK_URL. Never throws.
+ */
+export async function notifyBookingWebhook(b: Booking): Promise<boolean> {
+  const url = process.env.BOOKING_WEBHOOK_URL;
+  if (!url) return false;
+
+  const amountNum = Number(String(b.amount || "").replace(/[^\d.]/g, "")) || 0;
+  const payload = {
+    event: "new_booking",
+    bookingId: b.id,
+    name: b.name,
+    phone: b.phone,           // client's WhatsApp number (for the confirmation)
+    email: b.email || "",
+    service: b.itemTitle || b.itemType,
+    itemType: b.itemType,
+    slotDate: b.slotDate || "",
+    slotTime: b.slotTime || "",
+    amount: amountNum,
+    amountText: rupees(b.amount),
+    paid: b.paid,
+    paymentMethod: b.paymentMethod || "",
+    coupon: b.coupon || "",
+    createdAt: b.createdAt,
+    summary: bookingAlertText(b),
+  };
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: ctrl.signal,
+      cache: "no-store",
+    });
+    return res.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Notify of a new booking via every configured channel (best-effort). */
 export async function notifyNewBooking(b: Booking): Promise<void> {
-  await Promise.allSettled([notifyBookingWhatsApp(b), notifyBookingEmail(b)]);
+  await Promise.allSettled([
+    notifyBookingWebhook(b), // n8n -> WhatsApp to client + astrologer
+    notifyBookingWhatsApp(b), // CallMeBot (owner, optional)
+    notifyBookingEmail(b),    // Resend email (owner, optional)
+  ]);
 }
