@@ -15,6 +15,16 @@ type Consultation = {
   kundali: unknown; rows: Row[]; gemstone: Gem | null; notes: string; createdAt: string;
 };
 
+type KPlanet = { name: string; abbr: string; lon: number; rashi: number; house: number; sign: string; nakshatra: string; nakshatra_lord?: string };
+
+/** sidereal longitude -> "12°34'" within its sign */
+function fmtDeg(lon: number): string {
+  const d = ((lon % 30) + 30) % 30;
+  const deg = Math.floor(d);
+  const min = Math.floor((d - deg) * 60);
+  return `${deg}°${String(min).padStart(2, "0")}'`;
+}
+
 const emptyRow = (): Row => ({ planet: "", problem: "", remedies: [], notes: "" });
 const blankGem = (planet = ""): Gem => ({ id: "", planet, stone: "", weight: "", metal: "", finger: "", day: "", mantra: "" });
 
@@ -175,6 +185,8 @@ export function PrescriptionPad() {
   const inp = "w-full rounded border border-ink/20 bg-white px-2.5 py-1.5 text-sm outline-none focus:border-[#8a2020]";
   const lbl = "mb-0.5 block text-[11px] font-semibold uppercase tracking-wide text-ink/55";
 
+  const kPlanets = useMemo<KPlanet[]>(() => ((kundali as { planets?: KPlanet[] } | null)?.planets ?? []), [kundali]);
+
   return (
     <div className="min-h-screen bg-[#f3ece0] px-3 py-6 print:bg-white">
       <style>{`@media print { .rx-noprint { display:none !important; } }`}</style>
@@ -250,6 +262,37 @@ export function PrescriptionPad() {
               ))}
             </div>
           </div>
+
+          {/* planet positions (degrees) */}
+          {kPlanets.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 font-serif text-lg font-bold text-[#a01414]">ग्रह स्थिति / Planet Positions</p>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="bg-[#f2e4d6] text-left text-xs">
+                      <th className="border border-ink/15 px-2 py-1">ग्रह / Planet</th>
+                      <th className="border border-ink/15 px-2 py-1">राशि / Sign</th>
+                      <th className="border border-ink/15 px-2 py-1">अंश / Degree</th>
+                      <th className="border border-ink/15 px-2 py-1">भाव / House</th>
+                      <th className="border border-ink/15 px-2 py-1">नक्षत्र / Nakshatra</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {kPlanets.map((p) => (
+                      <tr key={p.name}>
+                        <td className="border border-ink/15 px-2 py-1 font-semibold">{p.name} ({p.abbr})</td>
+                        <td className="border border-ink/15 px-2 py-1">{p.sign}</td>
+                        <td className="border border-ink/15 px-2 py-1 font-mono">{fmtDeg(p.lon)}</td>
+                        <td className="border border-ink/15 px-2 py-1">{p.house}</td>
+                        <td className="border border-ink/15 px-2 py-1">{p.nakshatra}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {/* remedy rows */}
           <div className="mt-5">
@@ -332,6 +375,16 @@ export function PrescriptionPad() {
                   <p><b>महादशा —</b> {mahadasha}</p><p><b>अन्तर्दशा —</b> {antardasha}</p><p><b>प्र० दशा —</b> {pratyantar}</p><p><b>दोष —</b> {dosha}</p><p><b>योग —</b> {yog}</p>
                 </div>
               </div>
+              {kPlanets.length > 0 && (
+                <table className="mt-3 w-full border-collapse text-[11px]">
+                  <thead><tr className="bg-[#f2e4d6] text-left"><th className="border border-ink/20 px-2 py-0.5">ग्रह</th><th className="border border-ink/20 px-2 py-0.5">राशि</th><th className="border border-ink/20 px-2 py-0.5">अंश</th><th className="border border-ink/20 px-2 py-0.5">भाव</th><th className="border border-ink/20 px-2 py-0.5">नक्षत्र</th></tr></thead>
+                  <tbody>
+                    {kPlanets.map((p) => (
+                      <tr key={p.name}><td className="border border-ink/20 px-2 py-0.5">{p.name}</td><td className="border border-ink/20 px-2 py-0.5">{p.sign}</td><td className="border border-ink/20 px-2 py-0.5">{fmtDeg(p.lon)}</td><td className="border border-ink/20 px-2 py-0.5">{p.house}</td><td className="border border-ink/20 px-2 py-0.5">{p.nakshatra}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
               {rows.some((r) => r.planet) && (
                 <table className="mt-3 w-full border-collapse text-[12px]">
                   <thead><tr className="bg-[#f2e4d6] text-left"><th className="border border-ink/20 px-2 py-1">ग्रह</th><th className="border border-ink/20 px-2 py-1">समस्या</th><th className="border border-ink/20 px-2 py-1">उपाय</th><th className="border border-ink/20 px-2 py-1">Notes</th></tr></thead>
