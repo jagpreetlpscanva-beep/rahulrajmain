@@ -846,6 +846,63 @@ export const DEFAULT_BLOG: BlogPost[] = [
   },
 ];
 
+/* ---------------- Prescription pad: planets, remedies, gemstones ---------------- */
+
+export const PLANETS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"] as const;
+export type PlanetName = (typeof PLANETS)[number];
+
+/** One saved remedy for a planet. A planet can have many (astrologer picks some).
+ *  `title` holds the remedy text (named `title` to fit the generic CMS manager). */
+export interface PlanetRemedy {
+  id: string;
+  planet: string;
+  title: string;
+}
+
+/** Gemstone recommendation for a planet (one row per planet, editable). */
+export interface Gemstone {
+  id: string;
+  planet: string;
+  title: string;
+  stone: string;
+  weight: string;
+  metal: string;
+  finger: string;
+  day: string;
+  mantra: string;
+}
+
+const REMEDY_SEED: Record<string, string[]> = {
+  Sun: ["Surya ko jal arpan karein (roz subah)", "Aditya Hridaya Stotra ka paath", "Gud-gehun daan karein (Ravivar)", "Tambe ka kada dharan karein", "Om Suryaya Namah - 108 baar"],
+  Moon: ["Shiv ji ko jal chadhayein", "Chandi/silver dharan karein", "Doodh/chawal daan (Somvar)", "Om Chandraya Namah - 108 baar", "Maa ka aashirwad lein"],
+  Mars: ["Hanuman Chalisa ka paath", "Mangalwar vrat rakhein", "Masoor daal daan karein", "Sunder Kaand ka paath", "Om Mangalaya Namah - 108 baar"],
+  Mercury: ["Vishnu Sahasranaam paath", "Hari vastu/moong daan (Budhwar)", "Ganesh ji ki puja", "Om Budhaya Namah - 108 baar", "Kanya/vidyarthiyon ki madad karein"],
+  Jupiter: ["Guruvar vrat rakhein", "Peepal ko jal dein", "Chane ki daal / haldi daan", "Vishnu/Guru mantra jaap", "Om Gurave Namah - 108 baar"],
+  Venus: ["Lakshmi puja (Shukravar)", "Safed vastra/mishthan daan", "Shukra mantra jaap", "Gau seva karein", "Om Shukraya Namah - 108 baar"],
+  Saturn: ["Shani ko sarson ka tel arpan", "Shanivar vrat rakhein", "Kaale til/urad daan", "Hanuman ji ki puja", "Peepal ke neeche deep jalayein", "Om Sham Shanicharaya Namah - 108 baar", "Kauve/garib ko bhojan"],
+  Rahu: ["Rahu mantra jaap", "Neel/saboot urad daan", "Bhairav ji ki puja", "Om Raam Rahave Namah - 108 baar", "Kambal daan karein"],
+  Ketu: ["Ketu mantra jaap", "Kutte ko roti khilayein", "Ganesh ji ki puja", "Om Kem Ketave Namah - 108 baar", "Do-rangi kambal daan"],
+};
+
+export const DEFAULT_PLANET_REMEDIES: PlanetRemedy[] = PLANETS.flatMap((p) =>
+  (REMEDY_SEED[p] ?? []).map((title, i) => ({ id: `rem-${p.toLowerCase()}-${i + 1}`, planet: p, title }))
+);
+
+const gem = (id: string, planet: string, stone: string, weight: string, metal: string, finger: string, day: string, mantra: string): Gemstone =>
+  ({ id, planet, title: `${planet} — ${stone}`, stone, weight, metal, finger, day, mantra });
+
+export const DEFAULT_GEMSTONES: Gemstone[] = [
+  gem("gem-sun", "Sun", "Ruby (Manik)", "5 Ratti", "Gold / Copper", "Ring Finger", "Sunday", "Om Suryaya Namah"),
+  gem("gem-moon", "Moon", "Pearl (Moti)", "6 Ratti", "Silver", "Little Finger", "Monday", "Om Chandraya Namah"),
+  gem("gem-mars", "Mars", "Red Coral (Moonga)", "7 Ratti", "Copper / Gold", "Ring Finger", "Tuesday", "Om Mangalaya Namah"),
+  gem("gem-mercury", "Mercury", "Emerald (Panna)", "5 Ratti", "Gold", "Little Finger", "Wednesday", "Om Budhaya Namah"),
+  gem("gem-jupiter", "Jupiter", "Yellow Sapphire (Pukhraj)", "5 Ratti", "Gold", "Index Finger", "Thursday", "Om Gurave Namah"),
+  gem("gem-venus", "Venus", "Diamond (Heera)", "1 Ratti", "Silver / Platinum", "Middle Finger", "Friday", "Om Shukraya Namah"),
+  gem("gem-saturn", "Saturn", "Blue Sapphire (Neelam)", "7 Ratti", "Silver", "Middle Finger", "Saturday", "Om Sham Shanicharaya Namah"),
+  gem("gem-rahu", "Rahu", "Hessonite (Gomed)", "7 Ratti", "Silver", "Middle Finger", "Saturday", "Om Raam Rahave Namah"),
+  gem("gem-ketu", "Ketu", "Cat's Eye (Lehsunia)", "7 Ratti", "Silver", "Little Finger", "Wednesday", "Om Kem Ketave Namah"),
+];
+
 /** Collections exposed by the CMS API, with their seed data. */
 export const COLLECTIONS = {
   poojas: DEFAULT_POOJAS,
@@ -862,6 +919,8 @@ export const COLLECTIONS = {
   decor: DEFAULT_DECOR,
   coupons: DEFAULT_COUPONS,
   blog: DEFAULT_BLOG,
+  planetRemedies: DEFAULT_PLANET_REMEDIES,
+  gemstones: DEFAULT_GEMSTONES,
 } as const;
 
 export type CollectionKey = keyof typeof COLLECTIONS;

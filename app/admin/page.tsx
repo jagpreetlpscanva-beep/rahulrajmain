@@ -40,6 +40,7 @@ import { ReviewsManager } from "../components/admin/ReviewsManager";
 import type { Booking } from "@/lib/bookings";
 import { Logo } from "../components/ui/Logo";
 import { MoonIcon, OmIcon, StarIcon, UsersIcon, MedalIcon, GiftIcon } from "../components/icons";
+import { DEFAULT_PLANET_REMEDIES, type PlanetRemedy, DEFAULT_GEMSTONES, type Gemstone, PLANETS } from "@/lib/cms";
 
 /* ---------------- field definitions ---------------- */
 
@@ -247,6 +248,23 @@ const decorFields: FieldDef[] = [
 
 const blankDecor = (): DecorItem => ({ id: newId("decor"), title: "" });
 
+const remedyFields: FieldDef[] = [
+  { name: "planet", label: "Planet", type: "select", options: [...PLANETS] },
+  { name: "title", label: "Remedy (upay)", type: "textarea", hint: "One remedy per row. A planet can have many — they show as checkboxes on the prescription pad." },
+];
+const blankRemedy = (): PlanetRemedy => ({ id: newId("rem"), planet: "Saturn", title: "" });
+
+const gemstoneFields: FieldDef[] = [
+  { name: "planet", label: "Planet", type: "select", options: [...PLANETS] },
+  { name: "stone", label: "Stone", type: "text", placeholder: "Blue Sapphire (Neelam)" },
+  { name: "weight", label: "Weight", type: "text", placeholder: "7 Ratti" },
+  { name: "metal", label: "Metal", type: "text", placeholder: "Silver" },
+  { name: "finger", label: "Finger", type: "text", placeholder: "Middle Finger" },
+  { name: "day", label: "Day", type: "text", placeholder: "Saturday" },
+  { name: "mantra", label: "Mantra", type: "text", placeholder: "Om Sham Shanicharaya Namah" },
+];
+const blankGemstone = (): Gemstone => ({ id: newId("gem"), planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", mantra: "" });
+
 const blankConsultation = (): Consultation => ({
   id: newId("consult"),
   title: "",
@@ -259,7 +277,7 @@ const blankConsultation = (): Consultation => ({
   image: "",
 });
 
-type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "coupons" | "blog" | "reviews" | "slots" | "bookings" | "messages";
+type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "coupons" | "blog" | "reviews" | "slots" | "bookings" | "messages" | "planetRemedies" | "gemstones";
 
 const GridIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -288,6 +306,8 @@ const NAV: { key: TabKey; label: string; icon: (p: { className?: string }) => Re
   { key: "slots", label: "Slots", icon: GridIcon },
   { key: "bookings", label: "Bookings", icon: UsersIcon },
   { key: "messages", label: "Messages", icon: UsersIcon },
+  { key: "planetRemedies", label: "Planet Remedies", icon: OmIcon },
+  { key: "gemstones", label: "Gemstones", icon: MedalIcon },
 ];
 
 export default function AdminPage() {
@@ -311,6 +331,8 @@ export default function AdminPage() {
   const decor = useCollection<DecorItem>("decor", DEFAULT_DECOR);
   const coupons = useCollection<Coupon>("coupons", DEFAULT_COUPONS);
   const blog = useCollection<BlogPost>("blog", DEFAULT_BLOG);
+  const planetRemedies = useCollection<PlanetRemedy>("planetRemedies", DEFAULT_PLANET_REMEDIES);
+  const gemstones = useCollection<Gemstone>("gemstones", DEFAULT_GEMSTONES);
 
   useEffect(() => {
     fetch("/api/admin/session", { cache: "no-store" })
@@ -500,6 +522,12 @@ export default function AdminPage() {
           )}
           {tab === "blog" && (
             <CollectionManager<BlogPost> label="Blog Posts" items={blog.items} fields={blogFields} blank={blankBlog} onChange={blog.save} onReset={blog.reset} previewHref="/blog" />
+          )}
+          {tab === "planetRemedies" && (
+            <CollectionManager<PlanetRemedy> label="Planet Remedies" items={planetRemedies.items} fields={remedyFields} blank={blankRemedy} onChange={planetRemedies.save} onReset={planetRemedies.reset} previewHref="/prescription-pad" />
+          )}
+          {tab === "gemstones" && (
+            <CollectionManager<Gemstone> label="Gemstones" items={gemstones.items} fields={gemstoneFields} blank={blankGemstone} onChange={gemstones.save} onReset={gemstones.reset} previewHref="/prescription-pad" />
           )}
           {tab === "reviews" && <ReviewsManager />}
           {tab === "slots" && <SlotsManager />}

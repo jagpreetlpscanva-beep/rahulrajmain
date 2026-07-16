@@ -264,7 +264,7 @@ function navamsaSign(lon: number): number {
  * North-Indian (diamond) chart as an SVG data URI. `division` D1 uses each
  * planet's rashi; D9 uses its navamsa sign. House 1 (top diamond) = ascendant.
  */
-export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "D1" | "D9"): string {
+export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "D1" | "D9", color = "#c8902c"): string {
   const ascSign = division === "D1" ? k.asc_rashi : navamsaSign(k.ascendant_lon);
   // sign occupying each of the 12 houses (house1 = ascSign, going forward)
   const signInHouse = (h: number) => ((ascSign + h - 1) % 12);
@@ -291,13 +291,13 @@ export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "
   let inner = "";
   for (let h = 1; h <= 12; h++) {
     const [x, y] = c[h];
-    inner += `<text x="${x}" y="${y - 8}" font-size="11" fill="#a67320" text-anchor="middle">${signInHouse(h) + 1}</text>`;
+    inner += `<text x="${x}" y="${y - 8}" font-size="11" fill="${color}" opacity="0.75" text-anchor="middle">${signInHouse(h) + 1}</text>`;
     const ps = byHouse[h] || [];
     inner += `<text x="${x}" y="${y + 12}" font-size="15" font-weight="bold" fill="#3d2817" text-anchor="middle">${ps.join(" ")}</text>`;
   }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}">
-    <rect width="${S}" height="${S}" fill="#fffdf7"/>
-    <g fill="none" stroke="#c8902c" stroke-width="1.5">${lines.map((d) => `<path d="${d}"/>`).join("")}</g>
+    <rect width="${S}" height="${S}" fill="none"/>
+    <g fill="none" stroke="${color}" stroke-width="1.5">${lines.map((d) => `<path d="${d}"/>`).join("")}</g>
     ${inner}
   </svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
