@@ -214,6 +214,42 @@ function planetSiderealLon(p: { body?: A.Body; node?: "rahu" | "ketu" }, date: D
 
 const nakLord = (nakIdx: number) => NAK_LORD_CYCLE[nakIdx % 9];
 
+/* ---------------- Vimshottari Dasha ---------------- */
+const DASHA_LORDS = ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury"];
+const DASHA_YEARS: Record<string, number> = { Ketu: 7, Venus: 20, Sun: 6, Moon: 10, Mars: 7, Rahu: 18, Jupiter: 16, Saturn: 19, Mercury: 17 };
+const YEAR_MS = 365.25 * 24 * 3600 * 1000;
+
+/** Running Mahadasha + Antardasha for `now`, from the Moon's sidereal longitude. */
+function computeDasha(moonSid: number, birth: Date, now = new Date()) {
+  const span = 360 / 27;
+  const nak = Math.floor(moonSid / span) % 27;
+  const startIdx = nak % 9;
+  const fraction = (moonSid % span) / span; // portion of nakshatra already traversed at birth
+  const yrs = (lord: string) => DASHA_YEARS[lord];
+
+  const birthA = fraction * yrs(DASHA_LORDS[startIdx]); // absolute dasha-time at birth
+  const nowA = birthA + (now.getTime() - birth.getTime()) / YEAR_MS;
+
+  // walk mahadashas (absolute time from the true start of the first dasha)
+  let a = 0, i = startIdx, len = yrs(DASHA_LORDS[i]);
+  while (nowA >= a + len) { a += len; i = (i + 1) % 9; len = yrs(DASHA_LORDS[i]); }
+  const mahaLord = DASHA_LORDS[i], mahaStart = a, mahaLen = len;
+  const mahaEnd = new Date(birth.getTime() + (mahaStart + mahaLen - birthA) * YEAR_MS);
+
+  // antardasha within the running mahadasha
+  const into = nowA - mahaStart;
+  let b = 0, j = i, al = (mahaLen * yrs(DASHA_LORDS[j])) / 120;
+  while (into >= b + al) { b += al; j = (j + 1) % 9; al = (mahaLen * yrs(DASHA_LORDS[j])) / 120; }
+  const antarLord = DASHA_LORDS[j];
+  const antarEnd = new Date(birth.getTime() + (mahaStart + b + al - birthA) * YEAR_MS);
+
+  const fmt = (d: Date) => d.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+  return {
+    mahadasha: `${mahaLord} (till ${fmt(mahaEnd)})`,
+    antardasha: `${antarLord} (till ${fmt(antarEnd)})`,
+  };
+}
+
 /** Core kundli details (matches KundaliGenerator.tsx pick() keys) + planet list. */
 export function computeKundli(p: KundliInput) {
   const at = birthInstant(p);
@@ -246,6 +282,7 @@ export function computeKundli(p: KundliInput) {
     sign_lord: RASHI_LORD[moonRashi],
     charan: moonPada,
     planets,
+    dasha: computeDasha(moonS, at),
   };
 }
 
@@ -273,7 +310,9 @@ export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "
   for (const pl of k.planets) {
     const sign = division === "D1" ? pl.rashi : navamsaSign(pl.lon);
     const house = ((sign - ascSign + 12) % 12) + 1;
-    (byHouse[house] ||= []).push(pl.abbr);
+    // planet + its degree-in-sign (small), e.g. "Sa 12°"
+    const deg = division === "D1" ? ` ${Math.floor(((pl.lon % 30) + 30) % 30)}°` : "";
+    (byHouse[house] ||= []).push(`${pl.abbr}${deg}`);
   }
 
   const S = 400;
@@ -291,9 +330,11 @@ export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "
   let inner = "";
   for (let h = 1; h <= 12; h++) {
     const [x, y] = c[h];
-    inner += `<text x="${x}" y="${y - 8}" font-size="11" fill="${color}" opacity="0.75" text-anchor="middle">${signInHouse(h) + 1}</text>`;
+    inner += `<text x="${x}" y="${y - 10}" font-size="11" fill="${color}" opacity="0.7" text-anchor="middle">${signInHouse(h) + 1}</text>`;
     const ps = byHouse[h] || [];
-    inner += `<text x="${x}" y="${y + 12}" font-size="15" font-weight="bold" fill="#3d2817" text-anchor="middle">${ps.join(" ")}</text>`;
+    ps.forEach((label, n) => {
+      inner += `<text x="${x}" y="${y + 4 + n * 13}" font-size="11" font-weight="bold" fill="#3d2817" text-anchor="middle">${label}</text>`;
+    });
   }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}">
     <rect width="${S}" height="${S}" fill="none"/>

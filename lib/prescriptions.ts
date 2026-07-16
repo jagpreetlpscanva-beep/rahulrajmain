@@ -11,7 +11,6 @@ import { getMongoClient, getDbName, hasMongo } from "./mongodb";
 
 export interface RemedyRow {
   planet: string;
-  problem: string;
   remedies: string[];
   notes: string;
 }
@@ -43,7 +42,7 @@ export interface Consultation {
   yog: string;
   kundali: unknown; // full computeKundli() JSON — lagna + every planet's house
   rows: RemedyRow[];
-  gemstone: GemstonePick | null;
+  gemstones: GemstonePick[];
   notes: string;
   createdAt: string;
 }
@@ -89,6 +88,24 @@ export async function consultationsByMobile(mobile: string): Promise<Consultatio
   const digits = mobile.replace(/\D/g, "").slice(-10);
   if (!digits) return [];
   return (await readConsultations()).filter((c) => c.mobile.replace(/\D/g, "").slice(-10) === digits);
+}
+
+/** Search by patient name (substring) OR mobile. */
+export async function searchConsultations(q: string): Promise<Consultation[]> {
+  const s = q.trim().toLowerCase();
+  if (!s) return [];
+  const digits = q.replace(/\D/g, "").slice(-10);
+  return (await readConsultations()).filter(
+    (c) =>
+      c.patientName.toLowerCase().includes(s) ||
+      (digits.length >= 4 && c.mobile.replace(/\D/g, "").includes(digits))
+  );
+}
+
+/** All consultations created today (newest first). */
+export async function consultationsToday(): Promise<Consultation[]> {
+  const today = new Date().toDateString();
+  return (await readConsultations()).filter((c) => new Date(c.createdAt).toDateString() === today);
 }
 
 export async function getConsultation(id: string): Promise<Consultation | null> {

@@ -1,25 +1,18 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { verifyToken, COOKIE_NAME } from "@/lib/auth";
 import { newId } from "@/lib/cms";
 import {
   addConsultation,
   consultationsByMobile,
+  searchConsultations,
+  consultationsToday,
   getConsultation,
   type Consultation,
 } from "@/lib/prescriptions";
 
 export const dynamic = "force-dynamic";
 
-async function isAuthed(): Promise<boolean> {
-  const token = (await cookies()).get(COOKIE_NAME)?.value;
-  return verifyToken(token);
-}
-
-/** POST — save a consultation (append-only). Admin only. */
+/** POST — save a consultation (append-only). No admin login needed. */
 export async function POST(req: Request) {
-  if (!(await isAuthed())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   let b: Partial<Consultation> = {};
   try {
     b = await req.json();
@@ -46,7 +39,7 @@ export async function POST(req: Request) {
     yog: String(b.yog || ""),
     kundali: b.kundali ?? null,
     rows: Array.isArray(b.rows) ? b.rows : [],
-    gemstone: b.gemstone ?? null,
+    gemstones: Array.isArray(b.gemstones) ? b.gemstones : [],
     notes: String(b.notes || ""),
     createdAt: new Date().toISOString(),
   };
@@ -59,13 +52,16 @@ export async function POST(req: Request) {
   return NextResponse.json({ ok: true, id: c.id });
 }
 
-/** GET ?mobile= or ?id= — search patient history / open a consultation. Admin only. */
+/** GET ?id= | ?q=name-or-mobile | ?mobile= | ?today=1 — patient history. */
 export async function GET(req: Request) {
-  if (!(await isAuthed())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const url = new URL(req.url);
   const id = url.searchParams.get("id");
+  const q = url.searchParams.get("q");
   const mobile = url.searchParams.get("mobile");
+  const today = url.searchParams.get("today");
   if (id) return NextResponse.json({ ok: true, consultation: await getConsultation(id) });
+  if (today) return NextResponse.json({ ok: true, consultations: await consultationsToday() });
+  if (q) return NextResponse.json({ ok: true, consultations: await searchConsultations(q) });
   if (mobile) return NextResponse.json({ ok: true, consultations: await consultationsByMobile(mobile) });
-  return NextResponse.json({ error: "Provide id or mobile" }, { status: 400 });
+  return NextResponse.json({ error: "Provide id, q, mobile or today" }, { status: 400 });
 }
