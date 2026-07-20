@@ -388,7 +388,7 @@ export function PrescriptionPad() {
       {/* print doc */}
       {portal && createPortal(
         <div className="hidden print:block">
-          <div className="mx-auto flex min-h-[297mm] w-[210mm] flex-col bg-white text-[#222]">
+          <div className="mx-auto flex min-h-[296mm] w-[210mm] flex-col bg-white text-[#222]">
             <Letterhead />
             <div className="flex-1 px-6 py-4 text-sm">
               <div className="grid grid-cols-3 gap-x-4 gap-y-1">

@@ -57,11 +57,11 @@ export default async function RxPage({ params }: { params: Promise<{ id: string 
   return (
     <div className="min-h-screen bg-[#f4eee3] py-6 print:bg-white print:py-0">
       {/* on this page only, allow the whole doc to print (override the global print rule) */}
-      <style>{`@media print { body > *:not(#print-portal){ display:revert !important } .rx-hide-print{ display:none !important } @page{ size:A4; margin:0 } }`}</style>
+      <style>{`@media print { body > *:not(#print-portal){ display:revert !important } .rx-hide-print,#google_translate_element,audio,[aria-label="Mute background music"],[aria-label="Play background music"]{ display:none !important } @page{ size:A4; margin:0 } body{ margin:0 !important } }`}</style>
 
       <div className="rx-hide-print mx-auto mb-4 max-w-[210mm] px-3 text-right"><PrintButton /></div>
 
-      <div className="mx-auto flex min-h-[297mm] w-full max-w-[210mm] flex-col bg-white shadow-lg print:shadow-none">
+      <div className="mx-auto flex min-h-[296mm] w-full max-w-[210mm] flex-col bg-white shadow-lg print:shadow-none">
         <Letterhead />
         <div className="flex-1 px-6 py-4 text-sm text-[#222]">
           <div className="grid grid-cols-3 gap-x-4 gap-y-1">

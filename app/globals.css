@@ -224,7 +224,12 @@ a[class*="border-gold-500"]:active, button[class*="border-gold-500"]:active {
    too (not just their visibility) — that's what keeps this to exactly 1 page. */
 @media print {
   @page { size: A4; margin: 0; }
-  html, body { height: auto !important; background: #fff !important; }
+  html, body {
+    height: auto !important;
+    background: #fff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
   body > *:not(#print-portal) { display: none !important; }
   #print-portal { display: block !important; }
 }
