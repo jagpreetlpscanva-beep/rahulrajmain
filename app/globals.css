@@ -231,5 +231,15 @@ a[class*="border-gold-500"]:active, button[class*="border-gold-500"]:active {
     padding: 0 !important;
   }
   body > *:not(#print-portal) { display: none !important; }
-  #print-portal { display: block !important; }
+  #print-portal {
+    display: block !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  #print-portal * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
 }
