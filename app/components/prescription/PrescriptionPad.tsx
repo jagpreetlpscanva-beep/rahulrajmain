@@ -60,6 +60,7 @@ function Footer() {
       <p className="text-xs">प्रातः 11:00 से 1:00 · सायं 06:00 से 8:00 · रविवार सायं अवकाश</p>
       <p className="mt-1 text-[11px]">कुण्डली निर्माण, वास्तु दोष निवारण एवं सिद्ध रत्न, रुद्राक्ष एवं यन्त्रों की सुविधा।</p>
       <p className="mt-0.5 text-[11px] font-semibold text-amber-200">कृपया टोने-टोटके, वशीकरण इत्यादि के लिए सम्पर्क न करें।</p>
+      <p className="mt-1 text-sm font-bold tracking-wide">astrorahulraj.com</p>
     </div>
   );
 }
@@ -100,6 +101,7 @@ export function PrescriptionPad() {
   const [today, setToday] = useState<Consultation[]>([]);
   const [searchQ, setSearchQ] = useState("");
   const [results, setResults] = useState<Consultation[] | null>(null);
+  const [all, setAll] = useState<Consultation[] | null>(null);
 
   const [portal, setPortal] = useState<HTMLElement | null>(null);
   useEffect(() => setPortal(document.getElementById("print-portal")), []);
@@ -183,6 +185,11 @@ export function PrescriptionPad() {
     const j = await r.json();
     setResults(Array.isArray(j.consultations) ? j.consultations : []);
   };
+  const loadAll = async () => {
+    const r = await fetch("/api/prescriptions?all=1");
+    const j = await r.json();
+    setAll(Array.isArray(j.consultations) ? j.consultations : []);
+  };
 
   /* ---- share ---- */
   const shareText = useCallback((link?: string) => {
@@ -221,14 +228,14 @@ export function PrescriptionPad() {
   const btn = "rounded-lg px-4 py-2 text-sm font-bold shadow-sm transition-transform hover:-translate-y-0.5";
   const HistRow = (c: Consultation) => (
     <li key={c.id} className="flex items-center justify-between gap-2 py-2 text-xs">
-      <span className="min-w-0"><b className="block truncate">{c.patientName}</b><span className="text-ink/50">{c.mobile} · {new Date(c.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></span>
+      <span className="min-w-0"><b className="block truncate">{c.patientName}</b><span className="text-ink/50">{c.mobile} · {new Date(c.createdAt).toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span></span>
       <button onClick={() => load(c)} className="shrink-0 rounded-md bg-[#8a2020] px-2.5 py-1 font-semibold text-white">खोलें</button>
     </li>
   );
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f4eee3] print:bg-white">
-      <style>{`@media print { .rx-noprint { display:none !important; } }`}</style>
+      <style>{`@media print { .rx-noprint { display:none !important; } .rx-print-footer { position:fixed; bottom:0; left:0; right:0; } }`}</style>
 
       {/* ===== PAGE HEADER (top) ===== */}
       <header className="rx-noprint shadow-md"><Letterhead /></header>
@@ -262,8 +269,17 @@ export function PrescriptionPad() {
           <div className="rounded-xl border border-ink/10 bg-white p-3 shadow-sm">
             <p className="mb-2 text-sm font-bold text-[#8a2020]">📅 आज के परामर्श ({today.length})</p>
             {today.length === 0 ? <p className="text-xs text-ink/50">आज कोई परामर्श नहीं।</p> : (
-              <ul className="max-h-[60vh] divide-y divide-ink/10 overflow-y-auto">{today.map(HistRow)}</ul>
+              <ul className="max-h-[40vh] divide-y divide-ink/10 overflow-y-auto">{today.map(HistRow)}</ul>
             )}
+          </div>
+          <div className="rounded-xl border border-ink/10 bg-white p-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-[#8a2020]">📋 सभी पुराने रिकॉर्ड{all ? ` (${all.length})` : ""}</p>
+              <button onClick={loadAll} className="text-xs font-semibold text-[#8a2020] underline">{all ? "रिफ्रेश" : "दिखाएं"}</button>
+            </div>
+            {all && (all.length === 0
+              ? <p className="mt-2 text-xs text-ink/50">कोई रिकॉर्ड नहीं।</p>
+              : <ul className="mt-2 max-h-[50vh] divide-y divide-ink/10 overflow-y-auto">{all.map(HistRow)}</ul>)}
           </div>
         </aside>
 
@@ -388,9 +404,9 @@ export function PrescriptionPad() {
       {/* print doc */}
       {portal && createPortal(
         <div className="hidden print:block">
-          <div className="mx-auto flex min-h-[296mm] w-[210mm] flex-col bg-white text-[#222]">
+          <div className="mx-auto w-[210mm] bg-white text-[#222]">
             <Letterhead />
-            <div className="flex-1 px-6 py-4 text-sm">
+            <div className="px-6 py-4 pb-[30mm] text-sm">
               <div className="grid grid-cols-3 gap-x-4 gap-y-1">
                 <p><b>ग्राहक:</b> {patientName}</p><p><b>मोबाइल:</b> {mobile}</p><p><b>लिंग:</b> {gender}</p>
                 <p><b>जन्म तिथि:</b> {fmtDMY(dob)}</p><p><b>समय:</b> {tob}</p><p><b>स्थान:</b> {place}</p>
@@ -420,7 +436,7 @@ export function PrescriptionPad() {
               )}
               {notes && <p className="mt-2 text-[12px]"><b>टिप्पणी:</b> {notes}</p>}
             </div>
-            <Footer />
+            <div className="rx-print-footer"><Footer /></div>
           </div>
         </div>,
         portal

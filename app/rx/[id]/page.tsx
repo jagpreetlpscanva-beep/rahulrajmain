@@ -36,6 +36,7 @@ function Footer() {
       <p className="text-sm font-bold text-amber-200">: सम्पर्क समय : <span className="text-white/90">(केवल अपॉइंटमेंट हेतु)</span></p>
       <p className="text-xs">प्रातः 11:00 से 1:00 · सायं 06:00 से 8:00 · रविवार सायं अवकाश</p>
       <p className="mt-0.5 text-[11px] font-semibold text-amber-200">कृपया टोने-टोटके, वशीकरण इत्यादि के लिए सम्पर्क न करें।</p>
+      <p className="mt-1 text-sm font-bold tracking-wide">astrorahulraj.com</p>
     </div>
   );
 }
@@ -57,13 +58,13 @@ export default async function RxPage({ params }: { params: Promise<{ id: string 
   return (
     <div className="min-h-screen bg-[#f4eee3] py-6 print:bg-white print:py-0">
       {/* on this page only, allow the whole doc to print (override the global print rule) */}
-      <style>{`@media print { body > *:not(#print-portal){ display:revert !important } .rx-hide-print,#google_translate_element,audio,[aria-label="Mute background music"],[aria-label="Play background music"]{ display:none !important } @page{ size:A4; margin:0 } body{ margin:0 !important } }`}</style>
+      <style>{`@media print { body > *:not(#print-portal){ display:revert !important } .rx-hide-print,#google_translate_element,audio,[aria-label="Mute background music"],[aria-label="Play background music"]{ display:none !important } @page{ size:A4; margin:0 } body{ margin:0 !important } .rx-print-footer{ position:fixed; bottom:0; left:0; right:0; } }`}</style>
 
       <div className="rx-hide-print mx-auto mb-4 max-w-[210mm] px-3 text-right"><PrintButton /></div>
 
-      <div className="mx-auto flex min-h-[296mm] w-full max-w-[210mm] flex-col bg-white shadow-lg print:shadow-none">
+      <div className="mx-auto w-full max-w-[210mm] bg-white shadow-lg print:shadow-none">
         <Letterhead />
-        <div className="flex-1 px-6 py-4 text-sm text-[#222]">
+        <div className="px-6 py-4 pb-[30mm] text-sm text-[#222]">
           <div className="grid grid-cols-3 gap-x-4 gap-y-1">
             <p><b>ग्राहक:</b> {c.patientName}</p><p><b>मोबाइल:</b> {c.mobile}</p><p><b>लिंग:</b> {c.gender}</p>
             <p><b>जन्म तिथि:</b> {fmtDMY(c.dob)}</p><p><b>समय:</b> {c.tob}</p><p><b>स्थान:</b> {c.place}</p>
@@ -100,7 +101,7 @@ export default async function RxPage({ params }: { params: Promise<{ id: string 
 
           {c.notes && <p className="mt-2 text-[12px]"><b>टिप्पणी:</b> {c.notes}</p>}
         </div>
-        <Footer />
+        <div className="rx-print-footer"><Footer /></div>
       </div>
     </div>
   );

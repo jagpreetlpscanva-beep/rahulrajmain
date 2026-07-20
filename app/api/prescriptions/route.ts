@@ -6,6 +6,7 @@ import {
   searchConsultations,
   consultationsToday,
   getConsultation,
+  readConsultations,
   type Consultation,
 } from "@/lib/prescriptions";
 
@@ -59,9 +60,11 @@ export async function GET(req: Request) {
   const q = url.searchParams.get("q");
   const mobile = url.searchParams.get("mobile");
   const today = url.searchParams.get("today");
+  const all = url.searchParams.get("all");
   if (id) return NextResponse.json({ ok: true, consultation: await getConsultation(id) });
   if (today) return NextResponse.json({ ok: true, consultations: await consultationsToday() });
+  if (all) return NextResponse.json({ ok: true, consultations: (await readConsultations()).slice(0, 500) });
   if (q) return NextResponse.json({ ok: true, consultations: await searchConsultations(q) });
   if (mobile) return NextResponse.json({ ok: true, consultations: await consultationsByMobile(mobile) });
-  return NextResponse.json({ error: "Provide id, q, mobile or today" }, { status: 400 });
+  return NextResponse.json({ error: "Provide id, q, mobile, today or all" }, { status: 400 });
 }
