@@ -72,7 +72,7 @@ export function ConsultationHero() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">Limited-Time Offer</p>
                 <p className="mt-0.5 flex items-end gap-2">
                   <span className="text-lg text-ink/40 line-through">₹999</span>
-                  <span className="font-serif text-3xl font-bold text-gold-700">₹499</span>
+                  <span className="font-serif text-3xl font-bold text-gold-700">₹999</span>
                 </p>
               </div>
               <span className="rounded-lg bg-emerald-100 px-3 py-2 text-center text-xs font-bold leading-tight text-emerald-700">
@@ -88,7 +88,7 @@ export function ConsultationHero() {
                 href={BOOK_HREF}
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-luxe-gold px-6 py-4 font-serif text-base font-bold text-espresso shadow-luxe-btn transition-transform hover:-translate-y-0.5"
               >
-                <CalendarIcon className="h-5 w-5" /> Book Consultation for ₹499 →
+                <CalendarIcon className="h-5 w-5" /> Book Consultation for ₹999 →
               </a>
               <a
                 href={WHATSAPP_HREF}

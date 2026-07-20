@@ -100,7 +100,7 @@ export function ConsultationPopup({ initialSlides }: { initialSlides?: HeroSlide
                 {/* price */}
                 <div className="mt-4 flex items-center gap-3 rounded-2xl border border-gold-500/30 bg-white px-5 py-3 shadow-sm">
                   <span className="text-lg text-ink/40 line-through">₹999</span>
-                  <span className="font-serif text-4xl font-bold text-gold-700">₹499</span>
+                  <span className="font-serif text-4xl font-bold text-gold-700">₹999</span>
                   <span className="ml-auto rounded-lg bg-emerald-100 px-3 py-1.5 text-center text-xs font-bold leading-tight text-emerald-700">
                     50% OFF<br /><span className="font-medium">Limited Time</span>
                   </span>
@@ -121,7 +121,7 @@ export function ConsultationPopup({ initialSlides }: { initialSlides?: HeroSlide
                   onClick={close}
                   className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-gold-gradient px-6 py-4 text-sm font-bold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5"
                 >
-                  <CalendarIcon className="h-5 w-5" /> Book Now for ₹499
+                  <CalendarIcon className="h-5 w-5" /> Book Now for ₹999
                 </a>
                 <a
                   href={WHATSAPP_HREF}

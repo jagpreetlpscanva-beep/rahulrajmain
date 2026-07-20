@@ -168,7 +168,7 @@ export function ConsultationBooking() {
               <Step n={4} label="Consultation Fee">
                 <div className="flex items-center gap-3 rounded-xl border border-gold-500/25 bg-gold-50/60 px-4 py-3">
                   <span className="text-lg text-ink/40 line-through">₹999</span>
-                  <span className="font-serif text-3xl font-bold text-gold-700">₹499</span>
+                  <span className="font-serif text-3xl font-bold text-gold-700">₹999</span>
                   <span className="ml-auto rounded-lg bg-emerald-100 px-3 py-1.5 text-center text-xs font-bold leading-tight text-emerald-700">
                     50% OFF<br /><span className="font-medium">Limited Time Offer</span>
                   </span>
@@ -180,7 +180,7 @@ export function ConsultationBooking() {
               href={bookHref}
               className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-gold-gradient px-6 py-4 text-sm font-bold uppercase tracking-wider text-night shadow-gold-btn transition-transform hover:-translate-y-0.5"
             >
-              <CalendarSvg className="h-5 w-5" /> Book Consultation Now ₹499
+              <CalendarSvg className="h-5 w-5" /> Book Consultation Now ₹999
             </a>
             <div className="mt-3 flex items-center justify-center gap-4 text-xs text-ink/55">
               <span className="inline-flex items-center gap-1.5"><LockSvg className="h-3.5 w-3.5" /> Secure Payment</span>

@@ -17,7 +17,7 @@ export default function ConsultationPage() {
     <>
       <Navbar />
       <main>
-        {/* hero matching the reference: photo, ₹499 offer, stats, trust badges, feature row */}
+        {/* hero matching the reference: photo, ₹999 offer, stats, trust badges, feature row */}
         <ConsultationHero />
         {/* What people say about Dr. Rahul Raj */}
         <Testimonials />

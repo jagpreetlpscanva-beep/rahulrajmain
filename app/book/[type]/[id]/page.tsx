@@ -25,7 +25,7 @@ interface Item {
 }
 
 const FALLBACK: Record<string, Item> = {
-  consultation: { id: "quick", title: "Personal Consultation", price: "₹499", duration: "30 mins", mode: "Video / Call" },
+  consultation: { id: "quick", title: "Personal Consultation", price: "₹999", duration: "30 mins", mode: "Video / Call" },
   report: { id: "quick", title: "Astrology Report", price: "₹999" },
   course: { id: "quick", title: "Course", price: "₹999" },
   pooja: { id: "quick", title: "Online Puja", price: "₹999" },
