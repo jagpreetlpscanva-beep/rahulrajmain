@@ -195,15 +195,15 @@ function ascendant(date: Date, lat: number, lon: number): number {
 }
 
 const PLANETS: { key: string; abbr: string; body?: A.Body; node?: "rahu" | "ketu" }[] = [
-  { key: "Sun", abbr: "Su", body: A.Body.Sun },
-  { key: "Moon", abbr: "Mo", body: A.Body.Moon },
-  { key: "Mars", abbr: "Ma", body: A.Body.Mars },
-  { key: "Mercury", abbr: "Me", body: A.Body.Mercury },
-  { key: "Jupiter", abbr: "Ju", body: A.Body.Jupiter },
-  { key: "Venus", abbr: "Ve", body: A.Body.Venus },
-  { key: "Saturn", abbr: "Sa", body: A.Body.Saturn },
-  { key: "Rahu", abbr: "Ra", node: "rahu" },
-  { key: "Ketu", abbr: "Ke", node: "ketu" },
+  { key: "सूर्य", abbr: "सू", body: A.Body.Sun },
+  { key: "चंद्र", abbr: "चं", body: A.Body.Moon },
+  { key: "मंगल", abbr: "मं", body: A.Body.Mars },
+  { key: "बुध", abbr: "बु", body: A.Body.Mercury },
+  { key: "गुरु", abbr: "गु", body: A.Body.Jupiter },
+  { key: "शुक्र", abbr: "शु", body: A.Body.Venus },
+  { key: "शनि", abbr: "श", body: A.Body.Saturn },
+  { key: "राहु", abbr: "रा", node: "rahu" },
+  { key: "केतु", abbr: "के", node: "ketu" },
 ];
 
 function planetSiderealLon(p: { body?: A.Body; node?: "rahu" | "ketu" }, date: Date): number {
@@ -215,8 +215,8 @@ function planetSiderealLon(p: { body?: A.Body; node?: "rahu" | "ketu" }, date: D
 const nakLord = (nakIdx: number) => NAK_LORD_CYCLE[nakIdx % 9];
 
 /* ---------------- Vimshottari Dasha ---------------- */
-const DASHA_LORDS = ["Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury"];
-const DASHA_YEARS: Record<string, number> = { Ketu: 7, Venus: 20, Sun: 6, Moon: 10, Mars: 7, Rahu: 18, Jupiter: 16, Saturn: 19, Mercury: 17 };
+const DASHA_LORDS = ["केतु", "शुक्र", "सूर्य", "चंद्र", "मंगल", "राहु", "गुरु", "शनि", "बुध"];
+const DASHA_YEARS: Record<string, number> = { "केतु": 7, "शुक्र": 20, "सूर्य": 6, "चंद्र": 10, "मंगल": 7, "राहु": 18, "गुरु": 16, "शनि": 19, "बुध": 17 };
 const YEAR_MS = 365.25 * 24 * 3600 * 1000;
 
 /** Running Mahadasha + Antardasha for `now`, from the Moon's sidereal longitude. */
