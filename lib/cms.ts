@@ -873,15 +873,15 @@ export interface Gemstone {
 }
 
 const REMEDY_SEED: Record<string, string[]> = {
-  Sun: ["Surya ko jal arpan karein (roz subah)", "Aditya Hridaya Stotra ka paath", "Gud-gehun daan karein (Ravivar)", "Tambe ka kada dharan karein", "Om Suryaya Namah - 108 baar"],
-  Moon: ["Shiv ji ko jal chadhayein", "Chandi/silver dharan karein", "Doodh/chawal daan (Somvar)", "Om Chandraya Namah - 108 baar", "Maa ka aashirwad lein"],
-  Mars: ["Hanuman Chalisa ka paath", "Mangalwar vrat rakhein", "Masoor daal daan karein", "Sunder Kaand ka paath", "Om Mangalaya Namah - 108 baar"],
-  Mercury: ["Vishnu Sahasranaam paath", "Hari vastu/moong daan (Budhwar)", "Ganesh ji ki puja", "Om Budhaya Namah - 108 baar", "Kanya/vidyarthiyon ki madad karein"],
-  Jupiter: ["Guruvar vrat rakhein", "Peepal ko jal dein", "Chane ki daal / haldi daan", "Vishnu/Guru mantra jaap", "Om Gurave Namah - 108 baar"],
-  Venus: ["Lakshmi puja (Shukravar)", "Safed vastra/mishthan daan", "Shukra mantra jaap", "Gau seva karein", "Om Shukraya Namah - 108 baar"],
-  Saturn: ["Shani ko sarson ka tel arpan", "Shanivar vrat rakhein", "Kaale til/urad daan", "Hanuman ji ki puja", "Peepal ke neeche deep jalayein", "Om Sham Shanicharaya Namah - 108 baar", "Kauve/garib ko bhojan"],
-  Rahu: ["Rahu mantra jaap", "Neel/saboot urad daan", "Bhairav ji ki puja", "Om Raam Rahave Namah - 108 baar", "Kambal daan karein"],
-  Ketu: ["Ketu mantra jaap", "Kutte ko roti khilayein", "Ganesh ji ki puja", "Om Kem Ketave Namah - 108 baar", "Do-rangi kambal daan"],
+  Sun: ["प्रतिदिन प्रातः सूर्य को जल अर्पित करें", "आदित्य हृदय स्तोत्र का पाठ करें", "रविवार को गुड़-गेहूँ का दान करें", "तांबे का कड़ा धारण करें", "ॐ सूर्याय नमः — 108 बार जाप करें"],
+  Moon: ["शिव जी को जल चढ़ाएं", "चांदी धारण करें", "सोमवार को दूध/चावल का दान करें", "ॐ चन्द्राय नमः — 108 बार जाप करें", "माता का आशीर्वाद लें"],
+  Mars: ["हनुमान चालीसा का पाठ करें", "मंगलवार का व्रत रखें", "मसूर की दाल का दान करें", "सुन्दरकाण्ड का पाठ करें", "ॐ मंगलाय नमः — 108 बार जाप करें"],
+  Mercury: ["विष्णु सहस्रनाम का पाठ करें", "बुधवार को हरी वस्तु/मूँग का दान करें", "गणेश जी की पूजा करें", "ॐ बुधाय नमः — 108 बार जाप करें", "कन्या/विद्यार्थियों की सहायता करें"],
+  Jupiter: ["गुरुवार का व्रत रखें", "पीपल को जल दें", "चने की दाल / हल्दी का दान करें", "विष्णु/गुरु मंत्र का जाप करें", "ॐ गुरवे नमः — 108 बार जाप करें"],
+  Venus: ["शुक्रवार को लक्ष्मी पूजा करें", "सफेद वस्त्र/मिष्ठान्न का दान करें", "शुक्र मंत्र का जाप करें", "गौ सेवा करें", "ॐ शुक्राय नमः — 108 बार जाप करें"],
+  Saturn: ["शनि को सरसों का तेल अर्पित करें", "शनिवार का व्रत रखें", "काले तिल/उड़द का दान करें", "हनुमान जी की पूजा करें", "पीपल के नीचे दीप जलाएं", "ॐ शं शनैश्चराय नमः — 108 बार जाप करें", "कौवे/गरीब को भोजन कराएं"],
+  Rahu: ["राहु मंत्र का जाप करें", "नीले/साबुत उड़द का दान करें", "भैरव जी की पूजा करें", "ॐ राम राहवे नमः — 108 बार जाप करें", "कम्बल का दान करें"],
+  Ketu: ["केतु मंत्र का जाप करें", "कुत्ते को रोटी खिलाएं", "गणेश जी की पूजा करें", "ॐ कें केतवे नमः — 108 बार जाप करें", "दो-रंगी कम्बल का दान करें"],
 };
 
 export const DEFAULT_PLANET_REMEDIES: PlanetRemedy[] = PLANETS.flatMap((p) =>

@@ -161,8 +161,8 @@ export function PrescriptionPad() {
     setSavedId(null); setChart(null); setKundaliState("idle"); setResults(null);
   };
 
-  const save = async () => {
-    if (!patientName.trim() || !mobile.trim()) { alert("ग्राहक का नाम और मोबाइल ज़रूरी है।"); return; }
+  const doSave = async (): Promise<string | null> => {
+    if (!patientName.trim() || !mobile.trim()) { alert("ग्राहक का नाम और मोबाइल ज़रूरी है।"); return null; }
     setSaving(true);
     try {
       const r = await fetch("/api/prescriptions", {
@@ -170,11 +170,12 @@ export function PrescriptionPad() {
         body: JSON.stringify({ patientName, mobile, gender, dob, tob, place, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kundali, rows, gemstones: gems.filter((g) => g.stone), notes }),
       });
       const j = await r.json();
-      if (j.ok) { setSavedId(j.id); fetchToday(); }
-      else alert(j.error || "सेव नहीं हुआ।");
-    } catch { alert("सेव नहीं हुआ — दोबारा प्रयास करें।"); }
+      if (j.ok) { setSavedId(j.id); fetchToday(); return j.id as string; }
+      alert(j.error || "सेव नहीं हुआ।"); return null;
+    } catch { alert("सेव नहीं हुआ — दोबारा प्रयास करें।"); return null; }
     finally { setSaving(false); }
   };
+  const save = () => { doSave(); };
 
   const search = async () => {
     if (!searchQ.trim()) return;
@@ -184,7 +185,7 @@ export function PrescriptionPad() {
   };
 
   /* ---- share ---- */
-  const shareText = useCallback(() => {
+  const shareText = useCallback((link?: string) => {
     const L: string[] = ["🙏 *डॉ० राहुल राज — ज्योतिष परामर्श*"];
     if (patientName) L.push(`ग्राहक: ${patientName}`);
     if (dob) L.push(`जन्म: ${fmtDMY(dob)}  ${tob}  ${place}`);
@@ -195,17 +196,24 @@ export function PrescriptionPad() {
     const gem = gems.filter((g) => g.stone).map((g) => `${g.planet} → ${g.stone} (${g.weight}, ${g.finger})`);
     if (gem.length) { L.push("*रत्न:*"); gem.forEach((x) => L.push("• " + x)); }
     if (notes) L.push(`टिप्पणी: ${notes}`);
-    L.push("— astrorahulraj.in · +91 94153 12590");
+    if (link) L.push(`\n📄 पूरी रिपोर्ट देखें/डाउनलोड करें:\n${link}`);
+    L.push("\n— astrorahulraj.in · +91 94153 12590");
     return L.join("\n");
   }, [patientName, dob, tob, place, mahadasha, antardasha, rows, gems, notes]);
 
-  const shareWhatsApp = () => {
+  const shareWhatsApp = async () => {
+    const savedFor = savedId || (await doSave());
+    if (!savedFor) return;
+    const link = `${window.location.origin}/rx/${savedFor}`;
     const digits = mobile.replace(/\D/g, "");
     const to = digits.length === 10 ? "91" + digits : digits;
-    window.open(`https://wa.me/${to}?text=${encodeURIComponent(shareText())}`, "_blank");
+    window.open(`https://wa.me/${to}?text=${encodeURIComponent(shareText(link))}`, "_blank");
   };
-  const shareEmail = () => {
-    window.location.href = `mailto:?subject=${encodeURIComponent(`ज्योतिष परामर्श — ${patientName || "ग्राहक"}`)}&body=${encodeURIComponent(shareText())}`;
+  const shareEmail = async () => {
+    const savedFor = savedId || (await doSave());
+    if (!savedFor) return;
+    const link = `${window.location.origin}/rx/${savedFor}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(`ज्योतिष परामर्श — ${patientName || "ग्राहक"}`)}&body=${encodeURIComponent(shareText(link))}`;
   };
 
   const inp = "w-full rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-[#8a2020] focus:ring-2 focus:ring-[#8a2020]/15";
@@ -219,7 +227,7 @@ export function PrescriptionPad() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f4eee3] print:bg-white">
+    <div className="flex min-h-screen flex-col bg-[#f4eee3] print:bg-white">
       <style>{`@media print { .rx-noprint { display:none !important; } }`}</style>
 
       {/* ===== PAGE HEADER (top) ===== */}
@@ -236,7 +244,7 @@ export function PrescriptionPad() {
       </div>
 
       {/* ===== body: sidebar + pad ===== */}
-      <div className="mx-auto flex max-w-[1120px] flex-col gap-4 px-3 py-4 lg:flex-row">
+      <div className="mx-auto flex w-full max-w-[1120px] flex-1 flex-col gap-4 px-3 py-4 lg:flex-row">
         {/* sidebar */}
         <aside className="rx-noprint w-full shrink-0 space-y-4 lg:w-64">
           <div className="rounded-xl border border-ink/10 bg-white p-3 shadow-sm">
@@ -380,7 +388,7 @@ export function PrescriptionPad() {
       {/* print doc */}
       {portal && createPortal(
         <div className="hidden print:block">
-          <div className="mx-auto flex min-h-[277mm] w-[210mm] flex-col bg-white text-[#222]">
+          <div className="mx-auto flex min-h-[297mm] w-[210mm] flex-col bg-white text-[#222]">
             <Letterhead />
             <div className="flex-1 px-6 py-4 text-sm">
               <div className="grid grid-cols-3 gap-x-4 gap-y-1">

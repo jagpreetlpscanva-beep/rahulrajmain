@@ -330,10 +330,10 @@ export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "
   let inner = "";
   for (let h = 1; h <= 12; h++) {
     const [x, y] = c[h];
-    inner += `<text x="${x}" y="${y - 10}" font-size="11" fill="${color}" opacity="0.7" text-anchor="middle">${signInHouse(h) + 1}</text>`;
+    inner += `<text x="${x}" y="${y - 12}" font-size="12" fill="${color}" opacity="0.65" text-anchor="middle">${signInHouse(h) + 1}</text>`;
     const ps = byHouse[h] || [];
     ps.forEach((label, n) => {
-      inner += `<text x="${x}" y="${y + 4 + n * 13}" font-size="11" font-weight="bold" fill="#3d2817" text-anchor="middle">${label}</text>`;
+      inner += `<text x="${x}" y="${y + 6 + n * 17}" font-size="16" font-weight="bold" fill="#2a1b0e" text-anchor="middle">${label}</text>`;
     });
   }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}">
