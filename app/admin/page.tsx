@@ -40,7 +40,17 @@ import { ReviewsManager } from "../components/admin/ReviewsManager";
 import type { Booking } from "@/lib/bookings";
 import { Logo } from "../components/ui/Logo";
 import { MoonIcon, OmIcon, StarIcon, UsersIcon, MedalIcon, GiftIcon } from "../components/icons";
-import { DEFAULT_PLANET_REMEDIES, type PlanetRemedy, DEFAULT_GEMSTONES, type Gemstone, PLANETS } from "@/lib/cms";
+import {
+  DEFAULT_PLANET_REMEDIES,
+  type PlanetRemedy,
+  DEFAULT_GEMSTONES,
+  type Gemstone,
+  PLANETS,
+  DEFAULT_MISC_REMEDIES,
+  type MiscRemedy,
+  DEFAULT_REMEDY_COUNTS,
+  type RemedyCountOption,
+} from "@/lib/cms";
 
 /* ---------------- field definitions ---------------- */
 
@@ -254,6 +264,16 @@ const remedyFields: FieldDef[] = [
 ];
 const blankRemedy = (): PlanetRemedy => ({ id: newId("rem"), planet: "Saturn", title: "" });
 
+const miscRemedyFields: FieldDef[] = [
+  { name: "title", label: "Remedy (upay)", type: "textarea", hint: "General remedy not tied to any specific planet — shown under 'Miscellaneous' on the prescription pad." },
+];
+const blankMiscRemedy = (): MiscRemedy => ({ id: newId("rem"), title: "" });
+
+const remedyCountFields: FieldDef[] = [
+  { name: "title", label: "Count / Frequency", type: "text", placeholder: "e.g. 11 or 21 दिन", hint: "Appears as a dropdown option when the astrologer picks a repeatable remedy (Path, Jaap, etc.) on the prescription pad." },
+];
+const blankRemedyCount = (): RemedyCountOption => ({ id: newId("count"), title: "" });
+
 const gemstoneFields: FieldDef[] = [
   { name: "planet", label: "Planet", type: "select", options: [...PLANETS] },
   { name: "stone", label: "Stone", type: "text", placeholder: "Blue Sapphire (Neelam)" },
@@ -277,7 +297,7 @@ const blankConsultation = (): Consultation => ({
   image: "",
 });
 
-type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "coupons" | "blog" | "reviews" | "slots" | "bookings" | "messages" | "planetRemedies" | "gemstones";
+type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "coupons" | "blog" | "reviews" | "slots" | "bookings" | "messages" | "planetRemedies" | "miscRemedies" | "remedyCounts" | "gemstones";
 
 const GridIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -307,6 +327,8 @@ const NAV: { key: TabKey; label: string; icon: (p: { className?: string }) => Re
   { key: "bookings", label: "Bookings", icon: UsersIcon },
   { key: "messages", label: "Messages", icon: UsersIcon },
   { key: "planetRemedies", label: "Planet Remedies", icon: OmIcon },
+  { key: "miscRemedies", label: "Misc. Remedies", icon: OmIcon },
+  { key: "remedyCounts", label: "Remedy Counts", icon: MedalIcon },
   { key: "gemstones", label: "Gemstones", icon: MedalIcon },
 ];
 
@@ -332,6 +354,8 @@ export default function AdminPage() {
   const coupons = useCollection<Coupon>("coupons", DEFAULT_COUPONS);
   const blog = useCollection<BlogPost>("blog", DEFAULT_BLOG);
   const planetRemedies = useCollection<PlanetRemedy>("planetRemedies", DEFAULT_PLANET_REMEDIES);
+  const miscRemedies = useCollection<MiscRemedy>("miscRemedies", DEFAULT_MISC_REMEDIES);
+  const remedyCounts = useCollection<RemedyCountOption>("remedyCounts", DEFAULT_REMEDY_COUNTS);
   const gemstones = useCollection<Gemstone>("gemstones", DEFAULT_GEMSTONES);
 
   useEffect(() => {
@@ -525,6 +549,12 @@ export default function AdminPage() {
           )}
           {tab === "planetRemedies" && (
             <CollectionManager<PlanetRemedy> label="Planet Remedies" items={planetRemedies.items} fields={remedyFields} blank={blankRemedy} onChange={planetRemedies.save} onReset={planetRemedies.reset} previewHref="/prescription-pad" />
+          )}
+          {tab === "miscRemedies" && (
+            <CollectionManager<MiscRemedy> label="Miscellaneous Remedies" items={miscRemedies.items} fields={miscRemedyFields} blank={blankMiscRemedy} onChange={miscRemedies.save} onReset={miscRemedies.reset} previewHref="/prescription-pad" />
+          )}
+          {tab === "remedyCounts" && (
+            <CollectionManager<RemedyCountOption> label="Remedy Count / Frequency Options" items={remedyCounts.items} fields={remedyCountFields} blank={blankRemedyCount} onChange={remedyCounts.save} onReset={remedyCounts.reset} previewHref="/prescription-pad" />
           )}
           {tab === "gemstones" && (
             <CollectionManager<Gemstone> label="Gemstones" items={gemstones.items} fields={gemstoneFields} blank={blankGemstone} onChange={gemstones.save} onReset={gemstones.reset} previewHref="/prescription-pad" />
