@@ -272,6 +272,9 @@ export function PrescriptionPad() {
       const data = await buildPdfData();
       const blob = await generatePrescriptionPdf(data, "digital");
       downloadPdf(blob, `${patientName || "prescription"}-digital.pdf`);
+    } catch (err) {
+      console.error(err);
+      alert(`PDF नहीं बन सकी: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setPdfBusy(null);
     }
@@ -279,11 +282,23 @@ export function PrescriptionPad() {
 
   const openPrintPdf = async () => {
     setPdfBusy("print");
+    // open the tab synchronously (still inside the click handler) so browsers
+    // don't treat it as an unrequested popup once the async PDF build finishes
+    const tab = window.open("", "_blank");
     try {
       const data = await buildPdfData();
       const blob = await generatePrescriptionPdf(data, "print");
       // opened at the exact configured page size; viewer should print at "Actual size / 100%", no "Fit to page"
-      openPdfInNewTab(blob);
+      if (tab) {
+        const url = URL.createObjectURL(blob);
+        tab.location.href = url;
+      } else {
+        openPdfInNewTab(blob); // popup was blocked anyway — fall back, browser will show its own blocked-popup notice
+      }
+    } catch (err) {
+      console.error(err);
+      tab?.close();
+      alert(`प्रिंट PDF नहीं बन सकी: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setPdfBusy(null);
     }
