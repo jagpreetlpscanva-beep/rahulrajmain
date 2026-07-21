@@ -12,7 +12,7 @@ type MiscRem = { id: string; title: string };
 type CountOpt = { id: string; title: string };
 type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string };
 type Row = { planet: string; remedies: string[]; notes: string; remedyCounts?: Record<string, string> };
-type KPlanet = { name: string; abbr: string; lon: number; rashi: number; house: number; sign: string; nakshatra: string; nakshatra_lord?: string };
+type KPlanet = { name: string; color?: string; abbr: string; lon: number; rashi: number; house: number; sign: string; nakshatra: string; nakshatra_lord?: string };
 type Dasha = { mahadasha: string; antardasha: string };
 type Consultation = {
   id: string; patientName: string; mobile: string; gender: string; dob: string; tob: string; place: string;
@@ -108,6 +108,8 @@ export function PrescriptionPad() {
   const [yog, setYog] = useState("");
 
   const [chart, setChart] = useState<string | null>(null);
+  const [d9, setD9] = useState<string | null>(null);
+  const [gochar, setGochar] = useState<string | null>(null);
   const [kundali, setKundali] = useState<unknown>(null);
   const [kundaliState, setKundaliState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [zoom, setZoom] = useState(false);
@@ -152,7 +154,7 @@ export function PrescriptionPad() {
         .then((r) => r.json())
         .then((j) => {
           if (j.ok) {
-            setChart(j.chart); setKundali(j.kundali); setKundaliState("done");
+            setChart(j.chart); setD9(j.d9 || null); setGochar(j.gochar || null); setKundali(j.kundali); setKundaliState("done");
             const dasha = (j.kundali as { dasha?: Dasha })?.dasha;
             if (dasha) { setMahadasha(dasha.mahadasha); setAntardasha(dasha.antardasha); }
           } else setKundaliState("error");
@@ -212,7 +214,7 @@ export function PrescriptionPad() {
   const resetAll = () => {
     setPatientName(""); setMobile(""); setGender(""); setDob(""); setDobText(""); setTob(""); setPlace("Lucknow");
     setMahadasha(""); setAntardasha(""); setPratyantar(""); setDosha(""); setYog("");
-    setChart(null); setKundali(null); setKundaliState("idle");
+    setChart(null); setD9(null); setGochar(null); setKundali(null); setKundaliState("idle");
     setRows([emptyRow()]); setGems([blankGem()]); setNotes(""); setSavedId(null);
   };
 
@@ -220,7 +222,7 @@ export function PrescriptionPad() {
     setPatientName(c.patientName); setMobile(c.mobile); setGender(c.gender); setDob(c.dob); setDobText(fmtDMY(c.dob)); setTob(c.tob); setPlace(c.place || "Lucknow");
     setMahadasha(c.mahadasha); setAntardasha(c.antardasha); setPratyantar(c.pratyantar); setDosha(c.dosha); setYog(c.yog);
     setKundali(c.kundali); setRows(c.rows?.length ? c.rows : [emptyRow()]); setGems(c.gemstones?.length ? c.gemstones : [blankGem()]); setNotes(c.notes);
-    setSavedId(c.id); setChart(null); setKundaliState("idle"); setResults(null);
+    setSavedId(c.id); setChart(null); setD9(null); setGochar(null); setKundaliState("idle"); setResults(null);
   };
 
   const doSave = async (): Promise<string | null> => {
@@ -471,8 +473,31 @@ export function PrescriptionPad() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-[11px]">
                   <thead><tr className="text-left text-ink/55"><th className="px-1">ग्रह</th><th className="px-1">राशि</th><th className="px-1">अंश</th><th className="px-1">भाव</th><th className="px-1">नक्षत्र</th></tr></thead>
-                  <tbody>{kPlanets.map((p) => (<tr key={p.name} className="border-t border-ink/10"><td className="px-1 font-semibold">{p.name}</td><td className="px-1">{p.sign}</td><td className="px-1 font-mono">{fmtDeg(p.lon)}</td><td className="px-1">{p.house}</td><td className="px-1">{p.nakshatra}</td></tr>))}</tbody>
+                  <tbody>{kPlanets.map((p) => (<tr key={p.name} className="border-t border-ink/10"><td className="px-1 font-bold" style={{ color: p.color }}>{p.name}</td><td className="px-1">{p.sign}</td><td className="px-1 font-mono">{fmtDeg(p.lon)}</td><td className="px-1">{p.house}</td><td className="px-1">{p.nakshatra}</td></tr>))}</tbody>
                 </table>
+              </div>
+            </div>
+          )}
+
+          {/* D9 (Navamsa) + Gochar — astrologer reference only, NOT in PDF/print */}
+          {(d9 || gochar) && (
+            <div className="rx-noprint mt-4">
+              <p className="mb-2 text-xs font-bold text-ink/50">केवल ज्योतिषी के संदर्भ हेतु (PDF/प्रिंट में नहीं आएगा)</p>
+              <div className="grid grid-cols-2 gap-4">
+                {d9 && (
+                  <div className="rounded-xl border border-ink/10 bg-white p-2 text-center">
+                    <p className="mb-1 text-sm font-bold text-[#a01414]">नवांश (D9)</p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={d9} alt="Navamsa D9" className="mx-auto w-full max-w-[240px]" />
+                  </div>
+                )}
+                {gochar && (
+                  <div className="rounded-xl border border-ink/10 bg-white p-2 text-center">
+                    <p className="mb-1 text-sm font-bold text-[#1a5276]">गोचर (वर्तमान)</p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={gochar} alt="Gochar" className="mx-auto w-full max-w-[240px]" />
+                  </div>
+                )}
               </div>
             </div>
           )}

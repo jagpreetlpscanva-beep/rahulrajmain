@@ -39,10 +39,18 @@ export async function POST(req: Request) {
 
   try {
     const k = computeKundli({ day: d, month: m, year: y, hour: hh || 0, min: mm || 0, lat, lon, tzone });
+    // Gochar (current transit) at the same place — astrologer reference only.
+    const nw = new Date();
+    const g = computeKundli({
+      day: nw.getDate(), month: nw.getMonth() + 1, year: nw.getFullYear(),
+      hour: nw.getHours(), min: nw.getMinutes(), lat, lon, tzone: 5.5,
+    });
     return NextResponse.json({
       ok: true,
       kundali: k,
       chart: chartSvgDataUri(k, "D1", "#a01414"),
+      d9: chartSvgDataUri(k, "D9", "#a01414"),     // Navamsa — UI only
+      gochar: chartSvgDataUri(g, "D1", "#1a5276"), // Gochar — UI only
     });
   } catch (e) {
     return NextResponse.json({ error: "calc_error", message: (e as Error).message }, { status: 500 });

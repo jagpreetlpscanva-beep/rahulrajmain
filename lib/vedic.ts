@@ -194,6 +194,19 @@ function ascendant(date: Date, lat: number, lon: number): number {
   return sidereal(lambda, date);
 }
 
+/** Traditional planet colours (keyed by the Hindi name; readable on white). */
+export const PLANET_COLORS: Record<string, string> = {
+  "सूर्य": "#e2661a", // orange
+  "चंद्र": "#5b6b8c", // silver-blue
+  "मंगल": "#cc2222", // red
+  "बुध": "#1a8f3c",  // green
+  "गुरु": "#b8860b", // yellow/gold
+  "शुक्र": "#c026a3", // magenta
+  "शनि": "#1a2352",  // dark blue/black
+  "राहु": "#555555", // smoky grey
+  "केतु": "#7a4a1e", // brown
+};
+
 const PLANETS: { key: string; abbr: string; body?: A.Body; node?: "rahu" | "ketu" }[] = [
   { key: "सूर्य", abbr: "सू", body: A.Body.Sun },
   { key: "चंद्र", abbr: "चं", body: A.Body.Moon },
@@ -266,7 +279,7 @@ export function computeKundli(p: KundliInput) {
     const rashi = Math.floor(lon / 30) % 12;
     const nak = Math.floor(lon / (360 / 27)) % 27;
     return {
-      name: pl.key, abbr: pl.abbr, lon, rashi,
+      name: pl.key, abbr: pl.abbr, color: PLANET_COLORS[pl.key] || "#2a1b0e", lon, rashi,
       house: ((rashi - ascRashi + 12) % 12) + 1,
       sign: RASHIS[rashi], nakshatra: NAKSHATRAS[nak], nakshatra_lord: nakLord(nak),
     };
@@ -306,13 +319,13 @@ export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "
   // sign occupying each of the 12 houses (house1 = ascSign, going forward)
   const signInHouse = (h: number) => ((ascSign + h - 1) % 12);
   // planets grouped by house
-  const byHouse: Record<number, string[]> = {};
+  const byHouse: Record<number, { label: string; color: string }[]> = {};
   for (const pl of k.planets) {
     const sign = division === "D1" ? pl.rashi : navamsaSign(pl.lon);
     const house = ((sign - ascSign + 12) % 12) + 1;
-    // planet + its degree-in-sign (small), e.g. "Sa 12°"
+    // planet (Hindi) + its degree-in-sign, e.g. "श 12°"
     const deg = division === "D1" ? ` ${Math.floor(((pl.lon % 30) + 30) % 30)}°` : "";
-    (byHouse[house] ||= []).push(`${pl.abbr}${deg}`);
+    (byHouse[house] ||= []).push({ label: `${pl.abbr}${deg}`, color: (pl as { color?: string }).color || "#2a1b0e" });
   }
 
   const S = 400;
@@ -332,8 +345,8 @@ export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "
     const [x, y] = c[h];
     inner += `<text x="${x}" y="${y - 12}" font-size="12" fill="${color}" opacity="0.65" text-anchor="middle">${signInHouse(h) + 1}</text>`;
     const ps = byHouse[h] || [];
-    ps.forEach((label, n) => {
-      inner += `<text x="${x}" y="${y + 6 + n * 17}" font-size="16" font-weight="bold" fill="#2a1b0e" text-anchor="middle">${label}</text>`;
+    ps.forEach((p, n) => {
+      inner += `<text x="${x}" y="${y + 6 + n * 17}" font-size="16" font-weight="bold" fill="${p.color}" text-anchor="middle">${p.label}</text>`;
     });
   }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}">
