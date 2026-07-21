@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { CITIES } from "@/lib/calculators";
-import { PLANETS } from "@/lib/cms";
+import { PLANETS, MISC_REMEDY_CATEGORY } from "@/lib/cms";
 
 /* ---------------- types ---------------- */
 type Rem = { id: string; planet: string; title: string };
+type MiscRem = { id: string; title: string };
+type CountOpt = { id: string; title: string };
 type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string };
-type Row = { planet: string; remedies: string[]; notes: string };
+type Row = { planet: string; remedies: string[]; notes: string; remedyCounts?: Record<string, string> };
 type KPlanet = { name: string; abbr: string; lon: number; rashi: number; house: number; sign: string; nakshatra: string; nakshatra_lord?: string };
 type Dasha = { mahadasha: string; antardasha: string };
 type Consultation = {
@@ -68,6 +70,8 @@ function Footer() {
 /* ---------------- main ---------------- */
 export function PrescriptionPad() {
   const [remedies, setRemedies] = useState<Rem[]>([]);
+  const [miscRemedies, setMiscRemedies] = useState<MiscRem[]>([]);
+  const [countOptions, setCountOptions] = useState<CountOpt[]>([]);
   const [gemDefaults, setGemDefaults] = useState<Gem[]>([]);
 
   const [patientName, setPatientName] = useState("");
@@ -112,6 +116,8 @@ export function PrescriptionPad() {
 
   useEffect(() => {
     fetch("/api/content/planetRemedies").then((r) => r.json()).then((d) => Array.isArray(d) && setRemedies(d)).catch(() => {});
+    fetch("/api/content/miscRemedies").then((r) => r.json()).then((d) => Array.isArray(d) && setMiscRemedies(d)).catch(() => {});
+    fetch("/api/content/remedyCounts").then((r) => r.json()).then((d) => Array.isArray(d) && setCountOptions(d)).catch(() => {});
     fetch("/api/content/gemstones").then((r) => r.json()).then((d) => Array.isArray(d) && setGemDefaults(d)).catch(() => {});
     fetchToday();
   }, [fetchToday]);
@@ -136,12 +142,38 @@ export function PrescriptionPad() {
     return () => clearTimeout(t);
   }, [dob, tob, place]);
 
-  const remediesFor = useCallback((planet: string) => remedies.filter((r) => r.planet === planet), [remedies]);
+  const remediesFor = useCallback(
+    (planet: string): Rem[] =>
+      planet === MISC_REMEDY_CATEGORY
+        ? miscRemedies.map((r) => ({ id: r.id, planet: MISC_REMEDY_CATEGORY, title: r.title }))
+        : remedies.filter((r) => r.planet === planet),
+    [remedies, miscRemedies]
+  );
   const kPlanets = useMemo<KPlanet[]>(() => ((kundali as { planets?: KPlanet[] } | null)?.planets ?? []), [kundali]);
 
   const setRow = (i: number, patch: Partial<Row>) => setRows((rs) => rs.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
   const toggleRemedy = (i: number, remedy: string) =>
-    setRows((rs) => rs.map((r, idx) => idx === i ? { ...r, remedies: r.remedies.includes(remedy) ? r.remedies.filter((x) => x !== remedy) : [...r.remedies, remedy] } : r));
+    setRows((rs) => rs.map((r, idx) => {
+      if (idx !== i) return r;
+      const checked = r.remedies.includes(remedy);
+      const remedies = checked ? r.remedies.filter((x) => x !== remedy) : [...r.remedies, remedy];
+      const remedyCounts = { ...(r.remedyCounts || {}) };
+      if (checked) delete remedyCounts[remedy]; // clear its count when unchecked
+      return { ...r, remedies, remedyCounts };
+    }));
+  /** Set (or clear, when count === "") the admin-defined count/frequency picked for one remedy on a row. */
+  const setRemedyCount = (i: number, remedy: string, count: string) =>
+    setRows((rs) => rs.map((r, idx) => {
+      if (idx !== i) return r;
+      const remedyCounts = { ...(r.remedyCounts || {}) };
+      if (count) remedyCounts[remedy] = count; else delete remedyCounts[remedy];
+      return { ...r, remedyCounts };
+    }));
+  /** Remedy text with its selected count appended, e.g. "रामरक्षा पाठ (11)". */
+  const remedyLine = (row: Row, title: string) => {
+    const c = row.remedyCounts?.[title];
+    return c ? `${title} (${c})` : title;
+  };
 
   const setGemAt = (i: number, patch: Partial<Gem>) => setGems((gs) => gs.map((g, idx) => (idx === i ? { ...g, ...patch } : g)));
   const loadGemInto = (i: number, planet: string) => {
@@ -198,7 +230,7 @@ export function PrescriptionPad() {
     if (dob) L.push(`जन्म: ${fmtDMY(dob)}  ${tob}  ${place}`);
     if (mahadasha) L.push(`महादशा: ${mahadasha}`);
     if (antardasha) L.push(`अन्तर्दशा: ${antardasha}`);
-    const rem = rows.filter((r) => r.planet && r.remedies.length).map((r) => `${r.planet}: ${r.remedies.join(", ")}`);
+    const rem = rows.filter((r) => r.planet && r.remedies.length).map((r) => `${r.planet}: ${r.remedies.map((x) => remedyLine(r, x)).join(", ")}`);
     if (rem.length) { L.push("*उपाय:*"); rem.forEach((x) => L.push("• " + x)); }
     const gem = gems.filter((g) => g.stone).map((g) => `${g.planet} → ${g.stone} (${g.weight}, ${g.finger})`);
     if (gem.length) { L.push("*रत्न:*"); gem.forEach((x) => L.push("• " + x)); }
@@ -336,18 +368,36 @@ export function PrescriptionPad() {
             <div className="space-y-3">
               {rows.map((row, i) => (
                 <div key={i} className="rounded-xl border border-[#8a2020]/20 p-3">
-                  <div><label className={lbl}>ग्रह</label>
-                    <select className={`${inp} sm:max-w-[220px]`} value={row.planet} onChange={(e) => setRow(i, { planet: e.target.value, remedies: [] })}>
-                      <option value="">—</option>{PLANETS.map((p) => <option key={p} value={p}>{p}</option>)}
+                  <div><label className={lbl}>ग्रह / श्रेणी</label>
+                    <select className={`${inp} sm:max-w-[220px]`} value={row.planet} onChange={(e) => setRow(i, { planet: e.target.value, remedies: [], remedyCounts: {} })}>
+                      <option value="">—</option>
+                      {PLANETS.map((p) => <option key={p} value={p}>{p}</option>)}
+                      <option value={MISC_REMEDY_CATEGORY}>{MISC_REMEDY_CATEGORY} (सामान्य उपाय)</option>
                     </select>
                   </div>
                   {row.planet && (
                     <div className="mt-2">
                       <label className={lbl}>उपाय चुनें</label>
-                      <div className="grid gap-1 sm:grid-cols-2">
-                        {remediesFor(row.planet).length === 0 && <p className="text-xs text-ink/45">इस ग्रह के उपाय एडमिन में जोड़ें।</p>}
+                      <div className="grid gap-1.5 sm:grid-cols-2">
+                        {remediesFor(row.planet).length === 0 && <p className="text-xs text-ink/45">इस श्रेणी के उपाय एडमिन में जोड़ें।</p>}
                         {remediesFor(row.planet).map((r) => (
-                          <label key={r.id} className="flex items-start gap-2 text-sm"><input type="checkbox" className="mt-1" checked={row.remedies.includes(r.title)} onChange={() => toggleRemedy(i, r.title)} /><span>{r.title}</span></label>
+                          <div key={r.id} className="flex flex-wrap items-center gap-1.5 text-sm">
+                            <label className="flex items-start gap-2">
+                              <input type="checkbox" className="mt-1" checked={row.remedies.includes(r.title)} onChange={() => toggleRemedy(i, r.title)} />
+                              <span>{r.title}</span>
+                            </label>
+                            {row.remedies.includes(r.title) && countOptions.length > 0 && (
+                              <select
+                                className="rounded-md border border-ink/20 px-1.5 py-0.5 text-xs"
+                                value={row.remedyCounts?.[r.title] || ""}
+                                onChange={(e) => setRemedyCount(i, r.title, e.target.value)}
+                                title="संख्या / बार (वैकल्पिक)"
+                              >
+                                <option value="">संख्या —</option>
+                                {countOptions.map((c) => <option key={c.id} value={c.title}>{c.title}</option>)}
+                              </select>
+                            )}
+                          </div>
                         ))}
                       </div>
                     </div>
@@ -424,7 +474,7 @@ export function PrescriptionPad() {
               {rows.some((r) => r.planet) && (
                 <table className="mt-3 w-full border-collapse text-[12px]">
                   <thead><tr className="bg-[#f2e4d6] text-left"><th className="border border-ink/20 px-2 py-1">ग्रह</th><th className="border border-ink/20 px-2 py-1">उपाय</th><th className="border border-ink/20 px-2 py-1">टिप्पणी</th></tr></thead>
-                  <tbody>{rows.filter((r) => r.planet).map((r, i) => (<tr key={i}><td className="border border-ink/20 px-2 py-1 align-top">{r.planet}</td><td className="border border-ink/20 px-2 py-1 align-top">{r.remedies.map((x, j) => <div key={j}>• {x}</div>)}</td><td className="border border-ink/20 px-2 py-1 align-top">{r.notes}</td></tr>))}</tbody>
+                  <tbody>{rows.filter((r) => r.planet).map((r, i) => (<tr key={i}><td className="border border-ink/20 px-2 py-1 align-top">{r.planet}</td><td className="border border-ink/20 px-2 py-1 align-top">{r.remedies.map((x, j) => <div key={j}>• {remedyLine(r, x)}</div>)}</td><td className="border border-ink/20 px-2 py-1 align-top">{r.notes}</td></tr>))}</tbody>
                 </table>
               )}
               {gems.some((g) => g.stone) && (
