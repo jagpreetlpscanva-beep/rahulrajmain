@@ -35,6 +35,24 @@ const fmtDMY = (ymd: string) => {
   const [y, m, d] = ymd.split("-");
   return d && m && y ? `${d}/${m}/${y}` : ymd;
 };
+/** As the user types digits, auto-insert "/" -> "DD/MM/YYYY" (max 8 digits). */
+function maskDMY(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 8);
+  let out = digits.slice(0, 2);
+  if (digits.length > 2) out += "/" + digits.slice(2, 4);
+  if (digits.length > 4) out += "/" + digits.slice(4, 8);
+  return out;
+}
+/** "DD/MM/YYYY" -> "YYYY-MM-DD", or "" if incomplete/not a real calendar date. */
+function parseDMY(str: string): string {
+  const m = str.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return "";
+  const [, d, mo, y] = m;
+  const day = Number(d), month = Number(mo), year = Number(y);
+  const dt = new Date(year, month - 1, day);
+  if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return "";
+  return `${y}-${mo}-${d}`;
+}
 
 /* ---------------- letterhead + footer (page banners + print) ---------------- */
 function Letterhead() {
@@ -78,6 +96,7 @@ export function PrescriptionPad() {
   const [mobile, setMobile] = useState("");
   const [gender, setGender] = useState("");
   const [dob, setDob] = useState("");
+  const [dobText, setDobText] = useState(""); // what's shown in the DD/MM/YYYY input
   const [tob, setTob] = useState("");
   const [place, setPlace] = useState("Lucknow");
 
@@ -142,6 +161,14 @@ export function PrescriptionPad() {
     return () => clearTimeout(t);
   }, [dob, tob, place]);
 
+  /** Birth date field: mask keystrokes as DD/MM/YYYY, commit to ISO `dob` only once complete & valid. */
+  const onDobChange = (raw: string) => {
+    const masked = maskDMY(raw);
+    setDobText(masked);
+    const iso = parseDMY(masked);
+    setDob(iso); // "" while incomplete/invalid — avoids firing kundli generation on a half-typed date
+  };
+
   const remediesFor = useCallback(
     (planet: string): Rem[] =>
       planet === MISC_REMEDY_CATEGORY
@@ -182,14 +209,14 @@ export function PrescriptionPad() {
   };
 
   const resetAll = () => {
-    setPatientName(""); setMobile(""); setGender(""); setDob(""); setTob(""); setPlace("Lucknow");
+    setPatientName(""); setMobile(""); setGender(""); setDob(""); setDobText(""); setTob(""); setPlace("Lucknow");
     setMahadasha(""); setAntardasha(""); setPratyantar(""); setDosha(""); setYog("");
     setChart(null); setKundali(null); setKundaliState("idle");
     setRows([emptyRow()]); setGems([blankGem()]); setNotes(""); setSavedId(null);
   };
 
   const load = (c: Consultation) => {
-    setPatientName(c.patientName); setMobile(c.mobile); setGender(c.gender); setDob(c.dob); setTob(c.tob); setPlace(c.place || "Lucknow");
+    setPatientName(c.patientName); setMobile(c.mobile); setGender(c.gender); setDob(c.dob); setDobText(fmtDMY(c.dob)); setTob(c.tob); setPlace(c.place || "Lucknow");
     setMahadasha(c.mahadasha); setAntardasha(c.antardasha); setPratyantar(c.pratyantar); setDosha(c.dosha); setYog(c.yog);
     setKundali(c.kundali); setRows(c.rows?.length ? c.rows : [emptyRow()]); setGems(c.gemstones?.length ? c.gemstones : [blankGem()]); setNotes(c.notes);
     setSavedId(null); setChart(null); setKundaliState("idle"); setResults(null);
@@ -322,7 +349,7 @@ export function PrescriptionPad() {
             <div><label className={lbl}>ग्राहक का नाम</label><input className={inp} value={patientName} onChange={(e) => setPatientName(e.target.value)} /></div>
             <div><label className={lbl}>मोबाइल नंबर</label><input className={inp} value={mobile} onChange={(e) => setMobile(e.target.value)} /></div>
             <div><label className={lbl}>लिंग</label><select className={inp} value={gender} onChange={(e) => setGender(e.target.value)}><option value="">—</option><option>पुरुष</option><option>स्त्री</option><option>अन्य</option></select></div>
-            <div><label className={lbl}>जन्म तिथि</label><input type="date" className={inp} value={dob} onChange={(e) => setDob(e.target.value)} />{dob && <span className="mt-0.5 block text-[10px] text-ink/45">{fmtDMY(dob)}</span>}</div>
+            <div><label className={lbl}>जन्म तिथि</label><input type="text" inputMode="numeric" placeholder="DD/MM/YYYY" maxLength={10} className={inp} value={dobText} onChange={(e) => onDobChange(e.target.value)} /></div>
             <div><label className={lbl}>जन्म समय</label><input type="time" className={inp} value={tob} onChange={(e) => setTob(e.target.value)} /></div>
             <div><label className={lbl}>जन्म स्थान</label><input list="rx-cities" className={inp} value={place} onChange={(e) => setPlace(e.target.value)} /><datalist id="rx-cities">{CITIES.map((c) => <option key={c.name} value={c.name} />)}</datalist></div>
           </div>
