@@ -256,7 +256,7 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
   }
 
   const bytes = await doc.save();
-  return new Blob([bytes], { type: "application/pdf" });
+  return new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
 }
 
 /** Trigger a browser download of a generated PDF blob. */
