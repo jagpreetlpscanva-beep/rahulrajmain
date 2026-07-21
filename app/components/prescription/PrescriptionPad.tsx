@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { CITIES } from "@/lib/calculators";
 import { PLANETS, MISC_REMEDY_CATEGORY } from "@/lib/cms";
+import { generatePrescriptionPdf, rasterizeSvgDataUri, downloadPdf, openPdfInNewTab, type PrescriptionPdfData } from "@/lib/prescriptionPad/generatePdf";
 
 /* ---------------- types ---------------- */
 type Rem = { id: string; planet: string; title: string };
@@ -238,6 +239,56 @@ export function PrescriptionPad() {
   };
   const save = () => { doSave(); };
 
+  const [pdfBusy, setPdfBusy] = useState<"digital" | "print" | null>(null);
+
+  /** Assemble the data payload the PDF generator needs, rasterizing the SVG chart first. */
+  const buildPdfData = useCallback(async (): Promise<PrescriptionPdfData> => {
+    const chartImageDataUri = chart ? await rasterizeSvgDataUri(chart) : null;
+    return {
+      patientName,
+      mobile,
+      gender,
+      dob: fmtDMY(dob),
+      tob,
+      place,
+      date: fmtDMY(now.toISOString().slice(0, 10)),
+      astrologer,
+      mahadasha,
+      antardasha,
+      pratyantar,
+      dosha,
+      yog,
+      chartImageDataUri,
+      planets: kPlanets.map((p) => ({ name: p.name, sign: p.sign, degree: fmtDeg(p.lon), house: p.house, nakshatra: p.nakshatra })),
+      remedyRows: rows.filter((r) => r.planet).map((r) => ({ planet: r.planet, remedyLines: r.remedies.map((x) => remedyLine(r, x)), notes: r.notes })),
+      gemRows: gems.filter((g) => g.stone),
+      notes,
+    };
+  }, [chart, patientName, mobile, gender, dob, tob, place, now, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kPlanets, rows, gems, notes]);
+
+  const downloadDigitalPdf = async () => {
+    setPdfBusy("digital");
+    try {
+      const data = await buildPdfData();
+      const blob = await generatePrescriptionPdf(data, "digital");
+      downloadPdf(blob, `${patientName || "prescription"}-digital.pdf`);
+    } finally {
+      setPdfBusy(null);
+    }
+  };
+
+  const openPrintPdf = async () => {
+    setPdfBusy("print");
+    try {
+      const data = await buildPdfData();
+      const blob = await generatePrescriptionPdf(data, "print");
+      // opened at the exact configured page size; viewer should print at "Actual size / 100%", no "Fit to page"
+      openPdfInNewTab(blob);
+    } finally {
+      setPdfBusy(null);
+    }
+  };
+
   const search = async () => {
     if (!searchQ.trim()) return;
     const r = await fetch(`/api/prescriptions?q=${encodeURIComponent(searchQ)}`);
@@ -301,7 +352,8 @@ export function PrescriptionPad() {
 
       {/* ===== controls ===== */}
       <div className="rx-noprint mx-auto flex max-w-[1120px] flex-wrap items-center gap-2 px-3 pt-4">
-        <button onClick={() => window.print()} className={`${btn} bg-[#6d1414] text-white`}>📄 PDF सेव करें</button>
+        <button onClick={downloadDigitalPdf} disabled={pdfBusy !== null} className={`${btn} bg-[#6d1414] text-white disabled:opacity-60`}>{pdfBusy === "digital" ? "बन रहा है…" : "📄 PDF सेव करें (Digital)"}</button>
+        <button onClick={openPrintPdf} disabled={pdfBusy !== null} className={`${btn} bg-[#3a3a3a] text-white disabled:opacity-60`}>{pdfBusy === "print" ? "बन रहा है…" : "🖨️ प्रिंट (बिना बैकग्राउंड)"}</button>
         <button onClick={shareWhatsApp} className={`${btn} bg-emerald-600 text-white`}>💬 WhatsApp</button>
         <button onClick={shareEmail} className={`${btn} bg-sky-700 text-white`}>📧 ईमेल</button>
         <button onClick={save} disabled={saving} className={`${btn} bg-amber-600 text-white disabled:opacity-60`}>{saving ? "सेव हो रहा…" : "💾 सेव करें"}</button>
