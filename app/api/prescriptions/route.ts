@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { newId } from "@/lib/cms";
 import {
   addConsultation,
+  updateConsultation,
   consultationsByMobile,
   searchConsultations,
   consultationsToday,
@@ -51,6 +52,50 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Could not save consultation" }, { status: 500 });
   }
   return NextResponse.json({ ok: true, id: c.id });
+}
+
+/** PUT ?id= — update an already-saved consultation in place (no duplicate created). */
+export async function PUT(req: Request) {
+  const url = new URL(req.url);
+  const id = url.searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+
+  let b: Partial<Consultation> = {};
+  try {
+    b = await req.json();
+  } catch {
+    /* ignore */
+  }
+  if (!b.patientName || !b.mobile) {
+    return NextResponse.json({ error: "Patient name and mobile are required" }, { status: 400 });
+  }
+
+  const patch: Partial<Consultation> = {
+    patientName: String(b.patientName).trim(),
+    mobile: String(b.mobile).trim(),
+    gender: String(b.gender || ""),
+    dob: String(b.dob || ""),
+    tob: String(b.tob || ""),
+    place: String(b.place || ""),
+    astrologer: String(b.astrologer || "Dr. Rahul Raj"),
+    mahadasha: String(b.mahadasha || ""),
+    antardasha: String(b.antardasha || ""),
+    pratyantar: String(b.pratyantar || ""),
+    dosha: String(b.dosha || ""),
+    yog: String(b.yog || ""),
+    kundali: b.kundali ?? null,
+    rows: Array.isArray(b.rows) ? b.rows : [],
+    gemstones: Array.isArray(b.gemstones) ? b.gemstones : [],
+    notes: String(b.notes || ""),
+  };
+
+  try {
+    const ok = await updateConsultation(id, patch);
+    if (!ok) return NextResponse.json({ error: "Consultation not found" }, { status: 404 });
+  } catch {
+    return NextResponse.json({ error: "Could not update consultation" }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true, id });
 }
 
 /** GET ?id= | ?q=name-or-mobile | ?mobile= | ?today=1 — patient history. */
