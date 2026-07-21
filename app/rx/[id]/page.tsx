@@ -87,7 +87,7 @@ export default async function RxPage({ params }: { params: Promise<{ id: string 
           {c.rows.some((r) => r.planet) && (
             <table className="mt-3 w-full border-collapse text-[12px]">
               <thead><tr className="bg-[#f2e4d6] text-left"><th className="border border-black/15 px-2 py-1">ग्रह</th><th className="border border-black/15 px-2 py-1">उपाय</th><th className="border border-black/15 px-2 py-1">टिप्पणी</th></tr></thead>
-              <tbody>{c.rows.filter((r) => r.planet).map((r, i) => (<tr key={i}><td className="border border-black/15 px-2 py-1 align-top">{r.planet}</td><td className="border border-black/15 px-2 py-1 align-top">{r.remedies.map((x, j) => <div key={j}>• {x}</div>)}</td><td className="border border-black/15 px-2 py-1 align-top">{r.notes}</td></tr>))}</tbody>
+              <tbody>{c.rows.filter((r) => r.planet).map((r, i) => (<tr key={i}><td className="border border-black/15 px-2 py-1 align-top">{r.planet}</td><td className="border border-black/15 px-2 py-1 align-top">{r.remedies.map((x, j) => <div key={j}>• {r.remedyCounts?.[x] ? `${x} (${r.remedyCounts[x]})` : x}</div>)}</td><td className="border border-black/15 px-2 py-1 align-top">{r.notes}</td></tr>))}</tbody>
             </table>
           )}
 
