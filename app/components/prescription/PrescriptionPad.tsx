@@ -220,17 +220,18 @@ export function PrescriptionPad() {
     setPatientName(c.patientName); setMobile(c.mobile); setGender(c.gender); setDob(c.dob); setDobText(fmtDMY(c.dob)); setTob(c.tob); setPlace(c.place || "Lucknow");
     setMahadasha(c.mahadasha); setAntardasha(c.antardasha); setPratyantar(c.pratyantar); setDosha(c.dosha); setYog(c.yog);
     setKundali(c.kundali); setRows(c.rows?.length ? c.rows : [emptyRow()]); setGems(c.gemstones?.length ? c.gemstones : [blankGem()]); setNotes(c.notes);
-    setSavedId(null); setChart(null); setKundaliState("idle"); setResults(null);
+    setSavedId(c.id); setChart(null); setKundaliState("idle"); setResults(null);
   };
 
   const doSave = async (): Promise<string | null> => {
     if (!patientName.trim() || !mobile.trim()) { alert("ग्राहक का नाम और मोबाइल ज़रूरी है।"); return null; }
     setSaving(true);
     try {
-      const r = await fetch("/api/prescriptions", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ patientName, mobile, gender, dob, tob, place, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kundali, rows, gemstones: gems.filter((g) => g.stone), notes }),
-      });
+      const body = JSON.stringify({ patientName, mobile, gender, dob, tob, place, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kundali, rows, gemstones: gems.filter((g) => g.stone), notes });
+      // once a record already has an id, update it in place — every later Save/Share
+      // click on the same visit should NOT create a new duplicate entry
+      const url = savedId ? `/api/prescriptions?id=${encodeURIComponent(savedId)}` : "/api/prescriptions";
+      const r = await fetch(url, { method: savedId ? "PUT" : "POST", headers: { "Content-Type": "application/json" }, body });
       const j = await r.json();
       if (j.ok) { setSavedId(j.id); fetchToday(); return j.id as string; }
       alert(j.error || "सेव नहीं हुआ।"); return null;
@@ -336,9 +337,29 @@ export function PrescriptionPad() {
   const shareWhatsApp = async () => {
     const savedFor = savedId || (await doSave());
     if (!savedFor) return;
-    const link = `${window.location.origin}/rx/${savedFor}`;
     const digits = mobile.replace(/\D/g, "");
     const to = digits.length === 10 ? "91" + digits : digits;
+
+    // Try to attach the actual PDF file via the device's native Share sheet — this is
+    // what actually lets WhatsApp receive the PDF itself instead of just a text link.
+    // NOTE: this is a browser/OS capability (Web Share API, mobile only) — a plain
+    // wa.me link can never carry a file attachment, on any device, before or after
+    // any of these changes; that's a WhatsApp platform restriction, not app behaviour.
+    try {
+      const data = await buildPdfData();
+      const blob = await generatePrescriptionPdf(data, "digital");
+      const file = new File([blob], `${patientName || "prescription"}.pdf`, { type: "application/pdf" });
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "ज्योतिष परामर्श", text: shareText() });
+        return;
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return; // user cancelled the share sheet
+      console.error(err);
+    }
+    // fallback (desktop / unsupported browsers): open WhatsApp with a text + link,
+    // and separately download the PDF so it can be attached manually
+    const link = `${window.location.origin}/rx/${savedFor}`;
     window.open(`https://wa.me/${to}?text=${encodeURIComponent(shareText(link))}`, "_blank");
   };
   const shareEmail = async () => {
