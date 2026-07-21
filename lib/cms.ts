@@ -903,6 +903,47 @@ export const DEFAULT_GEMSTONES: Gemstone[] = [
   gem("gem-ketu", "Ketu", "Cat's Eye (Lehsunia)", "7 Ratti", "Silver", "Little Finger", "Wednesday", "Om Kem Ketave Namah"),
 ];
 
+/** General ("grah upay") remedies that are not tied to any one planet —
+ *  managed independently from the planet-wise remedies above. `title` holds
+ *  the remedy text, matching the generic CMS manager's `Item` shape. */
+export interface MiscRemedy {
+  id: string;
+  title: string;
+}
+
+/** Value used for the "planet" slot on the prescription pad when the
+ *  astrologer is picking a general/Miscellaneous remedy instead of a
+ *  planet-specific one. */
+export const MISC_REMEDY_CATEGORY = "Miscellaneous";
+
+const MISC_REMEDY_SEED: string[] = [
+  "प्रतिदिन प्रातः स्नान के बाद तुलसी को जल अर्पित करें",
+  "प्रतिदिन गायत्री मंत्र का जाप करें",
+  "प्रत्येक सोमवार शिवालय में दर्शन करें",
+  "घर के मुख्य द्वार पर स्वस्तिक बनाएं",
+  "प्रतिदिन ज़रूरतमंदों को भोजन/अन्न का दान करें",
+];
+
+export const DEFAULT_MISC_REMEDIES: MiscRemedy[] = MISC_REMEDY_SEED.map((title, i) => ({
+  id: `rem-misc-${i + 1}`,
+  title,
+}));
+
+/** Configurable count/frequency options for repeatable remedies (Path, Jaap,
+ *  etc.) — e.g. 3, 7, 11, 21 or any custom value the admin adds. `title`
+ *  holds the displayed value, matching the generic CMS manager's shape. */
+export interface RemedyCountOption {
+  id: string;
+  title: string;
+}
+
+const REMEDY_COUNT_SEED = ["3", "7", "11", "21"];
+
+export const DEFAULT_REMEDY_COUNTS: RemedyCountOption[] = REMEDY_COUNT_SEED.map((title, i) => ({
+  id: `count-${i + 1}`,
+  title,
+}));
+
 /** Collections exposed by the CMS API, with their seed data. */
 export const COLLECTIONS = {
   poojas: DEFAULT_POOJAS,
@@ -920,6 +961,8 @@ export const COLLECTIONS = {
   coupons: DEFAULT_COUPONS,
   blog: DEFAULT_BLOG,
   planetRemedies: DEFAULT_PLANET_REMEDIES,
+  miscRemedies: DEFAULT_MISC_REMEDIES,
+  remedyCounts: DEFAULT_REMEDY_COUNTS,
   gemstones: DEFAULT_GEMSTONES,
 } as const;
 
