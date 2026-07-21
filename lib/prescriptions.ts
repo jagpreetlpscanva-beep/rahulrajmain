@@ -13,6 +13,9 @@ export interface RemedyRow {
   planet: string;
   remedies: string[];
   notes: string;
+  /** Optional admin-defined count/frequency picked per remedy (e.g. "Path"
+   *  → "11"), keyed by the remedy's title. Omitted/blank when not set. */
+  remedyCounts?: Record<string, string>;
 }
 
 export interface GemstonePick {
