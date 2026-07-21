@@ -114,3 +114,14 @@ export async function consultationsToday(): Promise<Consultation[]> {
 export async function getConsultation(id: string): Promise<Consultation | null> {
   return (await readConsultations()).find((c) => c.id === id) ?? null;
 }
+
+/** Update an existing consultation in place (used once a record has already been saved,
+ *  so repeated Save/Share clicks on the same visit don't create duplicate entries). */
+export async function updateConsultation(id: string, patch: Partial<Consultation>): Promise<boolean> {
+  const all = await readConsultations();
+  const idx = all.findIndex((c) => c.id === id);
+  if (idx === -1) return false;
+  all[idx] = { ...all[idx], ...patch, id: all[idx].id, createdAt: all[idx].createdAt };
+  await writeConsultations(all);
+  return true;
+}
