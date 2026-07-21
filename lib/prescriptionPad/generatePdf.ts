@@ -16,7 +16,8 @@
  * a hardcoded coordinate.
  */
 
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { PDFDocument, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import {
   PAGE,
   CALIBRATION,
@@ -138,9 +139,26 @@ function wrapText(font: PDFFont, text: string, maxWidthMm: number, size: number)
 
 export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: PdfMode): Promise<Blob> {
   const doc = await PDFDocument.create();
+  doc.registerFontkit(fontkit);
   const page = doc.addPage([PAGE.widthPt, PAGE.heightPt]); // exact physical size, no scaling
-  const font = await doc.embedFont(StandardFonts.Helvetica);
-  const fontBold = await doc.embedFont(StandardFonts.HelveticaBold);
+
+  // StandardFonts (Helvetica) can only encode Latin text — every Hindi/Devanagari
+  // character (patient name, remedies, notes, etc.) would throw inside pdf-lib and
+  // silently abort PDF generation. Embed a real Devanagari-capable font instead.
+  let font: PDFFont;
+  try {
+    const fontBytes = await fetch("/fonts/NotoSansDevanagari.ttf").then((r) => {
+      if (!r.ok) throw new Error("font fetch failed");
+      return r.arrayBuffer();
+    });
+    font = await doc.embedFont(fontBytes, { subset: true });
+  } catch (err) {
+    throw new Error(
+      "Devanagari font (/fonts/NotoSansDevanagari.ttf) load nahi ho paya — public/fonts/ me file rakhi hai ya nahi check karein. " +
+        String(err)
+    );
+  }
+  const fontBold = font; // single variable-font instance covers both; distinct bold weight not required for legibility
 
   // ---- background (digital mode only) ----
   if (mode === "digital") {
