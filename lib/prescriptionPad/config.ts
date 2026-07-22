@@ -42,29 +42,34 @@ export const HOUSE_CENTERS: Record<number, [number, number]> = {
   11: [0.89, 0.25], 12: [0.75, 0.11],
 };
 
-/* ---- Mahadasha / Antardasha / etc — values after the printed labels ---- */
+/* ---- Mahadasha / Antardasha / etc — values after the printed labels.
+       Same left edge (xMm) + equal 9mm vertical spacing. ---- */
+const DASHA_X = 170;
+const DASHA_FS = 7;
 export const DASHA_FIELDS = {
-  mahadasha: { xMm: 168, yMm: 76, fontSize: 8 },
-  antardasha: { xMm: 168, yMm: 86, fontSize: 8 },
-  pratyantar: { xMm: 168, yMm: 96, fontSize: 8 },
-  dosha: { xMm: 168, yMm: 106, fontSize: 8 },
-  yog: { xMm: 168, yMm: 116, fontSize: 8 },
+  mahadasha: { xMm: DASHA_X, yMm: 76, fontSize: DASHA_FS },
+  antardasha: { xMm: DASHA_X, yMm: 85, fontSize: DASHA_FS },
+  pratyantar: { xMm: DASHA_X, yMm: 94, fontSize: DASHA_FS },
+  dosha: { xMm: DASHA_X, yMm: 103, fontSize: DASHA_FS },
+  yog: { xMm: DASHA_X, yMm: 112, fontSize: DASHA_FS },
 };
 
-/* ---- Remedies table (5,140 · 192×102) ---- */
+/* ---- Remedies table (5,140 · 192×102) — clean bordered table ---- */
 export const REMEDY_TABLE = {
   startXMm: 6,
   startYMm: 142,
   widthMm: 190,
   headerHeightMm: 7,
-  rowMinHeightMm: 6,
-  lineHeightMm: 4.2,
-  fontSize: 8.5,
-  headerFontSize: 9,
-  headerFillColor: { r: 1, g: 0.95, b: 0.72 },
+  rowMinHeightMm: 7,
+  lineHeightMm: 3.8,
+  cellPadMm: 2.2,
+  fontSize: 8,
+  headerFontSize: 8.5,
+  headerFillColor: { r: 1, g: 0.94, b: 0.68 },
+  borderColor: { r: 0.55, g: 0.48, b: 0.4 },
   columns: {
-    planet: { offsetXMm: 0, widthMm: 28 },
-    remedy: { offsetXMm: 28, widthMm: 112 },
+    planet: { offsetXMm: 0, widthMm: 30 },
+    remedy: { offsetXMm: 30, widthMm: 110 },
     notes: { offsetXMm: 140, widthMm: 50 },
   },
 };

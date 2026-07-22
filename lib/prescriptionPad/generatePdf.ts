@@ -180,39 +180,57 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
   drawText(page, font, data.dosha, DASHA_FIELDS.dosha.xMm, DASHA_FIELDS.dosha.yMm, mode, { size: DASHA_FIELDS.dosha.fontSize });
   drawText(page, font, data.yog, DASHA_FIELDS.yog.xMm, DASHA_FIELDS.yog.yMm, mode, { size: DASHA_FIELDS.yog.fontSize });
 
-  // ---- remedies table (ग्रह | उपाय | टिप्पणी) ----
+  // ---- remedies table (ग्रह | उपाय | टिप्पणी) — clean, bordered, aligned ----
   const t = REMEDY_TABLE;
   if (data.remedyRows.length > 0) {
-    const { x: hx, y: hyTop } = pt(t.startXMm, t.startYMm, mode);
-    page.drawRectangle({
-      x: hx,
-      y: hyTop - mm(t.headerHeightMm),
-      width: mm(t.widthMm),
-      height: mm(t.headerHeightMm),
-      color: rgb(t.headerFillColor.r, t.headerFillColor.g, t.headerFillColor.b),
+    const pad = t.cellPadMm;
+    const border = rgb(t.borderColor.r, t.borderColor.g, t.borderColor.b);
+    const lineAt = (x1: number, y1: number, x2: number, y2: number) => {
+      const a = pt(x1, y1, mode), b = pt(x2, y2, mode);
+      page.drawLine({ start: { x: a.x, y: a.y }, end: { x: b.x, y: b.y }, thickness: 0.6, color: border });
+    };
+    const colPlanetX = t.startXMm + t.columns.planet.offsetXMm;
+    const colRemedyX = t.startXMm + t.columns.remedy.offsetXMm;
+    const colNotesX = t.startXMm + t.columns.notes.offsetXMm;
+
+    // measure every row first (so borders can span the exact height)
+    const meta = data.remedyRows.map((row) => {
+      const remedyLines = row.remedyLines.flatMap((l) => wrapText(font, `• ${l}`, t.columns.remedy.widthMm - 2 * pad, t.fontSize));
+      const notesLines = wrapText(font, row.notes, t.columns.notes.widthMm - 2 * pad, t.fontSize);
+      const n = Math.max(1, remedyLines.length, notesLines.length);
+      const h = Math.max(t.rowMinHeightMm, n * t.lineHeightMm + 2 * pad);
+      return { row, remedyLines, notesLines, h };
     });
-    const headerLabelYMm = t.startYMm + t.headerHeightMm - t.headerHeightMm / 2 - 1.5;
-    drawText(page, font, "ग्रह", t.startXMm + t.columns.planet.offsetXMm + 2, headerLabelYMm, mode, { size: t.headerFontSize });
-    drawText(page, font, "उपाय", t.startXMm + t.columns.remedy.offsetXMm + 2, headerLabelYMm, mode, { size: t.headerFontSize });
-    drawText(page, font, "टिप्पणी", t.startXMm + t.columns.notes.offsetXMm + 2, headerLabelYMm, mode, { size: t.headerFontSize });
+    const totalH = t.headerHeightMm + meta.reduce((s, m) => s + m.h, 0);
+    const xL = t.startXMm, xR = t.startXMm + t.widthMm, yT = t.startYMm, yB = t.startYMm + totalH;
 
-    let cursorYMm = t.startYMm + t.headerHeightMm + 4;
-    for (const row of data.remedyRows) {
-      const color = PLANET_COLORS[row.planet] ?? DEFAULT_TEXT_COLOR;
-      const remedyLines = row.remedyLines.flatMap((line) => wrapText(font, `• ${line}`, t.columns.remedy.widthMm - 4, t.fontSize));
-      const notesLines = wrapText(font, row.notes, t.columns.notes.widthMm - 4, t.fontSize);
-      const rowLines = Math.max(1, remedyLines.length, notesLines.length);
-      const rowHeightMm = Math.max(t.rowMinHeightMm, rowLines * t.lineHeightMm);
+    // full-width yellow header fill
+    const hp = pt(xL, yT, mode);
+    page.drawRectangle({ x: hp.x, y: hp.y - mm(t.headerHeightMm), width: mm(t.widthMm), height: mm(t.headerHeightMm), color: rgb(t.headerFillColor.r, t.headerFillColor.g, t.headerFillColor.b) });
 
-      drawText(page, font, row.planet, t.startXMm + t.columns.planet.offsetXMm + 2, cursorYMm, mode, { size: t.fontSize, color });
-      remedyLines.forEach((line, i) =>
-        drawText(page, font, line, t.startXMm + t.columns.remedy.offsetXMm + 2, cursorYMm + i * t.lineHeightMm, mode, { size: t.fontSize })
-      );
-      notesLines.forEach((line, i) =>
-        drawText(page, font, line, t.startXMm + t.columns.notes.offsetXMm + 2, cursorYMm + i * t.lineHeightMm, mode, { size: t.fontSize })
-      );
-      cursorYMm += rowHeightMm;
-    }
+    // outer border + full-height column dividers + header underline
+    lineAt(xL, yT, xR, yT); lineAt(xL, yB, xR, yB);
+    lineAt(xL, yT, xL, yB); lineAt(xR, yT, xR, yB);
+    lineAt(colRemedyX, yT, colRemedyX, yB); lineAt(colNotesX, yT, colNotesX, yB);
+    lineAt(xL, yT + t.headerHeightMm, xR, yT + t.headerHeightMm);
+
+    // header labels — vertically centred in the band
+    const headBase = yT + t.headerHeightMm / 2 + t.headerFontSize / MM_TO_PT / 3;
+    drawText(page, font, "ग्रह", colPlanetX + pad, headBase, mode, { size: t.headerFontSize });
+    drawText(page, font, "उपाय", colRemedyX + pad, headBase, mode, { size: t.headerFontSize });
+    drawText(page, font, "टिप्पणी", colNotesX + pad, headBase, mode, { size: t.headerFontSize });
+
+    // body rows
+    let cy = yT + t.headerHeightMm;
+    meta.forEach((m, idx) => {
+      const base = cy + pad + t.fontSize / MM_TO_PT; // baseline of the first line
+      const color = PLANET_COLORS[m.row.planet] ?? DEFAULT_TEXT_COLOR;
+      drawText(page, font, m.row.planet, colPlanetX + pad, base, mode, { size: t.fontSize, color });
+      m.remedyLines.forEach((l, i) => drawText(page, font, l, colRemedyX + pad, base + i * t.lineHeightMm, mode, { size: t.fontSize }));
+      m.notesLines.forEach((l, i) => drawText(page, font, l, colNotesX + pad, base + i * t.lineHeightMm, mode, { size: t.fontSize }));
+      cy += m.h;
+      if (idx < meta.length - 1) lineAt(xL, cy, xR, cy); // row divider
+    });
   }
 
   // ---- gemstones ----
