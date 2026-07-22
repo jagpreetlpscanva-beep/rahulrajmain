@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { CITIES } from "@/lib/calculators";
 import { PLANETS, MISC_REMEDY_CATEGORY } from "@/lib/cms";
-import { generatePrescriptionPdf, rasterizeSvgDataUri, downloadPdf, type PrescriptionPdfData } from "@/lib/prescriptionPad/generatePdf";
+import { generatePrescriptionPdf, downloadPdf, type PrescriptionPdfData } from "@/lib/prescriptionPad/generatePdf";
 
 /* ---------------- types ---------------- */
 type Rem = { id: string; planet: string; title: string };
@@ -248,26 +248,33 @@ export function PrescriptionPad() {
   // Coordinate-accurate PDF (matches the physical pad). One click = one PDF.
   const [pdfBusy, setPdfBusy] = useState<"digital" | "print" | null>(null);
 
-  const buildPdfData = useCallback(async (): Promise<PrescriptionPdfData> => {
-    const chartImageDataUri = chart ? await rasterizeSvgDataUri(chart) : null;
+  const buildPdfData = useCallback((): PrescriptionPdfData => {
     return {
       patientName, mobile, gender,
       dob: fmtDMY(dob), tob, place,
       date: fmtDMY(now.toISOString().slice(0, 10)), astrologer,
       mahadasha, antardasha, pratyantar, dosha, yog,
-      chartImageDataUri,
+      planets: kPlanets.map((p) => ({ name: p.name, abbr: p.abbr, house: p.house, degree: Math.floor(((p.lon % 30) + 30) % 30) })),
       remedyRows: rows.filter((r) => r.planet).map((r) => ({ planet: r.planet, remedyLines: r.remedies.map((x) => remedyLine(r, x)), notes: r.notes })),
       gemRows: gems.filter((g) => g.stone),
       notes,
     };
-  }, [chart, patientName, mobile, gender, dob, tob, place, now, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, rows, gems, notes]);
+  }, [patientName, mobile, gender, dob, tob, place, now, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kPlanets, rows, gems, notes]);
+
+  /** PatientName_DD-MM-YYYY.pdf */
+  const pdfFileName = useCallback(() => {
+    const d = new Date();
+    const dmy = `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
+    const name = (patientName || "prescription").trim().replace(/\s+/g, "_").replace(/[^\wऀ-ॿ_-]/g, "") || "prescription";
+    return `${name}_${dmy}.pdf`;
+  }, [patientName]);
 
   const downloadDigitalPdf = async () => {
     if (pdfBusy) return;
     setPdfBusy("digital");
     try {
-      const blob = await generatePrescriptionPdf(await buildPdfData(), "digital");
-      downloadPdf(blob, `${patientName || "prescription"}.pdf`);
+      const blob = await generatePrescriptionPdf(buildPdfData(), "digital");
+      downloadPdf(blob, pdfFileName());
     } catch (err) {
       alert(`PDF नहीं बन सकी: ${err instanceof Error ? err.message : String(err)}`);
     } finally { setPdfBusy(null); }
@@ -278,7 +285,7 @@ export function PrescriptionPad() {
     setPdfBusy("print");
     const tab = window.open("", "_blank"); // opened in the click so it's not popup-blocked
     try {
-      const blob = await generatePrescriptionPdf(await buildPdfData(), "print");
+      const blob = await generatePrescriptionPdf(buildPdfData(), "print");
       const url = URL.createObjectURL(blob);
       if (tab) tab.location.href = url; else window.open(url, "_blank");
     } catch (err) {
@@ -331,12 +338,13 @@ export function PrescriptionPad() {
     const to = digits.length === 10 ? "91" + digits : digits;
     let blob: Blob;
     try {
-      blob = await generatePrescriptionPdf(await buildPdfData(), "digital");
+      blob = await generatePrescriptionPdf(buildPdfData(), "digital");
     } catch (err) {
       alert(`PDF नहीं बन सकी: ${err instanceof Error ? err.message : String(err)}`);
       return;
     }
-    const file = new File([blob], `${patientName || "prescription"}.pdf`, { type: "application/pdf" });
+    const fname = pdfFileName();
+    const file = new File([blob], fname, { type: "application/pdf" });
     // Mobile: share ONLY the PDF (no text) via the native share sheet.
     try {
       if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file] }); return; }
@@ -344,7 +352,7 @@ export function PrescriptionPad() {
       if (err instanceof Error && err.name === "AbortError") return;
     }
     // Desktop / WhatsApp Web can't auto-attach files — download the PDF + open the chat.
-    downloadPdf(blob, `${patientName || "prescription"}.pdf`);
+    downloadPdf(blob, fname);
     window.open(`https://wa.me/${to}`, "_blank");
     alert("Desktop par WhatsApp me file auto-attach nahi hoti. PDF download ho gayi — chat me attach kar dein.\n(Mobile par sirf PDF direct share hoti hai.)");
   };

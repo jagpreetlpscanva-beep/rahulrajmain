@@ -22,6 +22,8 @@ import {
   CALIBRATION,
   PATIENT_BLOCK,
   KUNDALI_BOX,
+  KUNDALI_PLANET,
+  HOUSE_CENTERS,
   DASHA_FIELDS,
   REMEDY_TABLE,
   GEMSTONE_BLOCK,
@@ -34,6 +36,7 @@ import {
 
 const mm = (v: number) => v * MM_TO_PT;
 
+export type PdfPlanet = { name: string; abbr: string; house: number; degree: number };
 export type PdfRemedyRow = { planet: string; remedyLines: string[]; notes: string };
 export type PdfGemRow = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string };
 
@@ -51,39 +54,11 @@ export interface PrescriptionPdfData {
   pratyantar: string;
   dosha: string;
   yog: string;
-  /** Chart as a PNG/JPEG data URI (SVG rasterized before calling). */
-  chartImageDataUri: string | null;
+  /** Planets to place inside the pad's pre-printed Kundali box (no grid is drawn). */
+  planets: PdfPlanet[];
   remedyRows: PdfRemedyRow[];
   gemRows: PdfGemRow[];
   notes: string;
-}
-
-/** Rasterize an SVG data-uri (kundali chart) to a PNG data-uri via canvas (browser only). */
-export async function rasterizeSvgDataUri(svgDataUri: string, targetPx = 900): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = targetPx;
-      canvas.height = targetPx;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return reject(new Error("no 2d context"));
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, targetPx, targetPx);
-      ctx.drawImage(img, 0, 0, targetPx, targetPx);
-      resolve(canvas.toDataURL("image/png"));
-    };
-    img.onerror = reject;
-    img.src = svgDataUri;
-  });
-}
-
-function dataUriToBytes(dataUri: string): Uint8Array {
-  const base64 = dataUri.split(",")[1] ?? "";
-  const bin = atob(base64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes;
 }
 
 /** top-left mm -> pdf-lib bottom-left pt, applying print-mode calibration. */
@@ -179,23 +154,23 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
     drawText(page, font, `${label} ${val}`, PB.xMm, PB.yMm + i * PB.lineHeightMm, mode, { size: PB.fontSize });
   });
 
-  // ---- Lagna Kundali — scaled to fit strictly inside the printed box ----
-  if (data.chartImageDataUri) {
-    try {
-      const bytes = dataUriToBytes(data.chartImageDataUri);
-      const img = data.chartImageDataUri.startsWith("data:image/png") ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
-      const boxWPt = mm(KUNDALI_BOX.widthMm);
-      const boxHPt = mm(KUNDALI_BOX.heightMm);
-      const scale = Math.min(boxWPt / img.width, boxHPt / img.height);
-      const drawWPt = img.width * scale;
-      const drawHPt = img.height * scale;
-      const innerXMm = KUNDALI_BOX.xMm + (KUNDALI_BOX.widthMm - drawWPt / MM_TO_PT) / 2;
-      const innerYMm = KUNDALI_BOX.yMm + (KUNDALI_BOX.heightMm - drawHPt / MM_TO_PT) / 2;
-      const { x, y } = pt(innerXMm, innerYMm + drawHPt / MM_TO_PT, mode); // anchor from top of the image
-      page.drawImage(img, { x, y, width: drawWPt, height: drawHPt });
-    } catch {
-      /* chart failed — skip rather than fail whole PDF */
-    }
+  // ---- planets INSIDE the pad's pre-printed Kundali box (NO grid drawn) ----
+  const byHouse: Record<number, PdfPlanet[]> = {};
+  for (const p of data.planets) (byHouse[p.house] ||= []).push(p);
+  for (let h = 1; h <= 12; h++) {
+    const arr = byHouse[h];
+    if (!arr || arr.length === 0) continue;
+    const [fx, fy] = HOUSE_CENTERS[h];
+    const cxMm = KUNDALI_BOX.xMm + fx * KUNDALI_BOX.widthMm;
+    const cyMm = KUNDALI_BOX.yMm + fy * KUNDALI_BOX.heightMm;
+    // stack multiple planets vertically, centred on the house point
+    const startYMm = cyMm - ((arr.length - 1) * KUNDALI_PLANET.lineMm) / 2;
+    arr.forEach((p, i) => {
+      const label = `${p.abbr} ${p.degree}°`;
+      const wMm = font.widthOfTextAtSize(label, KUNDALI_PLANET.fontSize) / MM_TO_PT;
+      const color = PLANET_COLORS[p.name] ?? DEFAULT_TEXT_COLOR;
+      drawText(page, font, label, cxMm - wMm / 2, startYMm + i * KUNDALI_PLANET.lineMm, mode, { size: KUNDALI_PLANET.fontSize, color });
+    });
   }
 
   // ---- dasha / dosha / yog (values after the printed labels) ----

@@ -31,8 +31,16 @@ export type Box = { xMm: number; yMm: number; widthMm: number; heightMm: number 
 /* ---- Patient details (typed into the centre area: 72,66 · 75×46) ---- */
 export const PATIENT_BLOCK = { xMm: 73, yMm: 71, lineHeightMm: 6, fontSize: 9 };
 
-/* ---- Lagna Kundali box: chart drawn ONLY inside this (13,65 · 54×54) ---- */
+/* ---- Lagna Kundali box (13,65 · 54×54). The pad ALREADY has the printed grid —
+       we do NOT draw a grid, only place planets at the house centres below. ---- */
 export const KUNDALI_BOX: Box = { xMm: 13, yMm: 65, widthMm: 54, heightMm: 54 };
+export const KUNDALI_PLANET = { fontSize: 6, lineMm: 2.4 };
+/** House centres as fractions of the box (North-Indian layout, house1 = top diamond). */
+export const HOUSE_CENTERS: Record<number, [number, number]> = {
+  1: [0.5, 0.24], 2: [0.25, 0.11], 3: [0.11, 0.25], 4: [0.25, 0.5], 5: [0.11, 0.75],
+  6: [0.25, 0.89], 7: [0.5, 0.76], 8: [0.75, 0.89], 9: [0.89, 0.75], 10: [0.75, 0.5],
+  11: [0.89, 0.25], 12: [0.75, 0.11],
+};
 
 /* ---- Mahadasha / Antardasha / etc — values after the printed labels ---- */
 export const DASHA_FIELDS = {
