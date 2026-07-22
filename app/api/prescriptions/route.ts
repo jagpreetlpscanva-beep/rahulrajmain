@@ -6,6 +6,8 @@ import {
   consultationsByMobile,
   searchConsultations,
   consultationsToday,
+  consultationsByDate,
+  deleteConsultation,
   getConsultation,
   readConsultations,
   type Consultation,
@@ -106,10 +108,20 @@ export async function GET(req: Request) {
   const mobile = url.searchParams.get("mobile");
   const today = url.searchParams.get("today");
   const all = url.searchParams.get("all");
+  const date = url.searchParams.get("date");
   if (id) return NextResponse.json({ ok: true, consultation: await getConsultation(id) });
   if (today) return NextResponse.json({ ok: true, consultations: await consultationsToday() });
+  if (date) return NextResponse.json({ ok: true, consultations: await consultationsByDate(date) });
   if (all) return NextResponse.json({ ok: true, consultations: (await readConsultations()).slice(0, 500) });
   if (q) return NextResponse.json({ ok: true, consultations: await searchConsultations(q) });
   if (mobile) return NextResponse.json({ ok: true, consultations: await consultationsByMobile(mobile) });
-  return NextResponse.json({ error: "Provide id, q, mobile, today or all" }, { status: 400 });
+  return NextResponse.json({ error: "Provide id, q, mobile, today, date or all" }, { status: 400 });
+}
+
+/** DELETE ?id= — remove a consultation. */
+export async function DELETE(req: Request) {
+  const id = new URL(req.url).searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
+  const ok = await deleteConsultation(id);
+  return NextResponse.json({ ok });
 }

@@ -108,7 +108,6 @@ export function PrescriptionPad() {
   const [yog, setYog] = useState("");
 
   const [chart, setChart] = useState<string | null>(null);
-  const [d9, setD9] = useState<string | null>(null);
   const [gochar, setGochar] = useState<string | null>(null);
   const [kundali, setKundali] = useState<unknown>(null);
   const [kundaliState, setKundaliState] = useState<"idle" | "loading" | "done" | "error">("idle");
@@ -127,7 +126,8 @@ export function PrescriptionPad() {
   const [today, setToday] = useState<Consultation[]>([]);
   const [searchQ, setSearchQ] = useState("");
   const [results, setResults] = useState<Consultation[] | null>(null);
-  const [all, setAll] = useState<Consultation[] | null>(null);
+  const [recDate, setRecDate] = useState("");
+  const [dateRecs, setDateRecs] = useState<Consultation[] | null>(null);
 
   const [portal, setPortal] = useState<HTMLElement | null>(null);
   useEffect(() => setPortal(document.getElementById("print-portal")), []);
@@ -154,9 +154,11 @@ export function PrescriptionPad() {
         .then((r) => r.json())
         .then((j) => {
           if (j.ok) {
-            setChart(j.chart); setD9(j.d9 || null); setGochar(j.gochar || null); setKundali(j.kundali); setKundaliState("done");
-            const dasha = (j.kundali as { dasha?: Dasha })?.dasha;
-            if (dasha) { setMahadasha(dasha.mahadasha); setAntardasha(dasha.antardasha); }
+            setChart(j.chart); setGochar(j.gochar || null); setKundali(j.kundali); setKundaliState("done");
+            const kk = j.kundali as { dasha?: Dasha; doshaStr?: string; yogStr?: string };
+            if (kk?.dasha) { setMahadasha(kk.dasha.mahadasha); setAntardasha(kk.dasha.antardasha); }
+            if (kk?.doshaStr) setDosha(kk.doshaStr);
+            if (kk?.yogStr) setYog(kk.yogStr);
           } else setKundaliState("error");
         })
         .catch(() => setKundaliState("error"));
@@ -214,7 +216,7 @@ export function PrescriptionPad() {
   const resetAll = () => {
     setPatientName(""); setMobile(""); setGender(""); setDob(""); setDobText(""); setTob(""); setPlace("Lucknow");
     setMahadasha(""); setAntardasha(""); setPratyantar(""); setDosha(""); setYog("");
-    setChart(null); setD9(null); setGochar(null); setKundali(null); setKundaliState("idle");
+    setChart(null); setGochar(null); setKundali(null); setKundaliState("idle");
     setRows([emptyRow()]); setGems([blankGem()]); setNotes(""); setSavedId(null);
   };
 
@@ -222,7 +224,7 @@ export function PrescriptionPad() {
     setPatientName(c.patientName); setMobile(c.mobile); setGender(c.gender); setDob(c.dob); setDobText(fmtDMY(c.dob)); setTob(c.tob); setPlace(c.place || "Lucknow");
     setMahadasha(c.mahadasha); setAntardasha(c.antardasha); setPratyantar(c.pratyantar); setDosha(c.dosha); setYog(c.yog);
     setKundali(c.kundali); setRows(c.rows?.length ? c.rows : [emptyRow()]); setGems(c.gemstones?.length ? c.gemstones : [blankGem()]); setNotes(c.notes);
-    setSavedId(c.id); setChart(null); setD9(null); setGochar(null); setKundaliState("idle"); setResults(null);
+    setSavedId(c.id); setChart(null); setGochar(null); setKundaliState("idle"); setResults(null);
   };
 
   const doSave = async (): Promise<string | null> => {
@@ -313,10 +315,18 @@ export function PrescriptionPad() {
     const j = await r.json();
     setResults(Array.isArray(j.consultations) ? j.consultations : []);
   };
-  const loadAll = async () => {
-    const r = await fetch("/api/prescriptions?all=1");
+  const loadByDate = async (date: string) => {
+    setRecDate(date);
+    if (!date) { setDateRecs(null); return; }
+    const r = await fetch(`/api/prescriptions?date=${date}`);
     const j = await r.json();
-    setAll(Array.isArray(j.consultations) ? j.consultations : []);
+    setDateRecs(Array.isArray(j.consultations) ? j.consultations : []);
+  };
+  const deleteRec = async (id: string) => {
+    if (!confirm("यह रिकॉर्ड हटा दें?")) return;
+    await fetch(`/api/prescriptions?id=${id}`, { method: "DELETE" });
+    setDateRecs((rs) => (rs ? rs.filter((c) => c.id !== id) : rs));
+    fetchToday();
   };
 
   /* ---- share ---- */
@@ -352,7 +362,8 @@ export function PrescriptionPad() {
       const blob = await generatePrescriptionPdf(data, "digital");
       const file = new File([blob], `${patientName || "prescription"}.pdf`, { type: "application/pdf" });
       if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: "ज्योतिष परामर्श", text: shareText() });
+        // Only the PDF — no prefilled text, as requested.
+        await navigator.share({ files: [file] });
         return;
       }
     } catch (err) {
@@ -422,13 +433,28 @@ export function PrescriptionPad() {
             )}
           </div>
           <div className="rounded-xl border border-ink/10 bg-white p-3 shadow-sm">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-[#8a2020]">📋 सभी पुराने रिकॉर्ड{all ? ` (${all.length})` : ""}</p>
-              <button onClick={loadAll} className="text-xs font-semibold text-[#8a2020] underline">{all ? "रिफ्रेश" : "दिखाएं"}</button>
-            </div>
-            {all && (all.length === 0
-              ? <p className="mt-2 text-xs text-ink/50">कोई रिकॉर्ड नहीं।</p>
-              : <ul className="mt-2 max-h-[50vh] divide-y divide-ink/10 overflow-y-auto">{all.map(HistRow)}</ul>)}
+            <p className="mb-2 text-sm font-bold text-[#8a2020]">📋 पुराने रिकॉर्ड — तारीख चुनें</p>
+            <input type="date" value={recDate} onChange={(e) => loadByDate(e.target.value)} className="w-full rounded-lg border border-ink/20 px-2.5 py-1.5 text-sm" />
+            {dateRecs && (
+              <>
+                <p className="mt-2 text-xs font-semibold text-ink/60">{recDate && fmtDMY(recDate)} — {dateRecs.length} परामर्श</p>
+                {dateRecs.length === 0 ? (
+                  <p className="mt-1 text-xs text-ink/50">इस तारीख को कोई रिकॉर्ड नहीं।</p>
+                ) : (
+                  <ul className="mt-1 max-h-[50vh] divide-y divide-ink/10 overflow-y-auto">
+                    {dateRecs.map((c) => (
+                      <li key={c.id} className="flex items-center justify-between gap-2 py-2 text-xs">
+                        <span className="min-w-0"><b className="block truncate">{c.patientName}</b><span className="text-ink/50">{c.mobile} · {new Date(c.createdAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}</span></span>
+                        <span className="flex shrink-0 gap-1">
+                          <button onClick={() => load(c)} className="rounded-md bg-[#8a2020] px-2 py-1 font-semibold text-white">खोलें</button>
+                          <button onClick={() => deleteRec(c.id)} title="हटाएं" className="rounded-md bg-rose-600 px-2 py-1 font-semibold text-white">🗑</button>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            )}
           </div>
         </aside>
 
@@ -463,6 +489,14 @@ export function PrescriptionPad() {
                   <input className={inp} value={val as string} onChange={(e) => (set as (v: string) => void)(e.target.value)} />
                 </div>
               ))}
+              {/* Gochar — small, right of kundali; astrologer reference only (not in PDF/print) */}
+              {gochar && (
+                <div className="rx-noprint mt-3 w-[150px] rounded-lg border border-ink/10 bg-white p-1.5 text-center">
+                  <p className="text-[11px] font-bold text-[#1a5276]">गोचर (वर्तमान)</p>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={gochar} alt="गोचर" className="mx-auto w-full" />
+                </div>
+              )}
             </div>
           </div>
 
@@ -475,29 +509,6 @@ export function PrescriptionPad() {
                   <thead><tr className="text-left text-ink/55"><th className="px-1">ग्रह</th><th className="px-1">राशि</th><th className="px-1">अंश</th><th className="px-1">भाव</th><th className="px-1">नक्षत्र</th></tr></thead>
                   <tbody>{kPlanets.map((p) => (<tr key={p.name} className="border-t border-ink/10"><td className="px-1 font-bold" style={{ color: p.color }}>{p.name}</td><td className="px-1">{p.sign}</td><td className="px-1 font-mono">{fmtDeg(p.lon)}</td><td className="px-1">{p.house}</td><td className="px-1">{p.nakshatra}</td></tr>))}</tbody>
                 </table>
-              </div>
-            </div>
-          )}
-
-          {/* D9 (Navamsa) + Gochar — astrologer reference only, NOT in PDF/print */}
-          {(d9 || gochar) && (
-            <div className="rx-noprint mt-4">
-              <p className="mb-2 text-xs font-bold text-ink/50">केवल ज्योतिषी के संदर्भ हेतु (PDF/प्रिंट में नहीं आएगा)</p>
-              <div className="grid grid-cols-2 gap-4">
-                {d9 && (
-                  <div className="rounded-xl border border-ink/10 bg-white p-2 text-center">
-                    <p className="mb-1 text-sm font-bold text-[#a01414]">नवांश (D9)</p>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={d9} alt="Navamsa D9" className="mx-auto w-full max-w-[240px]" />
-                  </div>
-                )}
-                {gochar && (
-                  <div className="rounded-xl border border-ink/10 bg-white p-2 text-center">
-                    <p className="mb-1 text-sm font-bold text-[#1a5276]">गोचर (वर्तमान)</p>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={gochar} alt="Gochar" className="mx-auto w-full max-w-[240px]" />
-                  </div>
-                )}
               </div>
             </div>
           )}

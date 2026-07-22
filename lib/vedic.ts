@@ -285,6 +285,28 @@ export function computeKundli(p: KundliInput) {
     };
   });
 
+  // ---- basic Dosha + Yog auto-detection (astrologer can edit) ----
+  const byName = (n: string) => planets.find((p) => p.name === n);
+  const doshas: string[] = [];
+  // Manglik: Mars from lagna in 1,2,4,7,8,12
+  const marsH = byName("मंगल")?.house ?? 0;
+  if ([1, 2, 4, 7, 8, 12].includes(marsH)) doshas.push("मांगलिक दोष");
+  // Kaal Sarp: all 7 grahas on one side of the Rahu–Ketu axis
+  const rahuLon = planetSiderealLon({ node: "rahu" }, at);
+  const grahas = ["सूर्य", "चंद्र", "मंगल", "बुध", "गुरु", "शुक्र", "शनि"];
+  const rel = grahas.map((g) => norm360((byName(g)?.lon ?? 0) - rahuLon));
+  if (rel.every((r) => r < 180) || rel.every((r) => r >= 180)) doshas.push("काल सर्प दोष");
+  const doshaStr = doshas.length ? doshas.join(", ") : "कोई प्रमुख दोष नहीं";
+
+  // Yog
+  const yogs: string[] = [];
+  const jupRashi = byName("गुरु")?.rashi ?? 0;
+  const jupFromMoon = ((jupRashi - moonRashi + 12) % 12) + 1;
+  if ([1, 4, 7, 10].includes(jupFromMoon)) yogs.push("गजकेसरी योग");
+  // Chandra-Mangal: Moon & Mars together
+  if ((byName("चंद्र")?.rashi ?? -1) === (byName("मंगल")?.rashi ?? -2)) yogs.push("चंद्र-मंगल योग");
+  const yogStr = yogs.length ? yogs.join(", ") : "—";
+
   return {
     ascendant: RASHIS[ascRashi],
     ascendant_lon: ascLon,
@@ -296,6 +318,8 @@ export function computeKundli(p: KundliInput) {
     charan: moonPada,
     planets,
     dasha: computeDasha(moonS, at),
+    doshaStr,
+    yogStr,
   };
 }
 

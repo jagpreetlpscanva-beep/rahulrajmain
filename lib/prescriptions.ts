@@ -115,6 +115,21 @@ export async function getConsultation(id: string): Promise<Consultation | null> 
   return (await readConsultations()).find((c) => c.id === id) ?? null;
 }
 
+/** Consultations created on a specific local date (YYYY-MM-DD), newest first. */
+export async function consultationsByDate(date: string): Promise<Consultation[]> {
+  const target = new Date(`${date}T00:00:00`).toDateString();
+  return (await readConsultations()).filter((c) => new Date(c.createdAt).toDateString() === target);
+}
+
+/** Permanently remove a consultation. */
+export async function deleteConsultation(id: string): Promise<boolean> {
+  const all = await readConsultations();
+  const next = all.filter((c) => c.id !== id);
+  if (next.length === all.length) return false;
+  await writeConsultations(next);
+  return true;
+}
+
 /** Update an existing consultation in place (used once a record has already been saved,
  *  so repeated Save/Share clicks on the same visit don't create duplicate entries). */
 export async function updateConsultation(id: string, patch: Partial<Consultation>): Promise<boolean> {

@@ -37,7 +37,7 @@ export const PAGE = {
     return mm(this.heightMm);
   },
   /** Full-bleed scan/photo of the pre-printed pad. Only drawn in "digital" mode. */
-  backgroundImagePath: "/prescription/pad-template.png",
+  backgroundImagePath: "/prescription/pad-template.jpg",
 };
 
 /**
