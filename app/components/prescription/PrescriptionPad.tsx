@@ -357,23 +357,28 @@ export function PrescriptionPad() {
     // NOTE: this is a browser/OS capability (Web Share API, mobile only) — a plain
     // wa.me link can never carry a file attachment, on any device, before or after
     // any of these changes; that's a WhatsApp platform restriction, not app behaviour.
+    let blob: Blob;
     try {
       const data = await buildPdfData();
-      const blob = await generatePrescriptionPdf(data, "digital");
+      blob = await generatePrescriptionPdf(data, "digital");
       const file = new File([blob], `${patientName || "prescription"}.pdf`, { type: "application/pdf" });
+      // Mobile: share ONLY the PDF via the native share sheet.
       if (navigator.canShare?.({ files: [file] })) {
-        // Only the PDF — no prefilled text, as requested.
         await navigator.share({ files: [file] });
         return;
       }
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") return; // user cancelled the share sheet
       console.error(err);
+      alert(`PDF नहीं बन सकी: ${err instanceof Error ? err.message : String(err)}`);
+      return;
     }
-    // fallback (desktop / unsupported browsers): open WhatsApp with a text + link,
-    // and separately download the PDF so it can be attached manually
-    const link = `${window.location.origin}/rx/${savedFor}`;
-    window.open(`https://wa.me/${to}?text=${encodeURIComponent(shareText(link))}`, "_blank");
+    // Desktop / WhatsApp Web: browsers CANNOT attach a file to WhatsApp automatically
+    // (a WhatsApp platform restriction). So NO text is sent — instead we download the
+    // PDF and open the client's chat so it can be dragged/attached manually.
+    downloadPdf(blob, `${patientName || "prescription"}.pdf`);
+    window.open(`https://wa.me/${to}`, "_blank"); // open chat, no prefilled text
+    alert("Desktop par WhatsApp me file auto-attach nahi hoti. PDF download ho gayi — chat me usko attach kar dein.\n(Mobile par sirf PDF direct share hoti hai.)");
   };
   const shareEmail = async () => {
     const savedFor = savedId || (await doSave());
