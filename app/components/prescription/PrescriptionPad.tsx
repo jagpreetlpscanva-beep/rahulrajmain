@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { CITIES } from "@/lib/calculators";
 import { PLANETS, MISC_REMEDY_CATEGORY } from "@/lib/cms";
+import { generatePrescriptionPdf, rasterizeSvgDataUri, downloadPdf, type PrescriptionPdfData } from "@/lib/prescriptionPad/generatePdf";
 
 /* ---------------- types ---------------- */
 type Rem = { id: string; planet: string; title: string };
@@ -111,6 +112,7 @@ export function PrescriptionPad() {
   const [kundali, setKundali] = useState<unknown>(null);
   const [kundaliState, setKundaliState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [zoom, setZoom] = useState(false);
+  const [gocharZoom, setGocharZoom] = useState(false);
 
   const [rows, setRows] = useState<Row[]>([emptyRow()]);
   const [gems, setGems] = useState<Gem[]>([blankGem()]);
@@ -243,14 +245,46 @@ export function PrescriptionPad() {
   };
   const save = () => { doSave(); };
 
-  // Clean PDF/print = the browser printing the styled HTML pad doc (the print-portal
-  // below). One click = one dialog. Save-as-PDF from the dialog gives the clean sheet.
-  const [printing, setPrinting] = useState(false);
-  const printPad = () => {
-    if (printing) return;
-    setPrinting(true);
-    window.print();
-    setTimeout(() => setPrinting(false), 1500);
+  // Coordinate-accurate PDF (matches the physical pad). One click = one PDF.
+  const [pdfBusy, setPdfBusy] = useState<"digital" | "print" | null>(null);
+
+  const buildPdfData = useCallback(async (): Promise<PrescriptionPdfData> => {
+    const chartImageDataUri = chart ? await rasterizeSvgDataUri(chart) : null;
+    return {
+      patientName, mobile, gender,
+      dob: fmtDMY(dob), tob, place,
+      date: fmtDMY(now.toISOString().slice(0, 10)), astrologer,
+      mahadasha, antardasha, pratyantar, dosha, yog,
+      chartImageDataUri,
+      remedyRows: rows.filter((r) => r.planet).map((r) => ({ planet: r.planet, remedyLines: r.remedies.map((x) => remedyLine(r, x)), notes: r.notes })),
+      gemRows: gems.filter((g) => g.stone),
+      notes,
+    };
+  }, [chart, patientName, mobile, gender, dob, tob, place, now, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, rows, gems, notes]);
+
+  const downloadDigitalPdf = async () => {
+    if (pdfBusy) return;
+    setPdfBusy("digital");
+    try {
+      const blob = await generatePrescriptionPdf(await buildPdfData(), "digital");
+      downloadPdf(blob, `${patientName || "prescription"}.pdf`);
+    } catch (err) {
+      alert(`PDF नहीं बन सकी: ${err instanceof Error ? err.message : String(err)}`);
+    } finally { setPdfBusy(null); }
+  };
+
+  const openPrintPdf = async () => {
+    if (pdfBusy) return;
+    setPdfBusy("print");
+    const tab = window.open("", "_blank"); // opened in the click so it's not popup-blocked
+    try {
+      const blob = await generatePrescriptionPdf(await buildPdfData(), "print");
+      const url = URL.createObjectURL(blob);
+      if (tab) tab.location.href = url; else window.open(url, "_blank");
+    } catch (err) {
+      tab?.close();
+      alert(`प्रिंट PDF नहीं बन सकी: ${err instanceof Error ? err.message : String(err)}`);
+    } finally { setPdfBusy(null); }
   };
 
   const search = async () => {
@@ -295,11 +329,24 @@ export function PrescriptionPad() {
     if (!savedFor) return;
     const digits = mobile.replace(/\D/g, "");
     const to = digits.length === 10 ? "91" + digits : digits;
-    // Share the clean report LINK (the /rx page renders the full pad; the client
-    // opens it and can save the PDF). Attaching a PDF file to a wa.me chat is a
-    // WhatsApp platform restriction and isn't possible from a browser.
-    const link = `${window.location.origin}/rx/${savedFor}`;
-    window.open(`https://wa.me/${to}?text=${encodeURIComponent(link)}`, "_blank");
+    let blob: Blob;
+    try {
+      blob = await generatePrescriptionPdf(await buildPdfData(), "digital");
+    } catch (err) {
+      alert(`PDF नहीं बन सकी: ${err instanceof Error ? err.message : String(err)}`);
+      return;
+    }
+    const file = new File([blob], `${patientName || "prescription"}.pdf`, { type: "application/pdf" });
+    // Mobile: share ONLY the PDF (no text) via the native share sheet.
+    try {
+      if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file] }); return; }
+    } catch (err) {
+      if (err instanceof Error && err.name === "AbortError") return;
+    }
+    // Desktop / WhatsApp Web can't auto-attach files — download the PDF + open the chat.
+    downloadPdf(blob, `${patientName || "prescription"}.pdf`);
+    window.open(`https://wa.me/${to}`, "_blank");
+    alert("Desktop par WhatsApp me file auto-attach nahi hoti. PDF download ho gayi — chat me attach kar dein.\n(Mobile par sirf PDF direct share hoti hai.)");
   };
   const shareEmail = async () => {
     const savedFor = savedId || (await doSave());
@@ -327,7 +374,8 @@ export function PrescriptionPad() {
 
       {/* ===== controls ===== */}
       <div className="rx-noprint mx-auto flex max-w-[1120px] flex-wrap items-center gap-2 px-3 pt-4">
-        <button onClick={printPad} disabled={printing} className={`${btn} bg-[#6d1414] text-white disabled:opacity-60`}>📄 PDF सेव करें / प्रिंट</button>
+        <button onClick={downloadDigitalPdf} disabled={pdfBusy !== null} className={`${btn} bg-[#6d1414] text-white disabled:opacity-60`}>{pdfBusy === "digital" ? "बन रहा है…" : "📄 PDF सेव करें"}</button>
+        <button onClick={openPrintPdf} disabled={pdfBusy !== null} className={`${btn} bg-[#3a3a3a] text-white disabled:opacity-60`}>{pdfBusy === "print" ? "बन रहा है…" : "🖨️ प्रिंट (पैड पर)"}</button>
         <button onClick={shareWhatsApp} className={`${btn} bg-emerald-600 text-white`}>💬 WhatsApp</button>
         <button onClick={shareEmail} className={`${btn} bg-sky-700 text-white`}>📧 ईमेल</button>
         <button onClick={save} disabled={saving} className={`${btn} bg-amber-600 text-white disabled:opacity-60`}>{saving ? "सेव हो रहा…" : "💾 सेव करें"}</button>
@@ -414,10 +462,10 @@ export function PrescriptionPad() {
                   <input className={inp} value={val as string} onChange={(e) => (set as (v: string) => void)(e.target.value)} />
                 </div>
               ))}
-              {/* Gochar — small, right of kundali; astrologer reference only (not in PDF/print) */}
+              {/* Gochar — right of kundali; click to expand. Reference only (not in PDF/print). */}
               {gochar && (
-                <div className="rx-noprint mt-3 w-[150px] rounded-lg border border-ink/10 bg-white p-1.5 text-center">
-                  <p className="text-[11px] font-bold text-[#1a5276]">गोचर (वर्तमान)</p>
+                <div onClick={() => setGocharZoom(true)} className="rx-noprint mt-3 w-[230px] cursor-zoom-in rounded-lg border border-ink/10 bg-white p-2 text-center">
+                  <p className="text-[11px] font-bold text-[#1a5276]">गोचर (वर्तमान) — बड़ा देखने के लिए क्लिक</p>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={gochar} alt="गोचर" className="mx-auto w-full" />
                 </div>
@@ -523,6 +571,18 @@ export function PrescriptionPad() {
             <p className="mb-2 text-center font-serif text-2xl font-bold text-[#a01414]">लग्न कुण्डली</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={chart} alt="लग्न कुण्डली (बड़ी)" className="mx-auto w-full max-w-[540px]" />
+          </div>
+        </div>
+      )}
+
+      {/* gochar zoom modal */}
+      {gocharZoom && gochar && (
+        <div className="rx-noprint fixed inset-0 z-[120] grid place-items-center bg-black/70 p-4" onClick={() => setGocharZoom(false)}>
+          <div className="relative w-full max-w-[620px] rounded-2xl bg-white p-4" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => setGocharZoom(false)} className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-ink/10 text-ink">✕</button>
+            <p className="mb-2 text-center font-serif text-2xl font-bold text-[#1a5276]">गोचर कुण्डली (वर्तमान)</p>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={gochar} alt="गोचर (बड़ा)" className="mx-auto w-full max-w-[540px]" />
           </div>
         </div>
       )}
