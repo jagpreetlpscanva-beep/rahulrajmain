@@ -20,7 +20,7 @@ export const PAGE = {
   get widthPt() { return mm(this.widthMm); },
   get heightPt() { return mm(this.heightMm); },
   /** Scan of the pre-printed pad — drawn only in "digital" mode, never printed. */
-  backgroundImagePath: "/prescription/pad-template.jpg",
+  backgroundImagePath: "/prescription/pad-template.jpeg",
 };
 
 /** Printer nudge applied to every field in "print" mode only (mm). */
