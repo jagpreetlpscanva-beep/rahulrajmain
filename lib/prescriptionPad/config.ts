@@ -44,8 +44,9 @@ export const HOUSE_CENTERS: Record<number, [number, number]> = {
 
 /* ---- Mahadasha / Antardasha / etc — values after the printed labels.
        Same left edge (xMm) + equal 9mm vertical spacing. ---- */
-const DASHA_X = 170;
-const DASHA_FS = 7;
+const DASHA_X = 168;
+const DASHA_FS = 8.5;              // max size — auto-shrinks to stay inside the block
+export const DASHA_MAX_WIDTH_MM = 32; // 168 → ~200 (page edge), value must fit here
 export const DASHA_FIELDS = {
   mahadasha: { xMm: DASHA_X, yMm: 67, fontSize: DASHA_FS },
   antardasha: { xMm: DASHA_X, yMm: 76, fontSize: DASHA_FS },
@@ -74,11 +75,29 @@ export const REMEDY_TABLE = {
   },
 };
 
-/* ---- Gemstones — printed just below the remedies table ---- */
-export const GEMSTONE_BLOCK = { startXMm: 6, startYMm: 232, rowHeightMm: 5, fontSize: 8 };
+/* ---- Gemstones — just above the footer, each with a small colour gem marker ---- */
+export const GEMSTONE_BLOCK = { startXMm: 6, startYMm: 176, rowHeightMm: 6, fontSize: 8, iconMm: 3.4 };
 
-/* ---- Free-text notes (bottom of the remedies area) ---- */
-export const NOTES_FIELD = { xMm: 6, yMm: 248, widthMm: 190, fontSize: 8, lineHeightMm: 4 };
+/* ---- Free-text notes (bottom of the remedies area, above the footer) ---- */
+export const NOTES_FIELD = { xMm: 6, yMm: 190, widthMm: 190, fontSize: 7.5, lineHeightMm: 3.6 };
+
+/* ---- Gemstone term → Hindi (astrologer's saved data is usually English) ---- */
+export const STONE_HI: Record<string, string> = {
+  "Ruby (Manik)": "माणिक", "Pearl (Moti)": "मोती", "Red Coral (Moonga)": "मूंगा",
+  "Emerald (Panna)": "पन्ना", "Yellow Sapphire (Pukhraj)": "पुखराज", "Diamond (Heera)": "हीरा",
+  "Blue Sapphire (Neelam)": "नीलम", "Hessonite (Gomed)": "गोमेद", "Cat's Eye (Lehsunia)": "लहसुनिया",
+};
+export const METAL_HI: Record<string, string> = {
+  "Gold": "सोना", "Silver": "चांदी", "Copper": "तांबा",
+  "Gold / Copper": "सोना/तांबा", "Copper / Gold": "तांबा/सोना", "Silver / Platinum": "चांदी/प्लैटिनम",
+};
+export const FINGER_HI: Record<string, string> = {
+  "Ring Finger": "अनामिका", "Little Finger": "कनिष्ठा", "Index Finger": "तर्जनी", "Middle Finger": "मध्यमा",
+};
+export const DAY_HI: Record<string, string> = {
+  "Sunday": "रविवार", "Monday": "सोमवार", "Tuesday": "मंगलवार", "Wednesday": "बुधवार",
+  "Thursday": "गुरुवार", "Friday": "शुक्रवार", "Saturday": "शनिवार",
+};
 
 /* ---- Traditional planet colours (RGB 0-1). Keyed by BOTH English & Hindi. ---- */
 const C = {

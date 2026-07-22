@@ -25,11 +25,16 @@ import {
   KUNDALI_PLANET,
   HOUSE_CENTERS,
   DASHA_FIELDS,
+  DASHA_MAX_WIDTH_MM,
   REMEDY_TABLE,
   GEMSTONE_BLOCK,
   NOTES_FIELD,
   PLANET_COLORS,
   DEFAULT_TEXT_COLOR,
+  STONE_HI,
+  METAL_HI,
+  FINGER_HI,
+  DAY_HI,
   MM_TO_PT,
   type PdfMode,
 } from "./config";
@@ -81,9 +86,21 @@ function drawText(
   const { x, y } = pt(xMm, yMm, mode);
   const size = opts.size ?? 9;
   const color = rgb((opts.color ?? DEFAULT_TEXT_COLOR).r, (opts.color ?? DEFAULT_TEXT_COLOR).g, (opts.color ?? DEFAULT_TEXT_COLOR).b);
-  // synthetic bold — draw twice with a tiny horizontal offset for a bolder, more attractive look
+  // synthetic bold — draw a few times with tiny offsets for a heavier, attractive stroke
   page.drawText(text, { x, y, size, font, color });
-  page.drawText(text, { x: x + 0.35, y, size, font, color });
+  page.drawText(text, { x: x + 0.4, y, size, font, color });
+  page.drawText(text, { x, y: y + 0.4, size, font, color });
+}
+
+/** Draw text shrinking the font (down to minSize) so it never spills past maxWidthMm. */
+function drawTextFit(
+  page: PDFPage, font: PDFFont, text: string, xMm: number, yMm: number, maxWidthMm: number,
+  mode: PdfMode, maxSize: number, minSize: number, color?: { r: number; g: number; b: number }
+) {
+  if (!text) return;
+  let size = maxSize;
+  while (size > minSize && font.widthOfTextAtSize(text, size) / MM_TO_PT > maxWidthMm) size -= 0.25;
+  drawText(page, font, text, xMm, yMm, mode, { size, color });
 }
 
 function wrapText(font: PDFFont, text: string, maxWidthMm: number, size: number): string[] {
@@ -171,12 +188,14 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
     });
   }
 
-  // ---- dasha / dosha / yog (values after the printed labels) ----
-  drawText(page, font, data.mahadasha, DASHA_FIELDS.mahadasha.xMm, DASHA_FIELDS.mahadasha.yMm, mode, { size: DASHA_FIELDS.mahadasha.fontSize });
-  drawText(page, font, data.antardasha, DASHA_FIELDS.antardasha.xMm, DASHA_FIELDS.antardasha.yMm, mode, { size: DASHA_FIELDS.antardasha.fontSize });
-  drawText(page, font, data.pratyantar, DASHA_FIELDS.pratyantar.xMm, DASHA_FIELDS.pratyantar.yMm, mode, { size: DASHA_FIELDS.pratyantar.fontSize });
-  drawText(page, font, data.dosha, DASHA_FIELDS.dosha.xMm, DASHA_FIELDS.dosha.yMm, mode, { size: DASHA_FIELDS.dosha.fontSize });
-  drawText(page, font, data.yog, DASHA_FIELDS.yog.xMm, DASHA_FIELDS.yog.yMm, mode, { size: DASHA_FIELDS.yog.fontSize });
+  // ---- dasha / dosha / yog — bold, biggest size that still fits inside the block ----
+  const dfit = (val: string, f: { xMm: number; yMm: number; fontSize: number }) =>
+    drawTextFit(page, font, val, f.xMm, f.yMm, DASHA_MAX_WIDTH_MM, mode, f.fontSize, 6);
+  dfit(data.mahadasha, DASHA_FIELDS.mahadasha);
+  dfit(data.antardasha, DASHA_FIELDS.antardasha);
+  dfit(data.pratyantar, DASHA_FIELDS.pratyantar);
+  dfit(data.dosha, DASHA_FIELDS.dosha);
+  dfit(data.yog, DASHA_FIELDS.yog);
 
   // ---- remedies table (ग्रह | उपाय | टिप्पणी) — clean, bordered, aligned ----
   const t = REMEDY_TABLE;
@@ -231,11 +250,21 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
     });
   }
 
-  // ---- gemstones ----
+  // ---- gemstones (in Hindi, each with a small colour gem marker) ----
+  const hi = (map: Record<string, string>, v: string) => map[v] ?? v;
+  const weightHi = (w: string) => w.replace(/ratti/i, "रत्ती");
   data.gemRows.forEach((g, i) => {
     const color = PLANET_COLORS[g.planet] ?? DEFAULT_TEXT_COLOR;
-    const line = `रत्न: ${g.planet} — ${g.stone} · ${g.weight} · ${g.metal} · ${g.finger} · ${g.day} · मंत्र: ${g.mantra}`;
-    drawText(page, font, line, GEMSTONE_BLOCK.startXMm, GEMSTONE_BLOCK.startYMm + i * GEMSTONE_BLOCK.rowHeightMm, mode, { size: GEMSTONE_BLOCK.fontSize, color });
+    const rowYMm = GEMSTONE_BLOCK.startYMm + i * GEMSTONE_BLOCK.rowHeightMm;
+    // small round "gem" in its traditional colour, before the line
+    const r = GEMSTONE_BLOCK.iconMm / 2;
+    const cxMm = GEMSTONE_BLOCK.startXMm + r;
+    const cyMm = rowYMm - 1.2; // roughly on the text's centre line
+    const cc = pt(cxMm, cyMm, mode);
+    page.drawCircle({ x: cc.x, y: cc.y, size: mm(r), color: rgb(color.r, color.g, color.b) });
+    page.drawCircle({ x: cc.x, y: cc.y, size: mm(r), borderColor: rgb(0.25, 0.25, 0.25), borderWidth: 0.4 });
+    const line = `रत्न: ${g.planet} — ${hi(STONE_HI, g.stone)} · ${weightHi(g.weight)} · ${hi(METAL_HI, g.metal)} · ${hi(FINGER_HI, g.finger)} · ${hi(DAY_HI, g.day)} · मंत्र: ${g.mantra}`;
+    drawText(page, font, line, GEMSTONE_BLOCK.startXMm + GEMSTONE_BLOCK.iconMm + 2, rowYMm, mode, { size: GEMSTONE_BLOCK.fontSize, color });
   });
 
   // ---- notes ----
