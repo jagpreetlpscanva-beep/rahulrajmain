@@ -1,5 +1,10 @@
 "use client";
 
+// pdf-lib / @pdf-lib/fontkit ship transpiled async code that references the
+// global `regeneratorRuntime`; importing this polyfill defines it and fixes
+// the "regeneratorRuntime is not defined" crash during PDF generation.
+import "regenerator-runtime/runtime";
+
 /**
  * Prescription Pad PDF generator.
  *
