@@ -79,13 +79,11 @@ function drawText(
 ) {
   if (!text) return;
   const { x, y } = pt(xMm, yMm, mode);
-  page.drawText(text, {
-    x,
-    y,
-    size: opts.size ?? 9,
-    font,
-    color: rgb((opts.color ?? DEFAULT_TEXT_COLOR).r, (opts.color ?? DEFAULT_TEXT_COLOR).g, (opts.color ?? DEFAULT_TEXT_COLOR).b),
-  });
+  const size = opts.size ?? 9;
+  const color = rgb((opts.color ?? DEFAULT_TEXT_COLOR).r, (opts.color ?? DEFAULT_TEXT_COLOR).g, (opts.color ?? DEFAULT_TEXT_COLOR).b);
+  // synthetic bold — draw twice with a tiny horizontal offset for a bolder, more attractive look
+  page.drawText(text, { x, y, size, font, color });
+  page.drawText(text, { x: x + 0.35, y, size, font, color });
 }
 
 function wrapText(font: PDFFont, text: string, maxWidthMm: number, size: number): string[] {

@@ -34,7 +34,7 @@ export const PATIENT_BLOCK = { xMm: 73, yMm: 71, lineHeightMm: 6, fontSize: 9 };
 /* ---- Lagna Kundali box (13,65 · 54×54). The pad ALREADY has the printed grid —
        we do NOT draw a grid, only place planets at the house centres below. ---- */
 export const KUNDALI_BOX: Box = { xMm: 13, yMm: 65, widthMm: 54, heightMm: 54 };
-export const KUNDALI_PLANET = { fontSize: 6, lineMm: 2.4 };
+export const KUNDALI_PLANET = { fontSize: 9, lineMm: 3.4 };
 /** House centres as fractions of the box (North-Indian layout, house1 = top diamond). */
 export const HOUSE_CENTERS: Record<number, [number, number]> = {
   1: [0.5, 0.24], 2: [0.25, 0.11], 3: [0.11, 0.25], 4: [0.25, 0.5], 5: [0.11, 0.75],
@@ -47,11 +47,11 @@ export const HOUSE_CENTERS: Record<number, [number, number]> = {
 const DASHA_X = 170;
 const DASHA_FS = 7;
 export const DASHA_FIELDS = {
-  mahadasha: { xMm: DASHA_X, yMm: 76, fontSize: DASHA_FS },
-  antardasha: { xMm: DASHA_X, yMm: 85, fontSize: DASHA_FS },
-  pratyantar: { xMm: DASHA_X, yMm: 94, fontSize: DASHA_FS },
-  dosha: { xMm: DASHA_X, yMm: 103, fontSize: DASHA_FS },
-  yog: { xMm: DASHA_X, yMm: 112, fontSize: DASHA_FS },
+  mahadasha: { xMm: DASHA_X, yMm: 67, fontSize: DASHA_FS },
+  antardasha: { xMm: DASHA_X, yMm: 76, fontSize: DASHA_FS },
+  pratyantar: { xMm: DASHA_X, yMm: 85, fontSize: DASHA_FS },
+  dosha: { xMm: DASHA_X, yMm: 94, fontSize: DASHA_FS },
+  yog: { xMm: DASHA_X, yMm: 103, fontSize: DASHA_FS },
 };
 
 /* ---- Remedies table (5,140 · 192×102) — clean bordered table ---- */
