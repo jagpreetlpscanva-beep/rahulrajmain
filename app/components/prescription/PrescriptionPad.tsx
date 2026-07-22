@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { CITIES } from "@/lib/calculators";
 import { PLANETS, MISC_REMEDY_CATEGORY } from "@/lib/cms";
-import { generatePrescriptionPdf, rasterizeSvgDataUri, downloadPdf, openPdfInNewTab, type PrescriptionPdfData } from "@/lib/prescriptionPad/generatePdf";
 
 /* ---------------- types ---------------- */
 type Rem = { id: string; planet: string; title: string };
@@ -244,69 +243,14 @@ export function PrescriptionPad() {
   };
   const save = () => { doSave(); };
 
-  const [pdfBusy, setPdfBusy] = useState<"digital" | "print" | null>(null);
-
-  /** Assemble the data payload the PDF generator needs, rasterizing the SVG chart first. */
-  const buildPdfData = useCallback(async (): Promise<PrescriptionPdfData> => {
-    const chartImageDataUri = chart ? await rasterizeSvgDataUri(chart) : null;
-    return {
-      patientName,
-      mobile,
-      gender,
-      dob: fmtDMY(dob),
-      tob,
-      place,
-      date: fmtDMY(now.toISOString().slice(0, 10)),
-      astrologer,
-      mahadasha,
-      antardasha,
-      pratyantar,
-      dosha,
-      yog,
-      chartImageDataUri,
-      planets: kPlanets.map((p) => ({ name: p.name, sign: p.sign, degree: fmtDeg(p.lon), house: p.house, nakshatra: p.nakshatra })),
-      remedyRows: rows.filter((r) => r.planet).map((r) => ({ planet: r.planet, remedyLines: r.remedies.map((x) => remedyLine(r, x)), notes: r.notes })),
-      gemRows: gems.filter((g) => g.stone),
-      notes,
-    };
-  }, [chart, patientName, mobile, gender, dob, tob, place, now, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kPlanets, rows, gems, notes]);
-
-  const downloadDigitalPdf = async () => {
-    setPdfBusy("digital");
-    try {
-      const data = await buildPdfData();
-      const blob = await generatePrescriptionPdf(data, "digital");
-      downloadPdf(blob, `${patientName || "prescription"}-digital.pdf`);
-    } catch (err) {
-      console.error(err);
-      alert(`PDF नहीं बन सकी: ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      setPdfBusy(null);
-    }
-  };
-
-  const openPrintPdf = async () => {
-    setPdfBusy("print");
-    // open the tab synchronously (still inside the click handler) so browsers
-    // don't treat it as an unrequested popup once the async PDF build finishes
-    const tab = window.open("", "_blank");
-    try {
-      const data = await buildPdfData();
-      const blob = await generatePrescriptionPdf(data, "print");
-      // opened at the exact configured page size; viewer should print at "Actual size / 100%", no "Fit to page"
-      if (tab) {
-        const url = URL.createObjectURL(blob);
-        tab.location.href = url;
-      } else {
-        openPdfInNewTab(blob); // popup was blocked anyway — fall back, browser will show its own blocked-popup notice
-      }
-    } catch (err) {
-      console.error(err);
-      tab?.close();
-      alert(`प्रिंट PDF नहीं बन सकी: ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      setPdfBusy(null);
-    }
+  // Clean PDF/print = the browser printing the styled HTML pad doc (the print-portal
+  // below). One click = one dialog. Save-as-PDF from the dialog gives the clean sheet.
+  const [printing, setPrinting] = useState(false);
+  const printPad = () => {
+    if (printing) return;
+    setPrinting(true);
+    window.print();
+    setTimeout(() => setPrinting(false), 1500);
   };
 
   const search = async () => {
@@ -351,34 +295,11 @@ export function PrescriptionPad() {
     if (!savedFor) return;
     const digits = mobile.replace(/\D/g, "");
     const to = digits.length === 10 ? "91" + digits : digits;
-
-    // Try to attach the actual PDF file via the device's native Share sheet — this is
-    // what actually lets WhatsApp receive the PDF itself instead of just a text link.
-    // NOTE: this is a browser/OS capability (Web Share API, mobile only) — a plain
-    // wa.me link can never carry a file attachment, on any device, before or after
-    // any of these changes; that's a WhatsApp platform restriction, not app behaviour.
-    let blob: Blob;
-    try {
-      const data = await buildPdfData();
-      blob = await generatePrescriptionPdf(data, "digital");
-      const file = new File([blob], `${patientName || "prescription"}.pdf`, { type: "application/pdf" });
-      // Mobile: share ONLY the PDF via the native share sheet.
-      if (navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file] });
-        return;
-      }
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") return; // user cancelled the share sheet
-      console.error(err);
-      alert(`PDF नहीं बन सकी: ${err instanceof Error ? err.message : String(err)}`);
-      return;
-    }
-    // Desktop / WhatsApp Web: browsers CANNOT attach a file to WhatsApp automatically
-    // (a WhatsApp platform restriction). So NO text is sent — instead we download the
-    // PDF and open the client's chat so it can be dragged/attached manually.
-    downloadPdf(blob, `${patientName || "prescription"}.pdf`);
-    window.open(`https://wa.me/${to}`, "_blank"); // open chat, no prefilled text
-    alert("Desktop par WhatsApp me file auto-attach nahi hoti. PDF download ho gayi — chat me usko attach kar dein.\n(Mobile par sirf PDF direct share hoti hai.)");
+    // Share the clean report LINK (the /rx page renders the full pad; the client
+    // opens it and can save the PDF). Attaching a PDF file to a wa.me chat is a
+    // WhatsApp platform restriction and isn't possible from a browser.
+    const link = `${window.location.origin}/rx/${savedFor}`;
+    window.open(`https://wa.me/${to}?text=${encodeURIComponent(link)}`, "_blank");
   };
   const shareEmail = async () => {
     const savedFor = savedId || (await doSave());
@@ -406,8 +327,7 @@ export function PrescriptionPad() {
 
       {/* ===== controls ===== */}
       <div className="rx-noprint mx-auto flex max-w-[1120px] flex-wrap items-center gap-2 px-3 pt-4">
-        <button onClick={downloadDigitalPdf} disabled={pdfBusy !== null} className={`${btn} bg-[#6d1414] text-white disabled:opacity-60`}>{pdfBusy === "digital" ? "बन रहा है…" : "📄 PDF सेव करें (Digital)"}</button>
-        <button onClick={openPrintPdf} disabled={pdfBusy !== null} className={`${btn} bg-[#3a3a3a] text-white disabled:opacity-60`}>{pdfBusy === "print" ? "बन रहा है…" : "🖨️ प्रिंट (बिना बैकग्राउंड)"}</button>
+        <button onClick={printPad} disabled={printing} className={`${btn} bg-[#6d1414] text-white disabled:opacity-60`}>📄 PDF सेव करें / प्रिंट</button>
         <button onClick={shareWhatsApp} className={`${btn} bg-emerald-600 text-white`}>💬 WhatsApp</button>
         <button onClick={shareEmail} className={`${btn} bg-sky-700 text-white`}>📧 ईमेल</button>
         <button onClick={save} disabled={saving} className={`${btn} bg-amber-600 text-white disabled:opacity-60`}>{saving ? "सेव हो रहा…" : "💾 सेव करें"}</button>
