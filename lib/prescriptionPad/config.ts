@@ -34,7 +34,7 @@ export const PATIENT_BLOCK = { xMm: 73, yMm: 71, lineHeightMm: 6, fontSize: 9 };
 /* ---- Lagna Kundali box (13,65 · 54×54). The pad ALREADY has the printed grid —
        we do NOT draw a grid, only place planets at the house centres below. ---- */
 export const KUNDALI_BOX: Box = { xMm: 13, yMm: 65, widthMm: 54, heightMm: 54 };
-export const KUNDALI_PLANET = { fontSize: 9, lineMm: 3.4 };
+export const KUNDALI_PLANET = { fontSize: 11.5, lineMm: 4.3 };
 /** House centres as fractions of the box (North-Indian layout, house1 = top diamond). */
 export const HOUSE_CENTERS: Record<number, [number, number]> = {
   1: [0.5, 0.24], 2: [0.25, 0.11], 3: [0.11, 0.25], 4: [0.25, 0.5], 5: [0.11, 0.75],
@@ -55,24 +55,26 @@ export const DASHA_FIELDS = {
   yog: { xMm: DASHA_X, yMm: 103, fontSize: DASHA_FS },
 };
 
-/* ---- Remedies table (5,140 · 192×102) — clean bordered table ---- */
-export const REMEDY_TABLE = {
+/* ---- Remedies (5,140 · 192×102) — one block per planet, NOT a table.
+       Heading (planet name, coloured) sits on its own line; remedies +
+       notes flow indented below it. Cursor is fully dynamic — nothing
+       here is a fixed per-planet Y, only the starting point of the
+       first block and the safe boundaries used for page-break checks. ---- */
+export const REMEDY_BLOCK = {
   startXMm: 6,
   startYMm: 142,
   widthMm: 190,
-  headerHeightMm: 7,
-  rowMinHeightMm: 7,
-  lineHeightMm: 3.8,
-  cellPadMm: 2.2,
-  fontSize: 8,
-  headerFontSize: 8.5,
-  headerFillColor: { r: 1, g: 0.94, b: 0.68 },
-  borderColor: { r: 0.55, g: 0.48, b: 0.4 },
-  columns: {
-    planet: { offsetXMm: 0, widthMm: 30 },
-    remedy: { offsetXMm: 30, widthMm: 110 },
-    notes: { offsetXMm: 140, widthMm: 50 },
-  },
+  indentMm: 6,
+  headingFontSize: 10.5,
+  bodyFontSize: 8.5,
+  lineHeightMm: 4.3,
+  headingLineHeightMm: 6,
+  blockGapMm: 5, // 4–6mm vertical gap between planet sections
+  /** page 1's remedies area is boxed on the pre-printed pad (140→242mm) — stay inside it. */
+  bottomLimitMm: 238,
+  /** overflow pages are plain (no pre-printed template), so they use almost the full sheet. */
+  continuationTopMm: 20,
+  continuationBottomMm: 270,
 };
 
 /* ---- Gemstones — just above the footer, each with a small colour gem marker ---- */
