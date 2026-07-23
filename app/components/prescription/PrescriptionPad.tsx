@@ -267,12 +267,10 @@ export function PrescriptionPad() {
     };
   }, [patientName, mobile, gender, dob, tob, place, now, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kPlanets, rows, gems, notes]);
 
-  /** PatientName_DD-MM-YYYY.pdf */
+  /** डॉ० राहुल राज — ज्योतिष परामर्श - {PatientName}.pdf */
   const pdfFileName = useCallback(() => {
-    const d = new Date();
-    const dmy = `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(2, "0")}-${d.getFullYear()}`;
-    const name = (patientName || "prescription").trim().replace(/\s+/g, "_").replace(/[^\wऀ-ॿ_-]/g, "") || "prescription";
-    return `${name}_${dmy}.pdf`;
+    const name = (patientName || "ग्राहक").trim().replace(/[\\/:*?"<>|]/g, "");
+    return `डॉ० राहुल राज — ज्योतिष परामर्श - ${name}.pdf`;
   }, [patientName]);
 
   const downloadDigitalPdf = async () => {
