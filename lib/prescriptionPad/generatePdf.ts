@@ -26,7 +26,7 @@ import {
   HOUSE_CENTERS,
   DASHA_FIELDS,
   DASHA_MAX_WIDTH_MM,
-  REMEDY_TABLE,
+  REMEDY_BLOCK,
   GEMSTONE_BLOCK,
   NOTES_FIELD,
   PLANET_COLORS,
@@ -197,62 +197,55 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
   dfit(data.dosha, DASHA_FIELDS.dosha);
   dfit(data.yog, DASHA_FIELDS.yog);
 
-  // ---- remedies table (ग्रह | उपाय | टिप्पणी) — clean, bordered, aligned ----
-  const t = REMEDY_TABLE;
-  let gemTopMm = GEMSTONE_BLOCK.startYMm; // gemstones flow AFTER the table (no overlap)
-  if (data.remedyRows.length > 0) {
-    const pad = t.cellPadMm;
-    const border = rgb(t.borderColor.r, t.borderColor.g, t.borderColor.b);
-    const lineAt = (x1: number, y1: number, x2: number, y2: number) => {
-      const a = pt(x1, y1, mode), b = pt(x2, y2, mode);
-      page.drawLine({ start: { x: a.x, y: a.y }, end: { x: b.x, y: b.y }, thickness: 0.6, color: border });
-    };
-    const colPlanetX = t.startXMm + t.columns.planet.offsetXMm;
-    const colRemedyX = t.startXMm + t.columns.remedy.offsetXMm;
-    const colNotesX = t.startXMm + t.columns.notes.offsetXMm;
+  // ---- remedies — ONE BLOCK PER PLANET (no table, no fixed per-planet Y) ----
+  // Layout rule: heading (planet name, coloured) on its own single line, then
+  // its remedies + notes indented below it, wrapped to the available width.
+  // The cursor always advances by the ACTUAL height just drawn, so a block
+  // with more/longer remedy lines simply pushes the next block further down
+  // instead of overlapping it. If a block would run past the safe area of
+  // the current page, we start a fresh page before drawing it — never mid-block.
+  const rb = REMEDY_BLOCK;
+  type Cursor = { page: PDFPage; yMm: number; pageIndex: number };
+  let cursor: Cursor = { page, yMm: rb.startYMm, pageIndex: 0 };
 
-    // measure every row first (so borders can span the exact height)
-    const meta = data.remedyRows.map((row) => {
-      const remedyLines = row.remedyLines.flatMap((l) => wrapText(font, `• ${l}`, t.columns.remedy.widthMm - 2 * pad, t.fontSize));
-      const notesLines = wrapText(font, row.notes, t.columns.notes.widthMm - 2 * pad, t.fontSize);
-      const n = Math.max(1, remedyLines.length, notesLines.length);
-      const h = Math.max(t.rowMinHeightMm, n * t.lineHeightMm + 2 * pad);
-      return { row, remedyLines, notesLines, h };
+  const bottomLimitFor = (pageIndex: number) => (pageIndex === 0 ? rb.bottomLimitMm : rb.continuationBottomMm);
+
+  /** Start a new (blank) page if `neededMm` of content won't fit before the safe bottom edge. */
+  const ensureSpace = (neededMm: number) => {
+    if (cursor.yMm + neededMm <= bottomLimitFor(cursor.pageIndex)) return;
+    const overflowPage = doc.addPage([PAGE.widthPt, PAGE.heightPt]);
+    cursor = { page: overflowPage, yMm: rb.continuationTopMm, pageIndex: cursor.pageIndex + 1 };
+  };
+
+  data.remedyRows.forEach((row) => {
+    // wrap remedies + notes to the block width (minus the indent) BEFORE drawing,
+    // so we know the block's real height up front — this is what lets row height
+    // grow automatically instead of clipping/overlapping the next planet.
+    const remedyLines = row.remedyLines.flatMap((l) => wrapText(font, `• ${l}`, rb.widthMm - rb.indentMm, rb.bodyFontSize));
+    const notesLines = row.notes ? wrapText(font, `टिप्पणी: ${row.notes}`, rb.widthMm - rb.indentMm, rb.bodyFontSize) : [];
+    const bodyLines = [...remedyLines, ...notesLines];
+    const blockHeightMm = rb.headingLineHeightMm + bodyLines.length * rb.lineHeightMm;
+
+    ensureSpace(blockHeightMm); // page-break BEFORE drawing, if needed — never overlaps
+
+    const color = PLANET_COLORS[row.planet] ?? DEFAULT_TEXT_COLOR;
+
+    // heading — always one line, never wrapped
+    drawText(cursor.page, font, row.planet, rb.startXMm, cursor.yMm, mode, { size: rb.headingFontSize, color });
+    cursor.yMm += rb.headingLineHeightMm;
+
+    // remedies + notes — indented under the heading
+    bodyLines.forEach((line) => {
+      drawText(cursor.page, font, line, rb.startXMm + rb.indentMm, cursor.yMm, mode, { size: rb.bodyFontSize });
+      cursor.yMm += rb.lineHeightMm;
     });
-    const totalH = t.headerHeightMm + meta.reduce((s, m) => s + m.h, 0);
-    const xL = t.startXMm, xR = t.startXMm + t.widthMm, yT = t.startYMm, yB = t.startYMm + totalH;
 
-    // full-width yellow header fill
-    const hp = pt(xL, yT, mode);
-    page.drawRectangle({ x: hp.x, y: hp.y - mm(t.headerHeightMm), width: mm(t.widthMm), height: mm(t.headerHeightMm), color: rgb(t.headerFillColor.r, t.headerFillColor.g, t.headerFillColor.b) });
+    cursor.yMm += rb.blockGapMm; // 4–6mm gap, then the NEXT block starts here — never a fixed Y
+  });
 
-    // outer border + full-height column dividers + header underline
-    lineAt(xL, yT, xR, yT); lineAt(xL, yB, xR, yB);
-    lineAt(xL, yT, xL, yB); lineAt(xR, yT, xR, yB);
-    lineAt(colRemedyX, yT, colRemedyX, yB); lineAt(colNotesX, yT, colNotesX, yB);
-    lineAt(xL, yT + t.headerHeightMm, xR, yT + t.headerHeightMm);
-
-    // header labels — vertically centred in the band
-    const headBase = yT + t.headerHeightMm / 2 + t.headerFontSize / MM_TO_PT / 3;
-    drawText(page, font, "ग्रह", colPlanetX + pad, headBase, mode, { size: t.headerFontSize });
-    drawText(page, font, "उपाय", colRemedyX + pad, headBase, mode, { size: t.headerFontSize });
-    drawText(page, font, "टिप्पणी", colNotesX + pad, headBase, mode, { size: t.headerFontSize });
-
-    // body rows
-    let cy = yT + t.headerHeightMm;
-    meta.forEach((m, idx) => {
-      const base = cy + pad + t.fontSize / MM_TO_PT; // baseline of the first line
-      const color = PLANET_COLORS[m.row.planet] ?? DEFAULT_TEXT_COLOR;
-      drawText(page, font, m.row.planet, colPlanetX + pad, base, mode, { size: t.fontSize, color });
-      m.remedyLines.forEach((l, i) => drawText(page, font, l, colRemedyX + pad, base + i * t.lineHeightMm, mode, { size: t.fontSize }));
-      m.notesLines.forEach((l, i) => drawText(page, font, l, colNotesX + pad, base + i * t.lineHeightMm, mode, { size: t.fontSize }));
-      cy += m.h;
-      if (idx < meta.length - 1) lineAt(xL, cy, xR, cy); // row divider
-    });
-    gemTopMm = yB + 5; // start gemstones just below the table
-  }
-
-  // ---- gemstones (in Hindi, each with a small colour gem marker) ----
+  // ---- gemstones — continue exactly where the remedy blocks left off (same page/cursor) ----
+  const gemPage = cursor.page;
+  const gemTopMm = data.remedyRows.length > 0 ? cursor.yMm : GEMSTONE_BLOCK.startYMm;
   const hi = (map: Record<string, string>, v: string) => map[v] ?? v;
   const weightHi = (w: string) => w.replace(/ratti/i, "रत्ती");
   data.gemRows.forEach((g, i) => {
@@ -261,18 +254,18 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
     // small round "gem" in its traditional colour, before the line
     const r = GEMSTONE_BLOCK.iconMm / 2;
     const cc = pt(GEMSTONE_BLOCK.startXMm + r, rowYMm - 1.2, mode);
-    page.drawCircle({ x: cc.x, y: cc.y, size: mm(r), color: rgb(color.r, color.g, color.b) });
-    page.drawCircle({ x: cc.x, y: cc.y, size: mm(r), borderColor: rgb(0.25, 0.25, 0.25), borderWidth: 0.4 });
+    gemPage.drawCircle({ x: cc.x, y: cc.y, size: mm(r), color: rgb(color.r, color.g, color.b) });
+    gemPage.drawCircle({ x: cc.x, y: cc.y, size: mm(r), borderColor: rgb(0.25, 0.25, 0.25), borderWidth: 0.4 });
     const rud = g.rudraksha ? ` · रुद्राक्ष: ${g.rudraksha}` : "";
     const line = `रत्न: ${g.planet} — ${hi(STONE_HI, g.stone)} · ${weightHi(g.weight)} · ${hi(METAL_HI, g.metal)} · ${hi(FINGER_HI, g.finger)} · ${hi(DAY_HI, g.day)} · मंत्र: ${g.mantra}${rud}`;
-    drawText(page, font, line, GEMSTONE_BLOCK.startXMm + GEMSTONE_BLOCK.iconMm + 2, rowYMm, mode, { size: GEMSTONE_BLOCK.fontSize, color });
+    drawText(gemPage, font, line, GEMSTONE_BLOCK.startXMm + GEMSTONE_BLOCK.iconMm + 2, rowYMm, mode, { size: GEMSTONE_BLOCK.fontSize, color });
   });
 
-  // ---- notes (flows just below the gemstones) ----
+  // ---- notes (flows just below the gemstones, same page) ----
   if (data.notes) {
     const notesTopMm = gemTopMm + data.gemRows.length * GEMSTONE_BLOCK.rowHeightMm + 3;
     const lines = wrapText(font, `टिप्पणी: ${data.notes}`, NOTES_FIELD.widthMm, NOTES_FIELD.fontSize);
-    lines.forEach((line, i) => drawText(page, font, line, NOTES_FIELD.xMm, notesTopMm + i * NOTES_FIELD.lineHeightMm, mode, { size: NOTES_FIELD.fontSize }));
+    lines.forEach((line, i) => drawText(gemPage, font, line, NOTES_FIELD.xMm, notesTopMm + i * NOTES_FIELD.lineHeightMm, mode, { size: NOTES_FIELD.fontSize }));
   }
 
   const bytes = await doc.save();
