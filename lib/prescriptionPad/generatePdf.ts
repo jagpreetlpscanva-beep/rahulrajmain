@@ -43,7 +43,7 @@ const mm = (v: number) => v * MM_TO_PT;
 
 export type PdfPlanet = { name: string; abbr: string; house: number; degree: number };
 export type PdfRemedyRow = { planet: string; remedyLines: string[]; notes: string };
-export type PdfGemRow = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string };
+export type PdfGemRow = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string; rudraksha?: string };
 
 export interface PrescriptionPdfData {
   patientName: string;
@@ -199,6 +199,7 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
 
   // ---- remedies table (ग्रह | उपाय | टिप्पणी) — clean, bordered, aligned ----
   const t = REMEDY_TABLE;
+  let gemTopMm = GEMSTONE_BLOCK.startYMm; // gemstones flow AFTER the table (no overlap)
   if (data.remedyRows.length > 0) {
     const pad = t.cellPadMm;
     const border = rgb(t.borderColor.r, t.borderColor.g, t.borderColor.b);
@@ -248,6 +249,7 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
       cy += m.h;
       if (idx < meta.length - 1) lineAt(xL, cy, xR, cy); // row divider
     });
+    gemTopMm = yB + 5; // start gemstones just below the table
   }
 
   // ---- gemstones (in Hindi, each with a small colour gem marker) ----
@@ -255,22 +257,22 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
   const weightHi = (w: string) => w.replace(/ratti/i, "रत्ती");
   data.gemRows.forEach((g, i) => {
     const color = PLANET_COLORS[g.planet] ?? DEFAULT_TEXT_COLOR;
-    const rowYMm = GEMSTONE_BLOCK.startYMm + i * GEMSTONE_BLOCK.rowHeightMm;
+    const rowYMm = gemTopMm + i * GEMSTONE_BLOCK.rowHeightMm;
     // small round "gem" in its traditional colour, before the line
     const r = GEMSTONE_BLOCK.iconMm / 2;
-    const cxMm = GEMSTONE_BLOCK.startXMm + r;
-    const cyMm = rowYMm - 1.2; // roughly on the text's centre line
-    const cc = pt(cxMm, cyMm, mode);
+    const cc = pt(GEMSTONE_BLOCK.startXMm + r, rowYMm - 1.2, mode);
     page.drawCircle({ x: cc.x, y: cc.y, size: mm(r), color: rgb(color.r, color.g, color.b) });
     page.drawCircle({ x: cc.x, y: cc.y, size: mm(r), borderColor: rgb(0.25, 0.25, 0.25), borderWidth: 0.4 });
-    const line = `रत्न: ${g.planet} — ${hi(STONE_HI, g.stone)} · ${weightHi(g.weight)} · ${hi(METAL_HI, g.metal)} · ${hi(FINGER_HI, g.finger)} · ${hi(DAY_HI, g.day)} · मंत्र: ${g.mantra}`;
+    const rud = g.rudraksha ? ` · रुद्राक्ष: ${g.rudraksha}` : "";
+    const line = `रत्न: ${g.planet} — ${hi(STONE_HI, g.stone)} · ${weightHi(g.weight)} · ${hi(METAL_HI, g.metal)} · ${hi(FINGER_HI, g.finger)} · ${hi(DAY_HI, g.day)} · मंत्र: ${g.mantra}${rud}`;
     drawText(page, font, line, GEMSTONE_BLOCK.startXMm + GEMSTONE_BLOCK.iconMm + 2, rowYMm, mode, { size: GEMSTONE_BLOCK.fontSize, color });
   });
 
-  // ---- notes ----
+  // ---- notes (flows just below the gemstones) ----
   if (data.notes) {
+    const notesTopMm = gemTopMm + data.gemRows.length * GEMSTONE_BLOCK.rowHeightMm + 3;
     const lines = wrapText(font, `टिप्पणी: ${data.notes}`, NOTES_FIELD.widthMm, NOTES_FIELD.fontSize);
-    lines.forEach((line, i) => drawText(page, font, line, NOTES_FIELD.xMm, NOTES_FIELD.yMm + i * NOTES_FIELD.lineHeightMm, mode, { size: NOTES_FIELD.fontSize }));
+    lines.forEach((line, i) => drawText(page, font, line, NOTES_FIELD.xMm, notesTopMm + i * NOTES_FIELD.lineHeightMm, mode, { size: NOTES_FIELD.fontSize }));
   }
 
   const bytes = await doc.save();

@@ -10,7 +10,13 @@ import { generatePrescriptionPdf, downloadPdf, type PrescriptionPdfData } from "
 type Rem = { id: string; planet: string; title: string };
 type MiscRem = { id: string; title: string };
 type CountOpt = { id: string; title: string };
-type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string };
+type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string; rudraksha: string };
+
+/** Standard rudraksha per planet (Mukhi), auto-filled when a planet is chosen. */
+const RUDRAKSHA_BY_PLANET: Record<string, string> = {
+  Sun: "1 मुखी", Moon: "2 मुखी", Mars: "3 मुखी", Mercury: "4 मुखी", Jupiter: "5 मुखी",
+  Venus: "6 मुखी", Saturn: "7 मुखी", Rahu: "8 मुखी", Ketu: "9 मुखी",
+};
 type Row = { planet: string; remedies: string[]; notes: string; remedyCounts?: Record<string, string> };
 type KPlanet = { name: string; color?: string; abbr: string; lon: number; rashi: number; house: number; sign: string; nakshatra: string; nakshatra_lord?: string };
 type Dasha = { mahadasha: string; antardasha: string };
@@ -21,7 +27,7 @@ type Consultation = {
 };
 
 const emptyRow = (): Row => ({ planet: "", remedies: [], notes: "" });
-const blankGem = (planet = ""): Gem => ({ planet, stone: "", weight: "", metal: "", finger: "", day: "", mantra: "" });
+const blankGem = (planet = ""): Gem => ({ planet, stone: "", weight: "", metal: "", finger: "", day: "", mantra: "", rudraksha: RUDRAKSHA_BY_PLANET[planet] || "" });
 
 /** sidereal longitude -> "12°34'" */
 function fmtDeg(lon: number): string {
@@ -211,7 +217,7 @@ export function PrescriptionPad() {
   const setGemAt = (i: number, patch: Partial<Gem>) => setGems((gs) => gs.map((g, idx) => (idx === i ? { ...g, ...patch } : g)));
   const loadGemInto = (i: number, planet: string) => {
     const d = gemDefaults.find((x) => x.planet === planet);
-    setGems((gs) => gs.map((g, idx) => idx === i ? (d ? { planet, stone: d.stone, weight: d.weight, metal: d.metal, finger: d.finger, day: d.day, mantra: d.mantra } : blankGem(planet)) : g));
+    setGems((gs) => gs.map((g, idx) => idx === i ? (d ? { planet, stone: d.stone, weight: d.weight, metal: d.metal, finger: d.finger, day: d.day, mantra: d.mantra, rudraksha: RUDRAKSHA_BY_PLANET[planet] || "" } : blankGem(planet)) : g));
   };
 
   const resetAll = () => {
@@ -555,7 +561,8 @@ export function PrescriptionPad() {
                     <div><label className={lbl}>धातु</label><input className={inp} value={g.metal} onChange={(e) => setGemAt(i, { metal: e.target.value })} /></div>
                     <div><label className={lbl}>अंगुली</label><input className={inp} value={g.finger} onChange={(e) => setGemAt(i, { finger: e.target.value })} /></div>
                     <div><label className={lbl}>दिन</label><input className={inp} value={g.day} onChange={(e) => setGemAt(i, { day: e.target.value })} /></div>
-                    <div className="sm:col-span-2"><label className={lbl}>मंत्र</label><input className={inp} value={g.mantra} onChange={(e) => setGemAt(i, { mantra: e.target.value })} /></div>
+                    <div><label className={lbl}>रुद्राक्ष</label><input className={inp} value={g.rudraksha || ""} onChange={(e) => setGemAt(i, { rudraksha: e.target.value })} placeholder="जैसे 7 मुखी" /></div>
+                    <div className="sm:col-span-3"><label className={lbl}>मंत्र</label><input className={inp} value={g.mantra} onChange={(e) => setGemAt(i, { mantra: e.target.value })} /></div>
                   </div>
                   {gems.length > 1 && <button onClick={() => setGems((gs) => gs.filter((_, idx) => idx !== i))} className="mt-2 text-xs font-semibold text-rose-600">✕ हटाएं</button>}
                 </div>
