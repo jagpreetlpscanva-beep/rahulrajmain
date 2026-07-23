@@ -34,7 +34,7 @@ export const PATIENT_BLOCK = { xMm: 73, yMm: 71, lineHeightMm: 6, fontSize: 9 };
 /* ---- Lagna Kundali box (13,65 · 54×54). The pad ALREADY has the printed grid —
        we do NOT draw a grid, only place planets at the house centres below. ---- */
 export const KUNDALI_BOX: Box = { xMm: 13, yMm: 65, widthMm: 54, heightMm: 54 };
-export const KUNDALI_PLANET = { fontSize: 11.5, lineMm: 4.3 };
+export const KUNDALI_PLANET = { fontSize: 8.5, lineMm: 3.2 };
 /** House centres as fractions of the box (North-Indian layout, house1 = top diamond). */
 export const HOUSE_CENTERS: Record<number, [number, number]> = {
   1: [0.5, 0.24], 2: [0.25, 0.11], 3: [0.11, 0.25], 4: [0.25, 0.5], 5: [0.11, 0.75],
@@ -65,10 +65,10 @@ export const REMEDY_BLOCK = {
   startYMm: 142,
   widthMm: 190,
   indentMm: 6,
-  headingFontSize: 10.5,
-  bodyFontSize: 8.5,
-  lineHeightMm: 4.3,
-  headingLineHeightMm: 6,
+  headingFontSize: 12.5,
+  bodyFontSize: 10.5,
+  lineHeightMm: 5.2,
+  headingLineHeightMm: 7,
   blockGapMm: 5, // 4–6mm vertical gap between planet sections
   /** page 1's remedies area is boxed on the pre-printed pad (140→242mm) — stay inside it. */
   bottomLimitMm: 238,
@@ -78,7 +78,7 @@ export const REMEDY_BLOCK = {
 };
 
 /* ---- Gemstones — just above the footer, each with a small colour gem marker ---- */
-export const GEMSTONE_BLOCK = { startXMm: 6, startYMm: 176, rowHeightMm: 6, fontSize: 8, iconMm: 3.4 };
+export const GEMSTONE_BLOCK = { startXMm: 6, startYMm: 176, rowHeightMm: 7.5, fontSize: 10, iconMm: 4 };
 
 /* ---- Free-text notes (bottom of the remedies area, above the footer) ---- */
 export const NOTES_FIELD = { xMm: 6, yMm: 190, widthMm: 190, fontSize: 7.5, lineHeightMm: 3.6 };
