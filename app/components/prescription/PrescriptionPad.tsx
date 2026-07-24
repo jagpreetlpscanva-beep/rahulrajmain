@@ -11,12 +11,6 @@ type Rem = { id: string; planet: string; title: string };
 type MiscRem = { id: string; title: string };
 type CountOpt = { id: string; title: string };
 type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string; rudraksha: string };
-
-/** Standard rudraksha per planet (Mukhi), auto-filled when a planet is chosen. */
-const RUDRAKSHA_BY_PLANET: Record<string, string> = {
-  Sun: "1 मुखी", Moon: "2 मुखी", Mars: "3 मुखी", Mercury: "4 मुखी", Jupiter: "5 मुखी",
-  Venus: "6 मुखी", Saturn: "7 मुखी", Rahu: "8 मुखी", Ketu: "9 मुखी",
-};
 type Row = { planet: string; remedies: string[]; notes: string; remedyCounts?: Record<string, string> };
 type KPlanet = { name: string; color?: string; abbr: string; lon: number; rashi: number; house: number; sign: string; nakshatra: string; nakshatra_lord?: string };
 type Dasha = { mahadasha: string; antardasha: string };
@@ -27,7 +21,7 @@ type Consultation = {
 };
 
 const emptyRow = (): Row => ({ planet: "", remedies: [], notes: "" });
-const blankGem = (planet = ""): Gem => ({ planet, stone: "", weight: "", metal: "", finger: "", day: "", mantra: "", rudraksha: RUDRAKSHA_BY_PLANET[planet] || "" });
+const blankGem = (planet = ""): Gem => ({ planet, stone: "", weight: "", metal: "", finger: "", day: "", mantra: "", rudraksha: "" });
 
 /** sidereal longitude -> "12°34'" */
 function fmtDeg(lon: number): string {
@@ -217,7 +211,7 @@ export function PrescriptionPad() {
   const setGemAt = (i: number, patch: Partial<Gem>) => setGems((gs) => gs.map((g, idx) => (idx === i ? { ...g, ...patch } : g)));
   const loadGemInto = (i: number, planet: string) => {
     const d = gemDefaults.find((x) => x.planet === planet);
-    setGems((gs) => gs.map((g, idx) => idx === i ? (d ? { planet, stone: d.stone, weight: d.weight, metal: d.metal, finger: d.finger, day: d.day, mantra: d.mantra, rudraksha: RUDRAKSHA_BY_PLANET[planet] || "" } : blankGem(planet)) : g));
+    setGems((gs) => gs.map((g, idx) => idx === i ? (d ? { planet, stone: d.stone, weight: d.weight, metal: d.metal, finger: d.finger, day: d.day, mantra: d.mantra, rudraksha: "" } : blankGem(planet)) : g));
   };
 
   const resetAll = () => {

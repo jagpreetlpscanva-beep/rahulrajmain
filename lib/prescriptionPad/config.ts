@@ -24,7 +24,7 @@ export const PAGE = {
 };
 
 /** Printer nudge applied to every field in "print" mode only (mm). */
-export const CALIBRATION = { offsetXMm: 0, offsetYMm: 0 };
+export const CALIBRATION = { offsetXMm: 15, offsetYMm: 0 };
 
 export type Box = { xMm: number; yMm: number; widthMm: number; heightMm: number };
 
