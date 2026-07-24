@@ -45,12 +45,16 @@ export async function POST(req: Request) {
       day: nw.getDate(), month: nw.getMonth() + 1, year: nw.getFullYear(),
       hour: nw.getHours(), min: nw.getMinutes(), lat, lon, tzone: 5.5,
     });
+    // Gochar chart must be framed on the NATAL lagna (house-1 = birth ascendant),
+    // with today's planets dropped into their houses relative to it — NOT on the
+    // current time-of-day ascendant (which changes every ~2 hrs and is meaningless).
+    const gocharChart = { ...g, asc_rashi: k.asc_rashi, ascendant_lon: k.ascendant_lon };
     return NextResponse.json({
       ok: true,
       kundali: k,
       chart: chartSvgDataUri(k, "D1", "#a01414"),
       d9: chartSvgDataUri(k, "D9", "#a01414"),     // Navamsa — UI only
-      gochar: chartSvgDataUri(g, "D1", "#1a5276"), // Gochar — UI only
+      gochar: chartSvgDataUri(gocharChart, "D1", "#1a5276"), // Gochar over natal lagna
     });
   } catch (e) {
     return NextResponse.json({ error: "calc_error", message: (e as Error).message }, { status: 500 });
