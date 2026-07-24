@@ -3,25 +3,26 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { CITIES } from "@/lib/calculators";
-import { PLANETS, MISC_REMEDY_CATEGORY } from "@/lib/cms";
+import { PLANETS, MISC_REMEDY_CATEGORY, DEFAULT_PAD_SECTIONS, type PadSection, type Anushthan, type GemGrade, type CaratOption } from "@/lib/cms";
 import { generatePrescriptionPdf, downloadPdf, type PrescriptionPdfData } from "@/lib/prescriptionPad/generatePdf";
 
 /* ---------------- types ---------------- */
 type Rem = { id: string; planet: string; title: string };
 type MiscRem = { id: string; title: string };
 type CountOpt = { id: string; title: string };
-type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string; rudraksha: string };
+type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string; rudraksha: string; carat?: string; grade?: string; rateA?: number; rateB?: number; rateC?: number };
+type AnuRow = { title: string; purpose: string; dakshina: string };
 type Row = { planet: string; remedies: string[]; notes: string; remedyCounts?: Record<string, string> };
 type KPlanet = { name: string; color?: string; abbr: string; lon: number; rashi: number; house: number; sign: string; nakshatra: string; nakshatra_lord?: string };
 type Dasha = { mahadasha: string; antardasha: string };
 type Consultation = {
   id: string; patientName: string; mobile: string; gender: string; dob: string; tob: string; place: string;
   astrologer: string; mahadasha: string; antardasha: string; pratyantar: string; dosha: string; yog: string;
-  kundali: unknown; rows: Row[]; gemstones: Gem[]; notes: string; createdAt: string;
+  kundali: unknown; rows: Row[]; gemstones: Gem[]; anushthan?: AnuRow[]; notes: string; createdAt: string;
 };
 
 const emptyRow = (): Row => ({ planet: "", remedies: [], notes: "" });
-const blankGem = (planet = ""): Gem => ({ planet, stone: "", weight: "", metal: "", finger: "", day: "", mantra: "", rudraksha: "" });
+const blankGem = (planet = ""): Gem => ({ planet, stone: "", weight: "", metal: "", finger: "", day: "", mantra: "", rudraksha: "", carat: "", grade: "" });
 
 /** sidereal longitude -> "12°34'" */
 function fmtDeg(lon: number): string {
@@ -91,7 +92,12 @@ export function PrescriptionPad() {
   const [remedies, setRemedies] = useState<Rem[]>([]);
   const [miscRemedies, setMiscRemedies] = useState<MiscRem[]>([]);
   const [countOptions, setCountOptions] = useState<CountOpt[]>([]);
-  const [gemDefaults, setGemDefaults] = useState<Gem[]>([]);
+  const [gemDefaults, setGemDefaults] = useState<(Gem & { rateA?: number; rateB?: number; rateC?: number })[]>([]);
+  const [padSections, setPadSections] = useState<PadSection[]>(DEFAULT_PAD_SECTIONS);
+  const [anushthanCatalog, setAnushthanCatalog] = useState<Anushthan[]>([]);
+  const [gemGrades, setGemGrades] = useState<GemGrade[]>([]);
+  const [carats, setCarats] = useState<CaratOption[]>([]);
+  const [anushthanRows, setAnushthanRows] = useState<AnuRow[]>([]);
 
   const [patientName, setPatientName] = useState("");
   const [mobile, setMobile] = useState("");
@@ -142,6 +148,10 @@ export function PrescriptionPad() {
     fetch("/api/content/miscRemedies").then((r) => r.json()).then((d) => Array.isArray(d) && setMiscRemedies(d)).catch(() => {});
     fetch("/api/content/remedyCounts").then((r) => r.json()).then((d) => Array.isArray(d) && setCountOptions(d)).catch(() => {});
     fetch("/api/content/gemstones").then((r) => r.json()).then((d) => Array.isArray(d) && setGemDefaults(d)).catch(() => {});
+    fetch("/api/content/padSections").then((r) => r.json()).then((d) => Array.isArray(d) && d.length && setPadSections(d)).catch(() => {});
+    fetch("/api/content/anushthan").then((r) => r.json()).then((d) => Array.isArray(d) && setAnushthanCatalog(d)).catch(() => {});
+    fetch("/api/content/gemGrades").then((r) => r.json()).then((d) => Array.isArray(d) && setGemGrades(d)).catch(() => {});
+    fetch("/api/content/carats").then((r) => r.json()).then((d) => Array.isArray(d) && setCarats(d)).catch(() => {});
     fetchToday();
   }, [fetchToday]);
 
@@ -211,20 +221,42 @@ export function PrescriptionPad() {
   const setGemAt = (i: number, patch: Partial<Gem>) => setGems((gs) => gs.map((g, idx) => (idx === i ? { ...g, ...patch } : g)));
   const loadGemInto = (i: number, planet: string) => {
     const d = gemDefaults.find((x) => x.planet === planet);
-    setGems((gs) => gs.map((g, idx) => idx === i ? (d ? { planet, stone: d.stone, weight: d.weight, metal: d.metal, finger: d.finger, day: d.day, mantra: d.mantra, rudraksha: "" } : blankGem(planet)) : g));
+    setGems((gs) => gs.map((g, idx) => idx === i
+      ? (d
+          ? { planet, stone: d.stone, weight: d.weight, metal: d.metal, finger: d.finger, day: d.day, mantra: d.mantra, rudraksha: "", carat: g.carat || "", grade: g.grade || "", rateA: d.rateA, rateB: d.rateB, rateC: d.rateC }
+          : { ...blankGem(planet), carat: g.carat || "", grade: g.grade || "" })
+      : g));
   };
+
+  /** Numeric ₹ price for a gem = carat × (rate for the selected grade). The grade's
+   *  index in the admin grade list picks rateA / rateB / rateC. "" when not priced. */
+  const gemPrice = useCallback((g: Gem): string => {
+    const caratNum = parseFloat(String(g.carat || "").replace(/[^\d.]/g, ""));
+    if (!caratNum || !g.grade) return "";
+    const gi = gemGrades.findIndex((x) => x.title === g.grade);
+    const rate = gi === 0 ? g.rateA : gi === 1 ? g.rateB : gi === 2 ? g.rateC : undefined;
+    if (!rate || rate <= 0) return "";
+    return `₹${Math.round(caratNum * rate).toLocaleString("en-IN")}`;
+  }, [gemGrades]);
+
+  /** Toggle an Anushthan catalog row on/off for this prescription (matched by title). */
+  const toggleAnushthan = (a: Anushthan) =>
+    setAnushthanRows((rows) =>
+      rows.some((r) => r.title === a.title)
+        ? rows.filter((r) => r.title !== a.title)
+        : [...rows, { title: a.title, purpose: a.purpose, dakshina: a.dakshina }]);
 
   const resetAll = () => {
     setPatientName(""); setMobile(""); setGender(""); setDob(""); setDobText(""); setTob(""); setPlace("Lucknow");
     setMahadasha(""); setAntardasha(""); setPratyantar(""); setDosha(""); setYog("");
     setChart(null); setGochar(null); setKundali(null); setKundaliState("idle");
-    setRows([emptyRow()]); setGems([blankGem()]); setNotes(""); setSavedId(null);
+    setRows([emptyRow()]); setGems([blankGem()]); setAnushthanRows([]); setNotes(""); setSavedId(null);
   };
 
   const load = (c: Consultation) => {
     setPatientName(c.patientName); setMobile(c.mobile); setGender(c.gender); setDob(c.dob); setDobText(fmtDMY(c.dob)); setTob(c.tob); setPlace(c.place || "Lucknow");
     setMahadasha(c.mahadasha); setAntardasha(c.antardasha); setPratyantar(c.pratyantar); setDosha(c.dosha); setYog(c.yog);
-    setKundali(c.kundali); setRows(c.rows?.length ? c.rows : [emptyRow()]); setGems(c.gemstones?.length ? c.gemstones : [blankGem()]); setNotes(c.notes);
+    setKundali(c.kundali); setRows(c.rows?.length ? c.rows : [emptyRow()]); setGems(c.gemstones?.length ? c.gemstones : [blankGem()]); setAnushthanRows(Array.isArray(c.anushthan) ? c.anushthan : []); setNotes(c.notes);
     setSavedId(c.id); setChart(null); setGochar(null); setKundaliState("idle"); setResults(null);
   };
 
@@ -232,7 +264,7 @@ export function PrescriptionPad() {
     if (!patientName.trim() || !mobile.trim()) { alert("ग्राहक का नाम और मोबाइल ज़रूरी है।"); return null; }
     setSaving(true);
     try {
-      const body = JSON.stringify({ patientName, mobile, gender, dob, tob, place, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kundali, rows, gemstones: gems.filter((g) => g.stone), notes });
+      const body = JSON.stringify({ patientName, mobile, gender, dob, tob, place, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kundali, rows, gemstones: gems.filter((g) => g.stone), anushthan: anushthanRows, notes });
       // once a record already has an id, update it in place — every later Save/Share
       // click on the same visit should NOT create a new duplicate entry
       const url = savedId ? `/api/prescriptions?id=${encodeURIComponent(savedId)}` : "/api/prescriptions";
@@ -256,10 +288,12 @@ export function PrescriptionPad() {
       mahadasha, antardasha, pratyantar, dosha, yog,
       planets: kPlanets.map((p) => ({ name: p.name, abbr: p.abbr, house: p.house, degree: Math.floor(((p.lon % 30) + 30) % 30) })),
       remedyRows: rows.filter((r) => r.planet).map((r) => ({ planet: r.planet, remedyLines: r.remedies.map((x) => remedyLine(r, x)), notes: r.notes })),
-      gemRows: gems.filter((g) => g.stone),
+      gemRows: gems.filter((g) => g.stone).map((g) => ({ ...g, price: gemPrice(g) })),
+      sections: padSections,
+      anushthanRows,
       notes,
     };
-  }, [patientName, mobile, gender, dob, tob, place, now, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kPlanets, rows, gems, notes]);
+  }, [patientName, mobile, gender, dob, tob, place, now, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kPlanets, rows, gems, gemPrice, padSections, anushthanRows, notes]);
 
   /** डॉ० राहुल राज — ज्योतिष परामर्श - {PatientName}.pdf */
   const pdfFileName = useCallback(() => {
@@ -540,6 +574,26 @@ export function PrescriptionPad() {
             <button onClick={() => setRows((rs) => [...rs, emptyRow()])} className="mt-2 rounded-lg border border-[#8a2020]/40 px-3 py-1.5 text-sm font-semibold text-[#8a2020]">＋ ग्रह जोड़ें</button>
           </div>
 
+          {/* anushthan */}
+          <div className="mt-6">
+            <p className="mb-2 font-serif text-xl font-bold text-[#a01414]">अनुष्ठान</p>
+            {anushthanCatalog.length === 0 ? (
+              <p className="text-xs text-ink/45">एडमिन → “Anushthan” में अनुष्ठान जोड़ें, फिर यहाँ चुनें।</p>
+            ) : (
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {anushthanCatalog.map((a) => {
+                  const on = anushthanRows.some((r) => r.title === a.title);
+                  return (
+                    <label key={a.id} className={`flex items-start gap-2 rounded-lg border p-2 text-sm ${on ? "border-[#8a2020]/50 bg-[#8a2020]/5" : "border-ink/15"}`}>
+                      <input type="checkbox" className="mt-1" checked={on} onChange={() => toggleAnushthan(a)} />
+                      <span><b>{a.title}</b><span className="text-ink/55"> · {a.purpose} · {a.dakshina}</span></span>
+                    </label>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* gemstones */}
           <div className="mt-6">
             <p className="mb-2 font-serif text-xl font-bold text-[#a01414]">रत्न</p>
@@ -554,9 +608,16 @@ export function PrescriptionPad() {
                     <div><label className={lbl}>अंगुली</label><input className={inp} value={g.finger} onChange={(e) => setGemAt(i, { finger: e.target.value })} /></div>
                     <div><label className={lbl}>दिन</label><input className={inp} value={g.day} onChange={(e) => setGemAt(i, { day: e.target.value })} /></div>
                     <div><label className={lbl}>रुद्राक्ष</label><input className={inp} value={g.rudraksha || ""} onChange={(e) => setGemAt(i, { rudraksha: e.target.value })} placeholder="जैसे 7 मुखी" /></div>
-                    <div className="sm:col-span-3"><label className={lbl}>मंत्र</label><input className={inp} value={g.mantra} onChange={(e) => setGemAt(i, { mantra: e.target.value })} /></div>
+                    <div><label className={lbl}>कैरेट / रत्ती</label><select className={inp} value={g.carat || ""} onChange={(e) => setGemAt(i, { carat: e.target.value })}><option value="">—</option>{carats.map((c) => <option key={c.id} value={c.title}>{c.title}</option>)}</select></div>
+                    <div><label className={lbl}>ग्रेड</label><select className={inp} value={g.grade || ""} onChange={(e) => setGemAt(i, { grade: e.target.value })}><option value="">—</option>{gemGrades.map((gr) => <option key={gr.id} value={gr.title}>{gr.title}</option>)}</select></div>
+                    <div className="sm:col-span-2"><label className={lbl}>मंत्र</label><input className={inp} value={g.mantra} onChange={(e) => setGemAt(i, { mantra: e.target.value })} /></div>
                   </div>
-                  {gems.length > 1 && <button onClick={() => setGems((gs) => gs.filter((_, idx) => idx !== i))} className="mt-2 text-xs font-semibold text-rose-600">✕ हटाएं</button>}
+                  <div className="mt-2 flex items-center justify-between">
+                    {gemPrice(g)
+                      ? <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-sm font-bold text-emerald-700">मूल्य: {gemPrice(g)}</span>
+                      : <span className="text-xs text-ink/40">कैरेट व ग्रेड चुनें → मूल्य अपने आप (रेट एडमिन में सेट करें)</span>}
+                    {gems.length > 1 && <button onClick={() => setGems((gs) => gs.filter((_, idx) => idx !== i))} className="text-xs font-semibold text-rose-600">✕ हटाएं</button>}
+                  </div>
                 </div>
               ))}
             </div>

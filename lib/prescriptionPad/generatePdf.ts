@@ -28,6 +28,8 @@ import {
   DASHA_MAX_WIDTH_MM,
   REMEDY_BLOCK,
   GEMSTONE_BLOCK,
+  ANUSHTHAN_TABLE,
+  SECTION_HEADING_COLOR,
   NOTES_FIELD,
   PLANET_COLORS,
   DEFAULT_TEXT_COLOR,
@@ -43,7 +45,9 @@ const mm = (v: number) => v * MM_TO_PT;
 
 export type PdfPlanet = { name: string; abbr: string; house: number; degree: number };
 export type PdfRemedyRow = { planet: string; remedyLines: string[]; notes: string };
-export type PdfGemRow = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string; rudraksha?: string };
+export type PdfGemRow = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string; rudraksha?: string; price?: string };
+export type PdfSection = { id: string; title: string; enabled: boolean; col1?: string; col2?: string; col3?: string };
+export type PdfAnushthanRow = { title: string; purpose: string; dakshina: string };
 
 export interface PrescriptionPdfData {
   patientName: string;
@@ -63,6 +67,10 @@ export interface PrescriptionPdfData {
   planets: PdfPlanet[];
   remedyRows: PdfRemedyRow[];
   gemRows: PdfGemRow[];
+  /** Admin-defined section order + on/off (both digital & print). Falls back to
+   *  anushthan → remedies → gemstones when not provided. */
+  sections?: PdfSection[];
+  anushthanRows?: PdfAnushthanRow[];
   notes: string;
 }
 
@@ -197,16 +205,13 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
   dfit(data.dosha, DASHA_FIELDS.dosha);
   dfit(data.yog, DASHA_FIELDS.yog);
 
-  // ---- remedies — ONE BLOCK PER PLANET (no table, no fixed per-planet Y) ----
-  // Layout rule: heading (planet name, coloured) on its own single line, then
-  // its remedies + notes indented below it, wrapped to the available width.
-  // The cursor always advances by the ACTUAL height just drawn, so a block
-  // with more/longer remedy lines simply pushes the next block further down
-  // instead of overlapping it. If a block would run past the safe area of
-  // the current page, we start a fresh page before drawing it — never mid-block.
+  // ---- flowing content area: Anushthan / Remedies / Gemstones, in the admin
+  //      order (data.sections), each skipped when disabled. A single cursor
+  //      advances by the ACTUAL height drawn, so sections never overlap and a
+  //      full page starts a fresh sheet before drawing (never mid-block). ----
   const rb = REMEDY_BLOCK;
   type Cursor = { page: PDFPage; yMm: number; pageIndex: number };
-  let cursor: Cursor = { page, yMm: rb.startYMm, pageIndex: 0 };
+  const cursor: Cursor = { page, yMm: rb.startYMm, pageIndex: 0 };
 
   const bottomLimitFor = (pageIndex: number) => (pageIndex === 0 ? rb.bottomLimitMm : rb.continuationBottomMm);
 
@@ -214,58 +219,119 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
   const ensureSpace = (neededMm: number) => {
     if (cursor.yMm + neededMm <= bottomLimitFor(cursor.pageIndex)) return;
     const overflowPage = doc.addPage([PAGE.widthPt, PAGE.heightPt]);
-    cursor = { page: overflowPage, yMm: rb.continuationTopMm, pageIndex: cursor.pageIndex + 1 };
+    cursor.page = overflowPage;
+    cursor.yMm = rb.continuationTopMm;
+    cursor.pageIndex += 1;
   };
 
-  data.remedyRows.forEach((row) => {
-    // wrap remedies + notes to the block width (minus the indent) BEFORE drawing,
-    // so we know the block's real height up front — this is what lets row height
-    // grow automatically instead of clipping/overlapping the next planet.
-    const remedyLines = row.remedyLines.flatMap((l) => wrapText(font, `• ${l}`, rb.widthMm - rb.indentMm, rb.bodyFontSize));
-    const notesLines = row.notes ? wrapText(font, `टिप्पणी: ${row.notes}`, rb.widthMm - rb.indentMm, rb.bodyFontSize) : [];
-    const bodyLines = [...remedyLines, ...notesLines];
-    const blockHeightMm = rb.headingLineHeightMm + bodyLines.length * rb.lineHeightMm;
-
-    ensureSpace(blockHeightMm); // page-break BEFORE drawing, if needed — never overlaps
-
-    const color = PLANET_COLORS[row.planet] ?? DEFAULT_TEXT_COLOR;
-
-    // heading — always one line, never wrapped
-    drawText(cursor.page, font, row.planet, rb.startXMm, cursor.yMm, mode, { size: rb.headingFontSize, color });
-    cursor.yMm += rb.headingLineHeightMm;
-
-    // remedies + notes — indented under the heading
-    bodyLines.forEach((line) => {
-      drawText(cursor.page, font, line, rb.startXMm + rb.indentMm, cursor.yMm, mode, { size: rb.bodyFontSize });
-      cursor.yMm += rb.lineHeightMm;
-    });
-
-    cursor.yMm += rb.blockGapMm; // 4–6mm gap, then the NEXT block starts here — never a fixed Y
-  });
-
-  // ---- gemstones — continue exactly where the remedy blocks left off (same page/cursor) ----
-  const gemPage = cursor.page;
-  const gemTopMm = data.remedyRows.length > 0 ? cursor.yMm : GEMSTONE_BLOCK.startYMm;
   const hi = (map: Record<string, string>, v: string) => map[v] ?? v;
   const weightHi = (w: string) => w.replace(/ratti/i, "रत्ती");
-  data.gemRows.forEach((g, i) => {
-    const color = PLANET_COLORS[g.planet] ?? DEFAULT_TEXT_COLOR;
-    const rowYMm = gemTopMm + i * GEMSTONE_BLOCK.rowHeightMm;
-    // small round "gem" in its traditional colour, before the line
-    const r = GEMSTONE_BLOCK.iconMm / 2;
-    const cc = pt(GEMSTONE_BLOCK.startXMm + r, rowYMm - 1.2, mode);
-    gemPage.drawCircle({ x: cc.x, y: cc.y, size: mm(r), color: rgb(color.r, color.g, color.b) });
-    gemPage.drawCircle({ x: cc.x, y: cc.y, size: mm(r), borderColor: rgb(0.25, 0.25, 0.25), borderWidth: 0.4 });
-    const rud = g.rudraksha ? ` · रुद्राक्ष: ${g.rudraksha}` : "";
-    const line = `रत्न: ${g.planet} — ${hi(STONE_HI, g.stone)} · ${weightHi(g.weight)} · ${hi(METAL_HI, g.metal)} · ${hi(FINGER_HI, g.finger)} · ${hi(DAY_HI, g.day)} · मंत्र: ${g.mantra}${rud}`;
-    drawText(gemPage, font, line, GEMSTONE_BLOCK.startXMm + GEMSTONE_BLOCK.iconMm + 2, rowYMm, mode, { size: GEMSTONE_BLOCK.fontSize, color });
-  });
 
-  // ---- notes (flows just below the gemstones, same page) ----
+  type C = { r: number; g: number; b: number };
+  const fillRect = (pg: PDFPage, xMm: number, yTopMm: number, wMm: number, hMm: number, fill?: C, border?: C) => {
+    const p = pt(xMm, yTopMm + hMm, mode); // bottom-left of the rect
+    pg.drawRectangle({
+      x: p.x, y: p.y, width: mm(wMm), height: mm(hMm),
+      color: fill ? rgb(fill.r, fill.g, fill.b) : undefined,
+      borderColor: border ? rgb(border.r, border.g, border.b) : undefined,
+      borderWidth: border ? 0.5 : 0,
+    });
+  };
+
+  // -- Remedies: one block per planet (heading + indented, wrapped body) --
+  const drawRemedies = () => {
+    data.remedyRows.forEach((row) => {
+      const remedyLines = row.remedyLines.flatMap((l) => wrapText(font, `• ${l}`, rb.widthMm - rb.indentMm, rb.bodyFontSize));
+      const notesLines = row.notes ? wrapText(font, `टिप्पणी: ${row.notes}`, rb.widthMm - rb.indentMm, rb.bodyFontSize) : [];
+      const bodyLines = [...remedyLines, ...notesLines];
+      const blockHeightMm = rb.headingLineHeightMm + bodyLines.length * rb.lineHeightMm;
+      ensureSpace(blockHeightMm);
+      const color = PLANET_COLORS[row.planet] ?? DEFAULT_TEXT_COLOR;
+      drawText(cursor.page, font, row.planet, rb.startXMm, cursor.yMm, mode, { size: rb.headingFontSize, color });
+      cursor.yMm += rb.headingLineHeightMm;
+      bodyLines.forEach((line) => {
+        drawText(cursor.page, font, line, rb.startXMm + rb.indentMm, cursor.yMm, mode, { size: rb.bodyFontSize });
+        cursor.yMm += rb.lineHeightMm;
+      });
+      cursor.yMm += rb.blockGapMm;
+    });
+  };
+
+  // -- Gemstones: one row each, with a coloured gem marker + optional price --
+  const drawGemstones = () => {
+    data.gemRows.forEach((g) => {
+      ensureSpace(GEMSTONE_BLOCK.rowHeightMm);
+      const color = PLANET_COLORS[g.planet] ?? DEFAULT_TEXT_COLOR;
+      const rowYMm = cursor.yMm;
+      const r = GEMSTONE_BLOCK.iconMm / 2;
+      const cc = pt(GEMSTONE_BLOCK.startXMm + r, rowYMm - 1.2, mode);
+      cursor.page.drawCircle({ x: cc.x, y: cc.y, size: mm(r), color: rgb(color.r, color.g, color.b) });
+      cursor.page.drawCircle({ x: cc.x, y: cc.y, size: mm(r), borderColor: rgb(0.25, 0.25, 0.25), borderWidth: 0.4 });
+      const rud = g.rudraksha ? ` · रुद्राक्ष: ${g.rudraksha}` : "";
+      const price = g.price ? ` · मूल्य: ${g.price}` : "";
+      const line = `रत्न: ${g.planet} — ${hi(STONE_HI, g.stone)} · ${weightHi(g.weight)} · ${hi(METAL_HI, g.metal)} · ${hi(FINGER_HI, g.finger)} · ${hi(DAY_HI, g.day)} · मंत्र: ${g.mantra}${rud}${price}`;
+      drawText(cursor.page, font, line, GEMSTONE_BLOCK.startXMm + GEMSTONE_BLOCK.iconMm + 2, rowYMm, mode, { size: GEMSTONE_BLOCK.fontSize, color });
+      cursor.yMm += GEMSTONE_BLOCK.rowHeightMm;
+    });
+  };
+
+  // -- Anushthan: editable-title + bordered 3-column table (name/purpose/dakshina) --
+  const drawAnushthan = (sec: PdfSection) => {
+    const rows = data.anushthanRows ?? [];
+    if (rows.length === 0) return;
+    const T = ANUSHTHAN_TABLE;
+    const x0 = rb.startXMm, w = rb.widthMm;
+    const w1 = w * T.col1FracW, w2 = w * T.col2FracW, w3 = w - w1 - w2;
+    const cols = [
+      { x: x0, w: w1, label: sec.col1 || "अनुष्ठान" },
+      { x: x0 + w1, w: w2, label: sec.col2 || "उद्देश्य" },
+      { x: x0 + w1 + w2, w: w3, label: sec.col3 || "दक्षिणा" },
+    ];
+    const totalH = rb.headingLineHeightMm + T.headerHeightMm + rows.length * T.rowHeightMm + 2;
+    ensureSpace(totalH);
+    const pg = cursor.page;
+    // section title (editable from admin)
+    drawText(pg, font, sec.title || "अनुष्ठान", x0, cursor.yMm, mode, { size: T.headingFontSize, color: SECTION_HEADING_COLOR });
+    cursor.yMm += rb.headingLineHeightMm;
+    // header row
+    const headerTop = cursor.yMm;
+    cols.forEach((c) => {
+      fillRect(pg, c.x, headerTop, c.w, T.headerHeightMm, T.headerFillColor, T.borderColor);
+      drawText(pg, font, c.label, c.x + T.cellPadMm, headerTop + T.headerHeightMm - T.cellPadMm, mode, { size: T.headerFontSize });
+    });
+    cursor.yMm += T.headerHeightMm;
+    // data rows
+    rows.forEach((rrow) => {
+      const rowTop = cursor.yMm;
+      const vals = [rrow.title, rrow.purpose, rrow.dakshina];
+      cols.forEach((c, ci) => {
+        fillRect(pg, c.x, rowTop, c.w, T.rowHeightMm, undefined, T.borderColor);
+        drawText(pg, font, vals[ci] ?? "", c.x + T.cellPadMm, rowTop + T.rowHeightMm - T.cellPadMm, mode, { size: T.cellFontSize });
+      });
+      cursor.yMm += T.rowHeightMm;
+    });
+    cursor.yMm += rb.blockGapMm;
+  };
+
+  const defaultSections: PdfSection[] = [
+    { id: "anushthan", title: "अनुष्ठान", enabled: true },
+    { id: "remedies", title: "उपाय", enabled: true },
+    { id: "gemstones", title: "रत्न", enabled: true },
+  ];
+  const sections = data.sections && data.sections.length ? data.sections : defaultSections;
+  for (const sec of sections) {
+    if (sec.enabled === false) continue;
+    if (sec.id === "remedies") drawRemedies();
+    else if (sec.id === "gemstones") drawGemstones();
+    else if (sec.id === "anushthan") drawAnushthan(sec);
+  }
+
+  // ---- notes (flows just below the last section, same cursor) ----
   if (data.notes) {
-    const notesTopMm = gemTopMm + data.gemRows.length * GEMSTONE_BLOCK.rowHeightMm + 3;
     const lines = wrapText(font, `टिप्पणी: ${data.notes}`, NOTES_FIELD.widthMm, NOTES_FIELD.fontSize);
-    lines.forEach((line, i) => drawText(gemPage, font, line, NOTES_FIELD.xMm, notesTopMm + i * NOTES_FIELD.lineHeightMm, mode, { size: NOTES_FIELD.fontSize }));
+    ensureSpace(lines.length * NOTES_FIELD.lineHeightMm);
+    lines.forEach((line, i) => drawText(cursor.page, font, line, NOTES_FIELD.xMm, cursor.yMm + i * NOTES_FIELD.lineHeightMm, mode, { size: NOTES_FIELD.fontSize }));
+    cursor.yMm += lines.length * NOTES_FIELD.lineHeightMm;
   }
 
   const bytes = await doc.save();

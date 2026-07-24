@@ -870,6 +870,11 @@ export interface Gemstone {
   finger: string;
   day: string;
   mantra: string;
+  /** Price per Ratti/carat (₹) for grade A / B / C. Final price = carat × rate.
+   *  Optional so older saved records keep working (treated as 0 when unset). */
+  rateA?: number;
+  rateB?: number;
+  rateC?: number;
 }
 
 const REMEDY_SEED: Record<string, string[]> = {
@@ -902,6 +907,66 @@ export const DEFAULT_GEMSTONES: Gemstone[] = [
   gem("gem-rahu", "Rahu", "Hessonite (Gomed)", "7 Ratti", "Silver", "Middle Finger", "Saturday", "Om Raam Rahave Namah"),
   gem("gem-ketu", "Ketu", "Cat's Eye (Lehsunia)", "7 Ratti", "Silver", "Little Finger", "Wednesday", "Om Kem Ketave Namah"),
 ];
+
+/* ---------------- Prescription pad: Anushthan (अनुष्ठान) catalog ----------------
+ *  A ritual/jaap the astrologer can add to a prescription. Fully admin-editable.
+ *  `title` = ritual name (अनुष्ठान), `purpose` = उद्देश्य, `dakshina` = दक्षिणा. */
+export interface Anushthan {
+  id: string;
+  title: string;
+  purpose: string;
+  dakshina: string;
+}
+
+export const DEFAULT_ANUSHTHAN: Anushthan[] = [
+  { id: "anu-rahu", title: "Rahu Jap", purpose: "18,000 Jap", dakshina: "₹7,000" },
+  { id: "anu-shani", title: "Shani Shanti", purpose: "23,000 Jap", dakshina: "₹9,000" },
+  { id: "anu-mangal", title: "Mangal Shanti", purpose: "10,000 Jap", dakshina: "₹5,000" },
+];
+
+/* ---------------- Prescription pad: section layout (order / enable / labels) ----
+ *  Controls the vertical order and on/off state of the movable prescription
+ *  sections in BOTH the digital PDF and the print output. `id` is fixed
+ *  ("anushthan" | "gemstones" | "remedies"); `title` is the printed heading.
+ *  The col1/col2/col3 labels are only used by the Anushthan table. */
+export interface PadSection {
+  id: string;
+  title: string;
+  enabled: boolean;
+  col1?: string;
+  col2?: string;
+  col3?: string;
+}
+
+export const DEFAULT_PAD_SECTIONS: PadSection[] = [
+  { id: "anushthan", title: "अनुष्ठान", enabled: true, col1: "अनुष्ठान", col2: "उद्देश्य", col3: "दक्षिणा" },
+  { id: "remedies", title: "उपाय", enabled: true },
+  { id: "gemstones", title: "रत्न", enabled: true },
+];
+
+/* ---------------- Prescription pad: gemstone grades + carat options ----------------
+ *  Grades (A/B/C) whose labels are editable; each gemstone stores a per-grade
+ *  rate (rateA/rateB/rateC). Carat options feed the pad's carat dropdown. */
+export interface GemGrade {
+  id: string;
+  title: string;
+}
+
+export const DEFAULT_GEM_GRADES: GemGrade[] = [
+  { id: "grade-a", title: "A" },
+  { id: "grade-b", title: "B" },
+  { id: "grade-c", title: "C" },
+];
+
+export interface CaratOption {
+  id: string;
+  title: string;
+}
+
+export const DEFAULT_CARATS: CaratOption[] = ["3", "5", "7", "9", "11"].map((title, i) => ({
+  id: `carat-${i + 1}`,
+  title,
+}));
 
 /** General ("grah upay") remedies that are not tied to any one planet —
  *  managed independently from the planet-wise remedies above. `title` holds
@@ -964,6 +1029,10 @@ export const COLLECTIONS = {
   miscRemedies: DEFAULT_MISC_REMEDIES,
   remedyCounts: DEFAULT_REMEDY_COUNTS,
   gemstones: DEFAULT_GEMSTONES,
+  anushthan: DEFAULT_ANUSHTHAN,
+  padSections: DEFAULT_PAD_SECTIONS,
+  gemGrades: DEFAULT_GEM_GRADES,
+  carats: DEFAULT_CARATS,
 } as const;
 
 export type CollectionKey = keyof typeof COLLECTIONS;

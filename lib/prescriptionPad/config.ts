@@ -80,6 +80,24 @@ export const REMEDY_BLOCK = {
 /* ---- Gemstones — just above the footer, each with a small colour gem marker ---- */
 export const GEMSTONE_BLOCK = { startXMm: 6, startYMm: 176, rowHeightMm: 7.5, fontSize: 10, iconMm: 4 };
 
+/* ---- Anushthan (अनुष्ठान) — bordered 3-column table (name / purpose / dakshina).
+       Flows in the remedies area, in the admin-chosen section order. ---- */
+export const ANUSHTHAN_TABLE = {
+  headingFontSize: 12.5,
+  headerFontSize: 9.5,
+  cellFontSize: 9.5,
+  headerHeightMm: 6.5,
+  rowHeightMm: 6.5,
+  col1FracW: 0.4,
+  col2FracW: 0.34, // col3 gets the remainder
+  cellPadMm: 1.8,
+  borderColor: { r: 0.55, g: 0.4, b: 0.1 },
+  headerFillColor: { r: 1, g: 0.93, b: 0.72 }, // light yellow header
+};
+
+/* ---- Heading colour used for drawn section titles (e.g. Anushthan). ---- */
+export const SECTION_HEADING_COLOR = { r: 0.63, g: 0.08, b: 0.08 };
+
 /* ---- Free-text notes (bottom of the remedies area, above the footer) ---- */
 export const NOTES_FIELD = { xMm: 6, yMm: 190, widthMm: 190, fontSize: 7.5, lineHeightMm: 3.6 };
 

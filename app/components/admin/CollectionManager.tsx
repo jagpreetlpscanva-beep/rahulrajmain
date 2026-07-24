@@ -11,7 +11,8 @@ export type FieldType =
   | "colorPair"
   | "select"
   | "date"
-  | "number";
+  | "number"
+  | "toggle";
 
 export interface FieldDef {
   name: string;
@@ -360,6 +361,23 @@ function FieldInput({
         value={value === undefined || value === null ? "" : (value as number)}
         onChange={(e) => onChange(e.target.value === "" ? 0 : Number(e.target.value))}
       />
+    );
+  }
+  if (field.type === "toggle") {
+    const on = Boolean(value);
+    return (
+      <button
+        type="button"
+        onClick={() => onChange(!on)}
+        className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
+          on ? "border-emerald-500/40 bg-emerald-50 text-emerald-700" : "border-ink/15 bg-white text-ink/50"
+        }`}
+      >
+        <span className={`grid h-5 w-9 items-center rounded-full px-0.5 ${on ? "bg-emerald-500" : "bg-ink/20"}`}>
+          <span className={`h-4 w-4 rounded-full bg-white shadow transition-transform ${on ? "translate-x-4" : ""}`} />
+        </span>
+        {on ? "Enabled" : "Disabled"}
+      </button>
     );
   }
   if (field.type === "image" || field.type === "video") {

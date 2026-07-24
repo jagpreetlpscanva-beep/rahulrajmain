@@ -44,6 +44,7 @@ export async function POST(req: Request) {
     kundali: b.kundali ?? null,
     rows: Array.isArray(b.rows) ? b.rows : [],
     gemstones: Array.isArray(b.gemstones) ? b.gemstones : [],
+    anushthan: Array.isArray(b.anushthan) ? b.anushthan : [],
     notes: String(b.notes || ""),
     createdAt: new Date().toISOString(),
   };
@@ -88,6 +89,7 @@ export async function PUT(req: Request) {
     kundali: b.kundali ?? null,
     rows: Array.isArray(b.rows) ? b.rows : [],
     gemstones: Array.isArray(b.gemstones) ? b.gemstones : [],
+    anushthan: Array.isArray(b.anushthan) ? b.anushthan : [],
     notes: String(b.notes || ""),
   };
 

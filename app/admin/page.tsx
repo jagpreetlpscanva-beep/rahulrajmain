@@ -50,6 +50,14 @@ import {
   type MiscRemedy,
   DEFAULT_REMEDY_COUNTS,
   type RemedyCountOption,
+  DEFAULT_ANUSHTHAN,
+  type Anushthan,
+  DEFAULT_PAD_SECTIONS,
+  type PadSection,
+  DEFAULT_GEM_GRADES,
+  type GemGrade,
+  DEFAULT_CARATS,
+  type CaratOption,
 } from "@/lib/cms";
 
 /* ---------------- field definitions ---------------- */
@@ -282,8 +290,37 @@ const gemstoneFields: FieldDef[] = [
   { name: "finger", label: "Finger", type: "text", placeholder: "Middle Finger" },
   { name: "day", label: "Day", type: "text", placeholder: "Saturday" },
   { name: "mantra", label: "Mantra", type: "text", placeholder: "Om Sham Shanicharaya Namah" },
+  { name: "rateA", label: "Rate — Grade A (₹ per Ratti/carat)", type: "number", optional: true, hint: "Price is calculated as carat × this rate. Leave 0 if not priced." },
+  { name: "rateB", label: "Rate — Grade B (₹ per Ratti/carat)", type: "number", optional: true },
+  { name: "rateC", label: "Rate — Grade C (₹ per Ratti/carat)", type: "number", optional: true },
 ];
-const blankGemstone = (): Gemstone => ({ id: newId("gem"), planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", mantra: "" });
+const blankGemstone = (): Gemstone => ({ id: newId("gem"), planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", mantra: "", rateA: 0, rateB: 0, rateC: 0 });
+
+const anushthanFields: FieldDef[] = [
+  { name: "title", label: "Anushthan (अनुष्ठान)", type: "text", placeholder: "Rahu Jap" },
+  { name: "purpose", label: "Purpose (उद्देश्य)", type: "text", placeholder: "18,000 Jap" },
+  { name: "dakshina", label: "Dakshina (दक्षिणा)", type: "text", placeholder: "₹7,000" },
+];
+const blankAnushthan = (): Anushthan => ({ id: newId("anu"), title: "", purpose: "", dakshina: "" });
+
+const padSectionFields: FieldDef[] = [
+  { name: "title", label: "Section heading", type: "text", placeholder: "अनुष्ठान", hint: "Printed as the section title (Anushthan only). Reorder sections with the ↑ ↓ buttons." },
+  { name: "enabled", label: "Show this section", type: "toggle" },
+  { name: "col1", label: "Column 1 label", type: "text", optional: true, hint: "Anushthan table only." },
+  { name: "col2", label: "Column 2 label", type: "text", optional: true, hint: "Anushthan table only." },
+  { name: "col3", label: "Column 3 label", type: "text", optional: true, hint: "Anushthan table only." },
+];
+const blankPadSection = (): PadSection => ({ id: newId("sec"), title: "", enabled: true });
+
+const gemGradeFields: FieldDef[] = [
+  { name: "title", label: "Grade label", type: "text", placeholder: "A", hint: "Order = quality tier. The 1st grade maps to Rate A on each gemstone, 2nd → Rate B, 3rd → Rate C." },
+];
+const blankGemGrade = (): GemGrade => ({ id: newId("grade"), title: "" });
+
+const caratFields: FieldDef[] = [
+  { name: "title", label: "Carat / Ratti", type: "text", placeholder: "7", hint: "Appears in the carat dropdown on the prescription pad." },
+];
+const blankCarat = (): CaratOption => ({ id: newId("carat"), title: "" });
 
 const blankConsultation = (): Consultation => ({
   id: newId("consult"),
@@ -297,7 +334,7 @@ const blankConsultation = (): Consultation => ({
   image: "",
 });
 
-type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "coupons" | "blog" | "reviews" | "slots" | "bookings" | "messages" | "planetRemedies" | "miscRemedies" | "remedyCounts" | "gemstones";
+type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "coupons" | "blog" | "reviews" | "slots" | "bookings" | "messages" | "planetRemedies" | "miscRemedies" | "remedyCounts" | "gemstones" | "anushthan" | "padSections" | "gemGrades" | "carats";
 
 const GridIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -330,6 +367,10 @@ const NAV: { key: TabKey; label: string; icon: (p: { className?: string }) => Re
   { key: "miscRemedies", label: "Misc. Remedies", icon: OmIcon },
   { key: "remedyCounts", label: "Remedy Counts", icon: MedalIcon },
   { key: "gemstones", label: "Gemstones", icon: MedalIcon },
+  { key: "anushthan", label: "Anushthan", icon: OmIcon },
+  { key: "padSections", label: "Pad Sections", icon: GridIcon },
+  { key: "gemGrades", label: "Gem Grades", icon: MedalIcon },
+  { key: "carats", label: "Carat Options", icon: MedalIcon },
 ];
 
 export default function AdminPage() {
@@ -357,6 +398,10 @@ export default function AdminPage() {
   const miscRemedies = useCollection<MiscRemedy>("miscRemedies", DEFAULT_MISC_REMEDIES);
   const remedyCounts = useCollection<RemedyCountOption>("remedyCounts", DEFAULT_REMEDY_COUNTS);
   const gemstones = useCollection<Gemstone>("gemstones", DEFAULT_GEMSTONES);
+  const anushthan = useCollection<Anushthan>("anushthan", DEFAULT_ANUSHTHAN);
+  const padSections = useCollection<PadSection>("padSections", DEFAULT_PAD_SECTIONS);
+  const gemGrades = useCollection<GemGrade>("gemGrades", DEFAULT_GEM_GRADES);
+  const carats = useCollection<CaratOption>("carats", DEFAULT_CARATS);
 
   useEffect(() => {
     fetch("/api/admin/session", { cache: "no-store" })
@@ -558,6 +603,18 @@ export default function AdminPage() {
           )}
           {tab === "gemstones" && (
             <CollectionManager<Gemstone> label="Gemstones" items={gemstones.items} fields={gemstoneFields} blank={blankGemstone} onChange={gemstones.save} onReset={gemstones.reset} previewHref="/prescription-pad" />
+          )}
+          {tab === "anushthan" && (
+            <CollectionManager<Anushthan> label="Anushthan" items={anushthan.items} fields={anushthanFields} blank={blankAnushthan} onChange={anushthan.save} onReset={anushthan.reset} previewHref="/prescription-pad" />
+          )}
+          {tab === "padSections" && (
+            <CollectionManager<PadSection> label="Prescription Pad Sections" items={padSections.items} fields={padSectionFields} blank={blankPadSection} onChange={padSections.save} onReset={padSections.reset} previewHref="/prescription-pad" />
+          )}
+          {tab === "gemGrades" && (
+            <CollectionManager<GemGrade> label="Gem Grades" items={gemGrades.items} fields={gemGradeFields} blank={blankGemGrade} onChange={gemGrades.save} onReset={gemGrades.reset} previewHref="/prescription-pad" />
+          )}
+          {tab === "carats" && (
+            <CollectionManager<CaratOption> label="Carat Options" items={carats.items} fields={caratFields} blank={blankCarat} onChange={carats.save} onReset={carats.reset} previewHref="/prescription-pad" />
           )}
           {tab === "reviews" && <ReviewsManager />}
           {tab === "slots" && <SlotsManager />}

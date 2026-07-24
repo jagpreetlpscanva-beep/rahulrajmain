@@ -26,6 +26,19 @@ export interface GemstonePick {
   finger: string;
   day: string;
   mantra: string;
+  /** Optional pricing selection (carat × grade rate) — all optional so older records load fine. */
+  carat?: string;
+  grade?: string;
+  rateA?: number;
+  rateB?: number;
+  rateC?: number;
+}
+
+/** One Anushthan (ritual) added to a prescription. */
+export interface AnushthanPick {
+  title: string;
+  purpose: string;
+  dakshina: string;
 }
 
 export interface Consultation {
@@ -46,6 +59,7 @@ export interface Consultation {
   kundali: unknown; // full computeKundli() JSON — lagna + every planet's house
   rows: RemedyRow[];
   gemstones: GemstonePick[];
+  anushthan?: AnushthanPick[];
   notes: string;
   createdAt: string;
 }
