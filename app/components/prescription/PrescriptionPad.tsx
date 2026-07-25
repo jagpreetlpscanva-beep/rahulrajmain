@@ -98,6 +98,7 @@ export function PrescriptionPad() {
   const [gemGrades, setGemGrades] = useState<GemGrade[]>([]);
   const [carats, setCarats] = useState<CaratOption[]>([]);
   const [anushthanRows, setAnushthanRows] = useState<AnuRow[]>([]);
+  const [anuQuery, setAnuQuery] = useState("");
 
   const [patientName, setPatientName] = useState("");
   const [mobile, setMobile] = useState("");
@@ -250,7 +251,7 @@ export function PrescriptionPad() {
     setPatientName(""); setMobile(""); setGender(""); setDob(""); setDobText(""); setTob(""); setPlace("Lucknow");
     setMahadasha(""); setAntardasha(""); setPratyantar(""); setDosha(""); setYog("");
     setChart(null); setGochar(null); setKundali(null); setKundaliState("idle");
-    setRows([emptyRow()]); setGems([blankGem()]); setAnushthanRows([]); setNotes(""); setSavedId(null);
+    setRows([emptyRow()]); setGems([blankGem()]); setAnushthanRows([]); setAnuQuery(""); setNotes(""); setSavedId(null);
   };
 
   const load = (c: Consultation) => {
@@ -574,23 +575,55 @@ export function PrescriptionPad() {
             <button onClick={() => setRows((rs) => [...rs, emptyRow()])} className="mt-2 rounded-lg border border-[#8a2020]/40 px-3 py-1.5 text-sm font-semibold text-[#8a2020]">＋ ग्रह जोड़ें</button>
           </div>
 
-          {/* anushthan */}
+          {/* anushthan — searchable dropdown (results after 3 letters) + chosen chips */}
           <div className="mt-6">
-            <p className="mb-2 font-serif text-xl font-bold text-[#a01414]">अनुष्ठान</p>
+            <p className="mb-1 font-serif text-xl font-bold text-[#a01414]">अनुष्ठान</p>
+            <p className="mb-2 text-[11px] text-ink/45">PDF/प्रिंट में सबसे ऊपर के 3 अनुष्ठान ही आते हैं।</p>
             {anushthanCatalog.length === 0 ? (
-              <p className="text-xs text-ink/45">एडमिन → “Anushthan” में अनुष्ठान जोड़ें, फिर यहाँ चुनें।</p>
+              <p className="text-xs text-ink/45">एडमिन → “Anushthan” में अनुष्ठान जोड़ें, फिर यहाँ खोजें।</p>
             ) : (
-              <div className="grid gap-1.5 sm:grid-cols-2">
-                {anushthanCatalog.map((a) => {
-                  const on = anushthanRows.some((r) => r.title === a.title);
+              <>
+                {/* chosen chips (this is the order used in PDF/print) */}
+                {anushthanRows.length > 0 && (
+                  <div className="mb-2 flex flex-wrap gap-1.5">
+                    {anushthanRows.map((r, idx) => (
+                      <span key={r.title} className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${idx < 3 ? "bg-[#8a2020]/10 text-[#8a2020]" : "bg-ink/10 text-ink/50"}`}>
+                        {idx < 3 ? `${idx + 1}. ` : ""}{r.title}
+                        <button type="button" onClick={() => setAnushthanRows((rs) => rs.filter((x) => x.title !== r.title))} className="text-current/70 hover:text-rose-600">✕</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {/* search box */}
+                <input
+                  className={inp}
+                  value={anuQuery}
+                  onChange={(e) => setAnuQuery(e.target.value)}
+                  placeholder="अनुष्ठान खोजें… (कम से कम 3 अक्षर लिखें)"
+                />
+                {anuQuery.trim().length >= 3 && (() => {
+                  const q = anuQuery.trim().toLowerCase();
+                  const matches = anushthanCatalog.filter((a) =>
+                    `${a.title} ${a.purpose} ${a.dakshina}`.toLowerCase().includes(q));
                   return (
-                    <label key={a.id} className={`flex items-start gap-2 rounded-lg border p-2 text-sm ${on ? "border-[#8a2020]/50 bg-[#8a2020]/5" : "border-ink/15"}`}>
-                      <input type="checkbox" className="mt-1" checked={on} onChange={() => toggleAnushthan(a)} />
-                      <span><b>{a.title}</b><span className="text-ink/55"> · {a.purpose} · {a.dakshina}</span></span>
-                    </label>
+                    <ul className="mt-1 max-h-56 divide-y divide-ink/10 overflow-y-auto rounded-lg border border-ink/15 bg-white shadow-sm">
+                      {matches.length === 0 ? (
+                        <li className="px-3 py-2 text-xs text-ink/45">कोई अनुष्ठान नहीं मिला।</li>
+                      ) : matches.map((a) => {
+                        const on = anushthanRows.some((r) => r.title === a.title);
+                        return (
+                          <li key={a.id}>
+                            <button type="button" onClick={() => toggleAnushthan(a)} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-[#8a2020]/5">
+                              <span><b>{a.title}</b><span className="text-ink/55"> · {a.purpose} · {a.dakshina}</span></span>
+                              <span className={`shrink-0 text-xs font-bold ${on ? "text-emerald-600" : "text-[#8a2020]"}`}>{on ? "✓ जुड़ा" : "＋ जोड़ें"}</span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
                   );
-                })}
-              </div>
+                })()}
+              </>
             )}
           </div>
 

@@ -35,6 +35,9 @@ export const PATIENT_BLOCK = { xMm: 73, yMm: 71, lineHeightMm: 6, fontSize: 9 };
        we do NOT draw a grid, only place planets at the house centres below. ---- */
 export const KUNDALI_BOX: Box = { xMm: 13, yMm: 65, widthMm: 54, heightMm: 54 };
 export const KUNDALI_PLANET = { fontSize: 8.5, lineMm: 3.2 };
+/** PRINT MODE ONLY: enlarge the kundali planet labels ~25% (bolder on the pre-printed
+ *  pad) without moving them. Digital PDF keeps KUNDALI_PLANET.fontSize unchanged. */
+export const PRINT_KUNDALI_PLANET_SCALE = 1.25;
 /** House centres as fractions of the box (North-Indian layout, house1 = top diamond). */
 export const HOUSE_CENTERS: Record<number, [number, number]> = {
   1: [0.5, 0.24], 2: [0.25, 0.11], 3: [0.11, 0.25], 4: [0.25, 0.5], 5: [0.11, 0.75],
@@ -47,6 +50,11 @@ export const HOUSE_CENTERS: Record<number, [number, number]> = {
 const DASHA_X = 168;
 const DASHA_FS = 8.5;              // max size — auto-shrinks to stay inside the block
 export const DASHA_MAX_WIDTH_MM = 32; // 168 → ~200 (page edge), value must fit here
+/** PRINT MODE ONLY: nudge the whole Mahadasha/Antardasha column left to line up
+ *  with the pad's printed labels. Digital PDF is unaffected. */
+export const PRINT_DASHA_SHIFT_XMM = -4;
+/** PDF/Print: cap the printed Anushthan table to the first N selected rows. */
+export const ANUSHTHAN_PRINT_LIMIT = 3;
 export const DASHA_FIELDS = {
   mahadasha: { xMm: DASHA_X, yMm: 67, fontSize: DASHA_FS },
   antardasha: { xMm: DASHA_X, yMm: 76, fontSize: DASHA_FS },

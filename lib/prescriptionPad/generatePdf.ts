@@ -23,9 +23,12 @@ import {
   PATIENT_BLOCK,
   KUNDALI_BOX,
   KUNDALI_PLANET,
+  PRINT_KUNDALI_PLANET_SCALE,
   HOUSE_CENTERS,
   DASHA_FIELDS,
   DASHA_MAX_WIDTH_MM,
+  PRINT_DASHA_SHIFT_XMM,
+  ANUSHTHAN_PRINT_LIMIT,
   REMEDY_BLOCK,
   GEMSTONE_BLOCK,
   ANUSHTHAN_TABLE,
@@ -178,6 +181,10 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
   });
 
   // ---- planets INSIDE the pad's pre-printed Kundali box (NO grid drawn) ----
+  // Print mode enlarges the labels ~25% (bolder on the pad) WITHOUT moving the
+  // house centres; digital keeps the original size. Vertical stacking (lineMm)
+  // is unchanged so planets stay inside their houses.
+  const planetSize = mode === "print" ? KUNDALI_PLANET.fontSize * PRINT_KUNDALI_PLANET_SCALE : KUNDALI_PLANET.fontSize;
   const byHouse: Record<number, PdfPlanet[]> = {};
   for (const p of data.planets) (byHouse[p.house] ||= []).push(p);
   for (let h = 1; h <= 12; h++) {
@@ -190,15 +197,18 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
     const startYMm = cyMm - ((arr.length - 1) * KUNDALI_PLANET.lineMm) / 2;
     arr.forEach((p, i) => {
       const label = `${p.abbr} ${p.degree}°`;
-      const wMm = font.widthOfTextAtSize(label, KUNDALI_PLANET.fontSize) / MM_TO_PT;
+      const wMm = font.widthOfTextAtSize(label, planetSize) / MM_TO_PT;
       const color = PLANET_COLORS[p.name] ?? DEFAULT_TEXT_COLOR;
-      drawText(page, font, label, cxMm - wMm / 2, startYMm + i * KUNDALI_PLANET.lineMm, mode, { size: KUNDALI_PLANET.fontSize, color });
+      drawText(page, font, label, cxMm - wMm / 2, startYMm + i * KUNDALI_PLANET.lineMm, mode, { size: planetSize, color });
     });
   }
 
   // ---- dasha / dosha / yog — bold, biggest size that still fits inside the block ----
+  // Print mode nudges the whole dasha column left to sit on the pad's printed
+  // labels; digital PDF is unaffected (shift = 0).
+  const dashaShift = mode === "print" ? PRINT_DASHA_SHIFT_XMM : 0;
   const dfit = (val: string, f: { xMm: number; yMm: number; fontSize: number }) =>
-    drawTextFit(page, font, val, f.xMm, f.yMm, DASHA_MAX_WIDTH_MM, mode, f.fontSize, 6);
+    drawTextFit(page, font, val, f.xMm + dashaShift, f.yMm, DASHA_MAX_WIDTH_MM, mode, f.fontSize, 6);
   dfit(data.mahadasha, DASHA_FIELDS.mahadasha);
   dfit(data.antardasha, DASHA_FIELDS.antardasha);
   dfit(data.pratyantar, DASHA_FIELDS.pratyantar);
@@ -277,7 +287,8 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
 
   // -- Anushthan: editable-title + bordered 3-column table (name/purpose/dakshina) --
   const drawAnushthan = (sec: PdfSection) => {
-    const rows = data.anushthanRows ?? [];
+    // Only the first N selected anushthan are printed on the pad.
+    const rows = (data.anushthanRows ?? []).slice(0, ANUSHTHAN_PRINT_LIMIT);
     if (rows.length === 0) return;
     const T = ANUSHTHAN_TABLE;
     const x0 = rb.startXMm, w = rb.widthMm;
