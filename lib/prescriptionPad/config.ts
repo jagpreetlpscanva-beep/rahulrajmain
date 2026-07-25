@@ -77,9 +77,9 @@ export const PRINT_MAHA_SPLIT_MM = 4;
  *  Height scales proportionally to the PNG; transparency is preserved. */
 export const SIGNATURE = {
   path: "/signatures/rahul-raj-sign.png",
-  xMm: 140,   // top-left X (mm). −left / +right to fine-tune
-  yMm: 176,   // top-left Y (mm). sits above the संपर्क समय footer (~195mm)
-  widthMm: 42, // width; height follows the image's aspect ratio
+  xMm: 150,   // top-left X (mm). −left / +right to fine-tune
+  yMm: 170,   // top-left Y (mm). sits just above the संपर्क समय footer (~195mm)
+  widthMm: 32, // width; height (~24mm) follows the image's 1.32 aspect ratio
 };
 /** PDF/Print: cap the printed Anushthan table to the first N selected rows. */
 export const ANUSHTHAN_PRINT_LIMIT = 3;
