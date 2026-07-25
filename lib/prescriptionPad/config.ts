@@ -52,7 +52,7 @@ const DASHA_FS = 8.5;              // max size — auto-shrinks to stay inside t
 export const DASHA_MAX_WIDTH_MM = 32; // 168 → ~200 (page edge), value must fit here
 /** PRINT MODE ONLY: nudge the whole Mahadasha/Antardasha column left to line up
  *  with the pad's printed labels. Digital PDF is unaffected. */
-export const PRINT_DASHA_SHIFT_XMM = -4;
+export const PRINT_DASHA_SHIFT_XMM = -9;
 /** PDF/Print: cap the printed Anushthan table to the first N selected rows. */
 export const ANUSHTHAN_PRINT_LIMIT = 3;
 export const DASHA_FIELDS = {
