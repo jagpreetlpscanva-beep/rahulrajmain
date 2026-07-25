@@ -370,7 +370,7 @@ export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "
     inner += `<text x="${x}" y="${y - 12}" font-size="12" fill="${color}" opacity="0.65" text-anchor="middle">${signInHouse(h) + 1}</text>`;
     const ps = byHouse[h] || [];
     ps.forEach((p, n) => {
-      inner += `<text x="${x}" y="${y + 6 + n * 17}" font-size="16" font-weight="bold" fill="${p.color}" text-anchor="middle">${p.label}</text>`;
+      inner += `<text x="${x - 7}" y="${y + 6 + n * 17}" font-size="16" font-weight="bold" fill="${p.color}" text-anchor="middle">${p.label}</text>`;
     });
   }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}">
