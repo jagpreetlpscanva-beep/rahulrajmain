@@ -30,6 +30,11 @@ export type Box = { xMm: number; yMm: number; widthMm: number; heightMm: number 
 
 /* ---- Patient details (typed into the centre area: 72,66 · 75×46) ---- */
 export const PATIENT_BLOCK = { xMm: 73, yMm: 71, lineHeightMm: 6, fontSize: 9 };
+/** PRINT MODE ONLY: nudge the whole patient block so it sits inside its printed
+ *  area and stops overlapping the pad's gemstone pictures. Digital is unaffected.
+ *  −ve X = left, −ve Y = up. Give me exact mm after a test print to fine-tune. */
+export const PRINT_PATIENT_SHIFT_XMM = -3;
+export const PRINT_PATIENT_SHIFT_YMM = -2;
 
 /* ---- Lagna Kundali box (13,65 · 54×54). The pad ALREADY has the printed grid —
        we do NOT draw a grid, only place planets at the house centres below. ---- */
@@ -37,7 +42,7 @@ export const KUNDALI_BOX: Box = { xMm: 13, yMm: 65, widthMm: 54, heightMm: 54 };
 export const KUNDALI_PLANET = { fontSize: 8.5, lineMm: 3.2 };
 /** PRINT MODE ONLY: enlarge the kundali planet labels ~25% (bolder on the pre-printed
  *  pad) without moving them. Digital PDF keeps KUNDALI_PLANET.fontSize unchanged. */
-export const PRINT_KUNDALI_PLANET_SCALE = 1.25;
+export const PRINT_KUNDALI_PLANET_SCALE = 1.2;
 /** House centres as fractions of the box (North-Indian layout, house1 = top diamond). */
 export const HOUSE_CENTERS: Record<number, [number, number]> = {
   1: [0.5, 0.24], 2: [0.25, 0.11], 3: [0.11, 0.25], 4: [0.25, 0.5], 5: [0.11, 0.75],
@@ -52,7 +57,7 @@ const DASHA_FS = 8.5;              // max size — auto-shrinks to stay inside t
 export const DASHA_MAX_WIDTH_MM = 32; // 168 → ~200 (page edge), value must fit here
 /** PRINT MODE ONLY: nudge the whole Mahadasha/Antardasha column left to line up
  *  with the pad's printed labels. Digital PDF is unaffected. */
-export const PRINT_DASHA_SHIFT_XMM = -9;
+export const PRINT_DASHA_SHIFT_XMM = -15;
 /** PDF/Print: cap the printed Anushthan table to the first N selected rows. */
 export const ANUSHTHAN_PRINT_LIMIT = 3;
 export const DASHA_FIELDS = {
@@ -95,10 +100,12 @@ export const ANUSHTHAN_TABLE = {
   headerFontSize: 9.5,
   cellFontSize: 9.5,
   headerHeightMm: 6.5,
-  rowHeightMm: 6.5,
-  col1FracW: 0.4,
-  col2FracW: 0.34, // col3 gets the remainder
+  rowHeightMm: 6.5,          // equal to the header height → uniform rows
+  col1FracW: 1 / 3,          // equal column widths (⅓ each)
+  col2FracW: 1 / 3,          // col3 gets the remaining ⅓
   cellPadMm: 1.8,
+  /** 5–8 mm clear space after the table before the next section (e.g. gemstones). */
+  afterGapMm: 7,
   borderColor: { r: 0.55, g: 0.4, b: 0.1 },
   headerFillColor: { r: 1, g: 0.93, b: 0.72 }, // light yellow header
 };

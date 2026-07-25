@@ -21,6 +21,8 @@ import {
   PAGE,
   CALIBRATION,
   PATIENT_BLOCK,
+  PRINT_PATIENT_SHIFT_XMM,
+  PRINT_PATIENT_SHIFT_YMM,
   KUNDALI_BOX,
   KUNDALI_PLANET,
   PRINT_KUNDALI_PLANET_SCALE,
@@ -175,9 +177,13 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
     ["दिनांक:", data.date],
     ["ज्योतिषी:", data.astrologer],
   ];
+  // Print mode nudges the whole patient block into its printed area (off the pad's
+  // gemstone pictures); digital keeps the exact measured position (shift = 0).
+  const pShiftX = mode === "print" ? PRINT_PATIENT_SHIFT_XMM : 0;
+  const pShiftY = mode === "print" ? PRINT_PATIENT_SHIFT_YMM : 0;
   pLines.forEach(([label, val], i) => {
     if (!val) return;
-    drawText(page, font, `${label} ${val}`, PB.xMm, PB.yMm + i * PB.lineHeightMm, mode, { size: PB.fontSize });
+    drawText(page, font, `${label} ${val}`, PB.xMm + pShiftX, PB.yMm + i * PB.lineHeightMm + pShiftY, mode, { size: PB.fontSize });
   });
 
   // ---- planets INSIDE the pad's pre-printed Kundali box (NO grid drawn) ----
@@ -321,7 +327,7 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
       });
       cursor.yMm += T.rowHeightMm;
     });
-    cursor.yMm += rb.blockGapMm;
+    cursor.yMm += T.afterGapMm; // 5–8mm clear space before the next section (gemstones)
   };
 
   const defaultSections: PdfSection[] = [
