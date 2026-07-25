@@ -43,6 +43,9 @@ export const KUNDALI_PLANET = { fontSize: 8.5, lineMm: 3.2 };
 /** PRINT MODE ONLY: enlarge the kundali planet labels ~25% (bolder on the pre-printed
  *  pad) without moving them. Digital PDF keeps KUNDALI_PLANET.fontSize unchanged. */
 export const PRINT_KUNDALI_PLANET_SCALE = 1.2;
+/** PRINT MODE ONLY: shift every kundali planet label left (−ve) / right (+ve).
+ *  Positions otherwise unchanged. Digital PDF unaffected. */
+export const PRINT_KUNDALI_SHIFT_XMM = -4;
 /** House centres as fractions of the box (North-Indian layout, house1 = top diamond). */
 export const HOUSE_CENTERS: Record<number, [number, number]> = {
   1: [0.5, 0.24], 2: [0.25, 0.11], 3: [0.11, 0.25], 4: [0.25, 0.5], 5: [0.11, 0.75],
@@ -58,6 +61,8 @@ export const DASHA_MAX_WIDTH_MM = 32; // 168 → ~200 (page edge), value must fi
 /** PRINT MODE ONLY: nudge the whole Mahadasha/Antardasha column left to line up
  *  with the pad's printed labels. Digital PDF is unaffected. */
 export const PRINT_DASHA_SHIFT_XMM = -15;
+/** PRINT MODE ONLY: nudge the whole dasha column down (+ve) / up (−ve). */
+export const PRINT_DASHA_SHIFT_YMM = 4;
 /** PDF/Print: cap the printed Anushthan table to the first N selected rows. */
 export const ANUSHTHAN_PRINT_LIMIT = 3;
 export const DASHA_FIELDS = {

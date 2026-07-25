@@ -26,10 +26,12 @@ import {
   KUNDALI_BOX,
   KUNDALI_PLANET,
   PRINT_KUNDALI_PLANET_SCALE,
+  PRINT_KUNDALI_SHIFT_XMM,
   HOUSE_CENTERS,
   DASHA_FIELDS,
   DASHA_MAX_WIDTH_MM,
   PRINT_DASHA_SHIFT_XMM,
+  PRINT_DASHA_SHIFT_YMM,
   ANUSHTHAN_PRINT_LIMIT,
   REMEDY_BLOCK,
   GEMSTONE_BLOCK,
@@ -191,6 +193,7 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
   // house centres; digital keeps the original size. Vertical stacking (lineMm)
   // is unchanged so planets stay inside their houses.
   const planetSize = mode === "print" ? KUNDALI_PLANET.fontSize * PRINT_KUNDALI_PLANET_SCALE : KUNDALI_PLANET.fontSize;
+  const planetShiftX = mode === "print" ? PRINT_KUNDALI_SHIFT_XMM : 0;
   const byHouse: Record<number, PdfPlanet[]> = {};
   for (const p of data.planets) (byHouse[p.house] ||= []).push(p);
   for (let h = 1; h <= 12; h++) {
@@ -205,7 +208,7 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
       const label = `${p.abbr} ${p.degree}°`;
       const wMm = font.widthOfTextAtSize(label, planetSize) / MM_TO_PT;
       const color = PLANET_COLORS[p.name] ?? DEFAULT_TEXT_COLOR;
-      drawText(page, font, label, cxMm - wMm / 2, startYMm + i * KUNDALI_PLANET.lineMm, mode, { size: planetSize, color });
+      drawText(page, font, label, cxMm - wMm / 2 + planetShiftX, startYMm + i * KUNDALI_PLANET.lineMm, mode, { size: planetSize, color });
     });
   }
 
@@ -213,8 +216,9 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
   // Print mode nudges the whole dasha column left to sit on the pad's printed
   // labels; digital PDF is unaffected (shift = 0).
   const dashaShift = mode === "print" ? PRINT_DASHA_SHIFT_XMM : 0;
+  const dashaShiftY = mode === "print" ? PRINT_DASHA_SHIFT_YMM : 0;
   const dfit = (val: string, f: { xMm: number; yMm: number; fontSize: number }) =>
-    drawTextFit(page, font, val, f.xMm + dashaShift, f.yMm, DASHA_MAX_WIDTH_MM, mode, f.fontSize, 6);
+    drawTextFit(page, font, val, f.xMm + dashaShift, f.yMm + dashaShiftY, DASHA_MAX_WIDTH_MM, mode, f.fontSize, 6);
   dfit(data.mahadasha, DASHA_FIELDS.mahadasha);
   dfit(data.antardasha, DASHA_FIELDS.antardasha);
   dfit(data.pratyantar, DASHA_FIELDS.pratyantar);
