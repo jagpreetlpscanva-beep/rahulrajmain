@@ -32,6 +32,9 @@ import {
   DASHA_MAX_WIDTH_MM,
   PRINT_DASHA_SHIFT_XMM,
   PRINT_DASHA_SHIFT_YMM,
+  PRINT_TODAY_DATE,
+  PRINT_MAHA_SPLIT_MM,
+  SIGNATURE,
   ANUSHTHAN_PRINT_LIMIT,
   REMEDY_BLOCK,
   GEMSTONE_BLOCK,
@@ -170,15 +173,24 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
 
   // ---- patient details (centre area, labelled lines) ----
   const PB = PATIENT_BLOCK;
-  const pLines: [string, string][] = [
-    ["यजमान:", data.patientName],
-    ["मोबाइल:", data.mobile],
-    ["लिंग:", data.gender],
-    ["जन्म:", `${data.dob} ${data.tob}`.trim()],
-    ["स्थान:", data.place],
-    ["दिनांक:", data.date],
-    ["ज्योतिषी:", data.astrologer],
-  ];
+  // Print pad: only नाम / जन्म / स्थान / ज्योतिषी (no mobile, gender or date —
+  // today's date is shown top-right instead). Digital PDF keeps all fields.
+  const pLines: [string, string][] = mode === "print"
+    ? [
+        ["नाम:", data.patientName],
+        ["जन्म:", `${data.dob} ${data.tob}`.trim()],
+        ["स्थान:", data.place],
+        ["ज्योतिषी:", data.astrologer],
+      ]
+    : [
+        ["यजमान:", data.patientName],
+        ["मोबाइल:", data.mobile],
+        ["लिंग:", data.gender],
+        ["जन्म:", `${data.dob} ${data.tob}`.trim()],
+        ["स्थान:", data.place],
+        ["दिनांक:", data.date],
+        ["ज्योतिषी:", data.astrologer],
+      ];
   // Print mode nudges the whole patient block into its printed area (off the pad's
   // gemstone pictures); digital keeps the exact measured position (shift = 0).
   const pShiftX = mode === "print" ? PRINT_PATIENT_SHIFT_XMM : 0;
@@ -219,7 +231,20 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
   const dashaShiftY = mode === "print" ? PRINT_DASHA_SHIFT_YMM : 0;
   const dfit = (val: string, f: { xMm: number; yMm: number; fontSize: number }) =>
     drawTextFit(page, font, val, f.xMm + dashaShift, f.yMm + dashaShiftY, DASHA_MAX_WIDTH_MM, mode, f.fontSize, 6);
-  dfit(data.mahadasha, DASHA_FIELDS.mahadasha);
+
+  if (mode === "print") {
+    // Only date on the print pad: today's date, top-right above the Mahadasha column.
+    drawText(page, font, `दिनांक: ${data.date}`, DASHA_FIELDS.mahadasha.xMm + dashaShift, PRINT_TODAY_DATE.yMm, mode, { size: PRINT_TODAY_DATE.fontSize });
+    // Mahadasha split: planet name above the printed label, "till <date>" below it.
+    const mf = DASHA_FIELDS.mahadasha;
+    const m = data.mahadasha.match(/^(.*?)\s*\(\s*till\s*(.*?)\)\s*$/i);
+    const planet = (m ? m[1] : data.mahadasha).trim();
+    const till = m ? `till ${m[2].trim()}` : "";
+    drawTextFit(page, font, planet, mf.xMm + dashaShift, mf.yMm + dashaShiftY - PRINT_MAHA_SPLIT_MM, DASHA_MAX_WIDTH_MM, mode, mf.fontSize, 6);
+    if (till) drawTextFit(page, font, till, mf.xMm + dashaShift, mf.yMm + dashaShiftY + PRINT_MAHA_SPLIT_MM, DASHA_MAX_WIDTH_MM, mode, mf.fontSize - 1, 6);
+  } else {
+    dfit(data.mahadasha, DASHA_FIELDS.mahadasha);
+  }
   dfit(data.antardasha, DASHA_FIELDS.antardasha);
   dfit(data.pratyantar, DASHA_FIELDS.pratyantar);
   dfit(data.dosha, DASHA_FIELDS.dosha);
@@ -353,6 +378,24 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
     ensureSpace(lines.length * NOTES_FIELD.lineHeightMm);
     lines.forEach((line, i) => drawText(cursor.page, font, line, NOTES_FIELD.xMm, cursor.yMm + i * NOTES_FIELD.lineHeightMm, mode, { size: NOTES_FIELD.fontSize }));
     cursor.yMm += lines.length * NOTES_FIELD.lineHeightMm;
+  }
+
+  // ---- permanent astrologer signature (EVERY PDF: print/save/share/whatsapp) ----
+  // Auto-loaded from /public each time (no upload/selection). Placed on page 1,
+  // bottom-right just above the "संपर्क समय" footer. Transparency preserved and
+  // height scaled proportionally. `no-store` = a replaced file is picked up next time.
+  try {
+    const sigRes = await fetch(SIGNATURE.path, { cache: "no-store" });
+    if (sigRes.ok) {
+      const sigBytes = new Uint8Array(await sigRes.arrayBuffer());
+      const sig = await doc.embedPng(sigBytes);
+      const wPt = mm(SIGNATURE.widthMm);
+      const hPt = sig.height * (wPt / sig.width); // proportional height
+      const bl = pt(SIGNATURE.xMm, SIGNATURE.yMm + hPt / MM_TO_PT, mode); // top-left → bottom-left
+      page.drawImage(sig, { x: bl.x, y: bl.y, width: wPt, height: hPt });
+    }
+  } catch {
+    /* signature file not present yet — skip silently */
   }
 
   const bytes = await doc.save();

@@ -63,6 +63,24 @@ export const DASHA_MAX_WIDTH_MM = 32; // 168 → ~200 (page edge), value must fi
 export const PRINT_DASHA_SHIFT_XMM = -15;
 /** PRINT MODE ONLY: nudge the whole dasha column down (+ve) / up (−ve). */
 export const PRINT_DASHA_SHIFT_YMM = 4;
+/** PRINT MODE ONLY: today's date shown top-right, just above the Mahadasha column
+ *  (x follows the dasha column). This is the ONLY date printed. */
+export const PRINT_TODAY_DATE = { yMm: 60, fontSize: 8.5 };
+/** PRINT MODE ONLY: Mahadasha is split around its printed label — planet name this
+ *  many mm ABOVE the label, "till <date>" the same distance BELOW it. */
+export const PRINT_MAHA_SPLIT_MM = 4;
+
+/** Astrologer's permanent digital signature (transparent PNG). Auto-rendered on
+ *  EVERY generated PDF (Print / Save / Share / WhatsApp) just above the pad's
+ *  "संपर्क समय" footer, bottom-right. Replace the file at this path (same name)
+ *  and all future PDFs pick it up automatically — no upload/selection needed.
+ *  Height scales proportionally to the PNG; transparency is preserved. */
+export const SIGNATURE = {
+  path: "/signatures/rahul-raj-sign.png",
+  xMm: 140,   // top-left X (mm). −left / +right to fine-tune
+  yMm: 176,   // top-left Y (mm). sits above the संपर्क समय footer (~195mm)
+  widthMm: 42, // width; height follows the image's aspect ratio
+};
 /** PDF/Print: cap the printed Anushthan table to the first N selected rows. */
 export const ANUSHTHAN_PRINT_LIMIT = 3;
 export const DASHA_FIELDS = {
