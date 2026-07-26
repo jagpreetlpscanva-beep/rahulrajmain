@@ -120,10 +120,10 @@ export function CollectionManager<T extends Item>({
   return (
     <div>
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-serif text-2xl font-bold text-ink">
+        <h2 className="font-serif text-xl font-bold text-ink sm:text-2xl">
           {label} <span className="text-ink/40">({items.length})</span>
         </h2>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <a
             href={previewHref}
             target="_blank"
@@ -169,11 +169,11 @@ export function CollectionManager<T extends Item>({
               </div>
             ))}
           </div>
-          <div className="mt-6 flex justify-end gap-2">
-            <button type="button" onClick={cancel} className="rounded-lg border border-ink/15 px-4 py-2 text-sm text-ink/70 hover:bg-ink/5">
+          <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button type="button" onClick={cancel} className="w-full rounded-lg border border-ink/15 px-4 py-2.5 text-sm text-ink/70 hover:bg-ink/5 sm:w-auto">
               Cancel
             </button>
-            <button type="button" onClick={save} className="rounded-lg bg-gold-gradient px-5 py-2 text-sm font-semibold text-night shadow-gold-btn">
+            <button type="button" onClick={save} className="w-full rounded-lg bg-gold-gradient px-5 py-2.5 text-sm font-semibold text-night shadow-gold-btn sm:w-auto">
               Save
             </button>
           </div>
@@ -209,9 +209,9 @@ export function CollectionManager<T extends Item>({
                 onDragOver={(e) => { if (dragIndex !== null) e.preventDefault(); }}
                 onDrop={() => { if (dragIndex !== null) reorder(dragIndex, i); setDragIndex(null); }}
                 onDragEnd={() => setDragIndex(null)}
-                className={`flex items-center gap-2 rounded-xl border border-ink/10 bg-white p-3 shadow-sm ${!q ? "cursor-move" : ""} ${dragIndex === i ? "opacity-50" : ""}`}
+                className={`flex flex-wrap items-center gap-2 rounded-xl border border-ink/10 bg-white p-3 shadow-sm ${!q ? "cursor-move" : ""} ${dragIndex === i ? "opacity-50" : ""}`}
               >
-                {!q && <span className="select-none text-ink/30" title="Drag to reorder" aria-hidden>⠿</span>}
+                {!q && <span className="select-none px-1 text-lg leading-none text-ink/30" title="Drag to reorder" aria-hidden>⠿</span>}
                 {img ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={img} alt={item.title} className="h-11 w-11 shrink-0 rounded-lg object-cover" />
@@ -221,21 +221,21 @@ export function CollectionManager<T extends Item>({
                     style={{ background: accent ? `linear-gradient(150deg, ${accent[0]}, ${accent[1]})` : "#e9dcc2" }}
                   />
                 )}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-ink">{item.title || "Untitled"}</p>
-                  <p className="truncate text-xs text-ink/55">{meta || "—"}</p>
+                <div className="min-w-0 flex-1 basis-[55%]">
+                  <p className="break-words font-semibold text-ink">{item.title || "Untitled"}</p>
+                  {(meta || "").length > 0 && <p className="break-words text-xs text-ink/55">{meta}</p>}
                 </div>
-                <div className="flex items-center gap-1">
-                  <button type="button" aria-label="Move up" onClick={() => move(i, -1)} className="grid h-8 w-8 place-items-center rounded-md text-ink/50 hover:bg-ink/5 disabled:opacity-30" disabled={i <= 0 || !!q}>
+                <div className="ml-auto flex w-full items-center justify-end gap-1 sm:w-auto">
+                  <button type="button" aria-label="Move up" onClick={() => move(i, -1)} className="grid h-10 w-10 place-items-center rounded-md text-ink/50 hover:bg-ink/5 disabled:opacity-30" disabled={i <= 0 || !!q}>
                     ↑
                   </button>
-                  <button type="button" aria-label="Move down" onClick={() => move(i, 1)} className="grid h-8 w-8 place-items-center rounded-md text-ink/50 hover:bg-ink/5 disabled:opacity-30" disabled={i === items.length - 1 || !!q}>
+                  <button type="button" aria-label="Move down" onClick={() => move(i, 1)} className="grid h-10 w-10 place-items-center rounded-md text-ink/50 hover:bg-ink/5 disabled:opacity-30" disabled={i === items.length - 1 || !!q}>
                     ↓
                   </button>
-                  <button type="button" onClick={() => startEdit(item)} className="rounded-md px-3 py-1.5 text-sm font-medium text-gold-700 hover:bg-gold-100/70">
+                  <button type="button" onClick={() => startEdit(item)} className="rounded-md px-3 py-2 text-sm font-medium text-gold-700 hover:bg-gold-100/70">
                     Edit
                   </button>
-                  <button type="button" onClick={() => remove(item.id)} className="rounded-md px-3 py-1.5 text-sm font-medium text-rose-600 hover:bg-rose-50">
+                  <button type="button" onClick={() => remove(item.id)} className="rounded-md px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50">
                     Delete
                   </button>
                 </div>
