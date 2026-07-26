@@ -8,8 +8,8 @@ import { generatePrescriptionPdf, downloadPdf, type PrescriptionPdfData } from "
 import { toHindi } from "@/lib/prescriptionPad/hindi";
 
 /* ---------------- types ---------------- */
-type Rem = { id: string; planet: string; title: string };
-type MiscRem = { id: string; title: string };
+type Rem = { id: string; planet: string; title: string; enabled?: boolean };
+type MiscRem = { id: string; title: string; enabled?: boolean };
 type CountOpt = { id: string; title: string };
 type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string; rudraksha: string; carat?: string; grade?: string; rateA?: number; rateB?: number; rateC?: number };
 type AnuRow = { title: string; purpose: string; dakshina: string };
@@ -196,8 +196,8 @@ export function PrescriptionPad() {
   const remediesFor = useCallback(
     (planet: string): Rem[] =>
       planet === MISC_REMEDY_CATEGORY
-        ? miscRemedies.map((r) => ({ id: r.id, planet: MISC_REMEDY_CATEGORY, title: r.title }))
-        : remedies.filter((r) => r.planet === planet),
+        ? miscRemedies.filter((r) => r.enabled !== false).map((r) => ({ id: r.id, planet: MISC_REMEDY_CATEGORY, title: r.title }))
+        : remedies.filter((r) => r.planet === planet && r.enabled !== false),
     [remedies, miscRemedies]
   );
   const kPlanets = useMemo<KPlanet[]>(() => ((kundali as { planets?: KPlanet[] } | null)?.planets ?? []), [kundali]);
@@ -564,6 +564,7 @@ export function PrescriptionPad() {
                     <select className={`${inp} sm:max-w-[220px]`} value={row.planet} onChange={(e) => setRow(i, { planet: e.target.value, remedies: [], remedyCounts: {} })}>
                       <option value="">—</option>
                       {PLANETS.map((p) => <option key={p} value={p}>{p}</option>)}
+                      <option value="Lagna">Lagna (लग्न)</option>
                       <option value={MISC_REMEDY_CATEGORY}>{MISC_REMEDY_CATEGORY} (सामान्य उपाय)</option>
                     </select>
                   </div>

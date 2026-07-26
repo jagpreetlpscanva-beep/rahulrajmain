@@ -857,6 +857,8 @@ export interface PlanetRemedy {
   id: string;
   planet: string;
   title: string;
+  /** When false the remedy is hidden on the pad (still kept in admin). Absent = shown. */
+  enabled?: boolean;
 }
 
 /** Gemstone recommendation for a planet (one row per planet, editable). */
@@ -1040,6 +1042,8 @@ export const DEFAULT_CARATS: CaratOption[] = ["3", "5", "7", "9", "11"].map((tit
 export interface MiscRemedy {
   id: string;
   title: string;
+  /** When false the remedy is hidden on the pad (still kept in admin). Absent = shown. */
+  enabled?: boolean;
 }
 
 /** Value used for the "planet" slot on the prescription pad when the

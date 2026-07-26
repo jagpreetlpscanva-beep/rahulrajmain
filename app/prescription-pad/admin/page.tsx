@@ -22,15 +22,9 @@ import {
   DEFAULT_CARATS, type CaratOption,
 } from "@/lib/cms";
 import { CollectionManager, type FieldDef } from "../../components/admin/CollectionManager";
+import { PlanetRemediesManager } from "../../components/admin/PlanetRemediesManager";
 
 /* ---------------- field definitions (mirror the main admin) ---------------- */
-const remedyFields: FieldDef[] = [
-  { name: "planet", label: "Planet", type: "select", options: [...PLANETS] },
-  { name: "title", label: "Remedy (upay)", type: "textarea", hint: "English is auto-shown in Hindi on the pad; or type Hindi directly." },
-];
-const miscRemedyFields: FieldDef[] = [
-  { name: "title", label: "Remedy (upay)", type: "textarea" },
-];
 const remedyCountFields: FieldDef[] = [
   { name: "title", label: "Count / Frequency", type: "text", placeholder: "e.g. 11 or 21" },
 ];
@@ -67,8 +61,6 @@ const padLabelFields: FieldDef[] = [
   { name: "key", label: "Slot key (do not change)", type: "text" },
 ];
 
-const blankRemedy = (): PlanetRemedy => ({ id: newId("rem"), planet: "Saturn", title: "" });
-const blankMisc = (): MiscRemedy => ({ id: newId("rem"), title: "" });
 const blankCount = (): RemedyCountOption => ({ id: newId("count"), title: "" });
 const blankGem = (): Gemstone => ({ id: newId("gem"), planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", mantra: "", rateA: 0, rateB: 0, rateC: 0 });
 const blankAnu = (): Anushthan => ({ id: newId("anu"), title: "", purpose: "", dakshina: "", titleHi: "" });
@@ -82,7 +74,7 @@ const TABS: { key: TabKey; label: string }[] = [
   { key: "remedies", label: "Remedies" },
   { key: "anushthan", label: "Anushthan" },
   { key: "gemstones", label: "Gemstones" },
-  { key: "misc", label: "Misc & Counts" },
+  { key: "misc", label: "Remedy Counts" },
   { key: "layout", label: "Print Layout" },
   { key: "labels", label: "Text/Labels" },
 ];
@@ -168,7 +160,7 @@ export default function PrescriptionAdminPage() {
 
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         {tab === "remedies" && (
-          <CollectionManager<PlanetRemedy> label="Planet Remedies" items={remedies.items} fields={remedyFields} blank={blankRemedy} onChange={remedies.save} onReset={remedies.reset} previewHref="/prescription-pad" />
+          <PlanetRemediesManager planet={{ items: remedies.items, save: remedies.save }} misc={{ items: misc.items, save: misc.save }} />
         )}
         {tab === "anushthan" && (
           <CollectionManager<Anushthan> label="Anushthan" items={anushthan.items} fields={anushthanFields} blank={blankAnu} onChange={anushthan.save} onReset={anushthan.reset} previewHref="/prescription-pad" />
@@ -181,9 +173,12 @@ export default function PrescriptionAdminPage() {
           </div>
         )}
         {tab === "misc" && (
-          <div className="space-y-8">
-            <CollectionManager<MiscRemedy> label="Miscellaneous Remedies" items={misc.items} fields={miscRemedyFields} blank={blankMisc} onChange={misc.save} onReset={misc.reset} previewHref="/prescription-pad" />
+          <div className="space-y-4">
             <CollectionManager<RemedyCountOption> label="Remedy Counts / Frequency" items={counts.items} fields={remedyCountFields} blank={blankCount} onChange={counts.save} onReset={counts.reset} previewHref="/prescription-pad" />
+            <p className="rounded-xl border border-dashed border-ink/15 bg-white p-4 text-xs leading-relaxed text-ink/55">
+              <b>Miscellaneous (सामान्य) remedies</b> are now managed inside the <b>Remedies</b> tab, in the
+              “Miscellaneous (सामान्य)” category at the bottom of the accordion.
+            </p>
           </div>
         )}
         {tab === "layout" && (
