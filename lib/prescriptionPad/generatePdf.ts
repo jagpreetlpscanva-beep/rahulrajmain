@@ -82,6 +82,9 @@ export interface PrescriptionPdfData {
    *  anushthan → remedies → gemstones when not provided. */
   sections?: PdfSection[];
   anushthanRows?: PdfAnushthanRow[];
+  /** Editable patient-block labels keyed by their padLabels key (falls back to
+   *  the built-in Hindi default when absent). */
+  labels?: Record<string, string>;
   notes: string;
 }
 
@@ -174,23 +177,24 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
 
   // ---- patient details (centre area, labelled lines) ----
   const PB = PATIENT_BLOCK;
+  const L = (key: string, fallback: string) => data.labels?.[key] ?? fallback;
   // Print pad: only नाम / जन्म / स्थान / ज्योतिषी (no mobile, gender or date —
   // today's date is shown top-right instead). Digital PDF keeps all fields.
   const pLines: [string, string][] = mode === "print"
     ? [
-        ["नाम:", data.patientName],
-        ["जन्म:", `${data.dob} ${data.tob}`.trim()],
-        ["स्थान:", data.place],
-        ["ज्योतिषी:", data.astrologer],
+        [`${L("plabel_name", "नाम")}:`, data.patientName],
+        [`${L("plabel_birth", "जन्म")}:`, `${data.dob} ${data.tob}`.trim()],
+        [`${L("plabel_place", "स्थान")}:`, data.place],
+        [`${L("plabel_astrologer", "ज्योतिषी")}:`, data.astrologer],
       ]
     : [
-        ["यजमान:", data.patientName],
-        ["मोबाइल:", data.mobile],
-        ["लिंग:", data.gender],
-        ["जन्म:", `${data.dob} ${data.tob}`.trim()],
-        ["स्थान:", data.place],
-        ["दिनांक:", data.date],
-        ["ज्योतिषी:", data.astrologer],
+        [`${L("plabel_yajman", "यजमान")}:`, data.patientName],
+        [`${L("plabel_mobile", "मोबाइल")}:`, data.mobile],
+        [`${L("plabel_gender", "लिंग")}:`, data.gender],
+        [`${L("plabel_birth", "जन्म")}:`, `${data.dob} ${data.tob}`.trim()],
+        [`${L("plabel_place", "स्थान")}:`, data.place],
+        [`${L("plabel_date", "दिनांक")}:`, data.date],
+        [`${L("plabel_astrologer", "ज्योतिषी")}:`, data.astrologer],
       ];
   // Print mode nudges the whole patient block into its printed area (off the pad's
   // gemstone pictures); digital keeps the exact measured position (shift = 0).
@@ -245,7 +249,7 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
 
   if (mode === "print") {
     // Only date on the print pad: today's date, top-right above the Mahadasha column.
-    drawText(page, font, `दिनांक: ${data.date}`, DASHA_FIELDS.mahadasha.xMm + dashaShift, PRINT_TODAY_DATE.yMm, mode, { size: PRINT_TODAY_DATE.fontSize });
+    drawText(page, font, `${L("plabel_date", "दिनांक")}: ${data.date}`, DASHA_FIELDS.mahadasha.xMm + dashaShift, PRINT_TODAY_DATE.yMm, mode, { size: PRINT_TODAY_DATE.fontSize });
     // Mahadasha split: planet name above the printed label, "till <date>" below it.
     const mf = DASHA_FIELDS.mahadasha;
     const m = data.mahadasha.match(/^(.*?)\s*\(\s*till\s*(.*?)\)\s*$/i);

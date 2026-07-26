@@ -54,6 +54,8 @@ import {
   type Anushthan,
   DEFAULT_PAD_SECTIONS,
   type PadSection,
+  DEFAULT_PAD_LABELS,
+  type PadLabel,
   DEFAULT_GEM_GRADES,
   type GemGrade,
   DEFAULT_CARATS,
@@ -313,6 +315,13 @@ const padSectionFields: FieldDef[] = [
 ];
 const blankPadSection = (): PadSection => ({ id: newId("sec"), title: "", enabled: true });
 
+const padLabelFields: FieldDef[] = [
+  { name: "title", label: "Text (as shown on pad/PDF)", type: "textarea", hint: "Edit this to change the heading/label/banner line everywhere (screen, PDF & print)." },
+  { name: "enabled", label: "Show this text", type: "toggle" },
+  { name: "key", label: "Slot key (do not change)", type: "text", hint: "Internal identifier the pad looks up. Changing it makes the pad fall back to the built-in default." },
+];
+const blankPadLabel = (): PadLabel => ({ id: newId("lbl"), key: "", title: "", enabled: true });
+
 const gemGradeFields: FieldDef[] = [
   { name: "title", label: "Grade label", type: "text", placeholder: "A", hint: "Order = quality tier. The 1st grade maps to Rate A on each gemstone, 2nd → Rate B, 3rd → Rate C." },
 ];
@@ -335,7 +344,7 @@ const blankConsultation = (): Consultation => ({
   image: "",
 });
 
-type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "coupons" | "blog" | "reviews" | "slots" | "bookings" | "messages" | "planetRemedies" | "miscRemedies" | "remedyCounts" | "gemstones" | "anushthan" | "padSections" | "gemGrades" | "carats";
+type TabKey = "dashboard" | "hero" | "poojas" | "poojaBanner" | "reports" | "courses" | "podcasts" | "consultations" | "addons" | "gallery" | "decor" | "coupons" | "blog" | "reviews" | "slots" | "bookings" | "messages" | "planetRemedies" | "miscRemedies" | "remedyCounts" | "gemstones" | "anushthan" | "padSections" | "padLabels" | "gemGrades" | "carats";
 
 const GridIcon = ({ className = "" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -370,6 +379,7 @@ const NAV: { key: TabKey; label: string; icon: (p: { className?: string }) => Re
   { key: "gemstones", label: "Gemstones", icon: MedalIcon },
   { key: "anushthan", label: "Anushthan", icon: OmIcon },
   { key: "padSections", label: "Pad Sections", icon: GridIcon },
+  { key: "padLabels", label: "Pad Text/Labels", icon: MedalIcon },
   { key: "gemGrades", label: "Gem Grades", icon: MedalIcon },
   { key: "carats", label: "Carat Options", icon: MedalIcon },
 ];
@@ -401,6 +411,7 @@ export default function AdminPage() {
   const gemstones = useCollection<Gemstone>("gemstones", DEFAULT_GEMSTONES);
   const anushthan = useCollection<Anushthan>("anushthan", DEFAULT_ANUSHTHAN);
   const padSections = useCollection<PadSection>("padSections", DEFAULT_PAD_SECTIONS);
+  const padLabels = useCollection<PadLabel>("padLabels", DEFAULT_PAD_LABELS);
   const gemGrades = useCollection<GemGrade>("gemGrades", DEFAULT_GEM_GRADES);
   const carats = useCollection<CaratOption>("carats", DEFAULT_CARATS);
 
@@ -610,6 +621,9 @@ export default function AdminPage() {
           )}
           {tab === "padSections" && (
             <CollectionManager<PadSection> label="Prescription Pad Sections" items={padSections.items} fields={padSectionFields} blank={blankPadSection} onChange={padSections.save} onReset={padSections.reset} previewHref="/prescription-pad" />
+          )}
+          {tab === "padLabels" && (
+            <CollectionManager<PadLabel> label="Pad Text / Labels" items={padLabels.items} fields={padLabelFields} blank={blankPadLabel} onChange={padLabels.save} onReset={padLabels.reset} previewHref="/prescription-pad" />
           )}
           {tab === "gemGrades" && (
             <CollectionManager<GemGrade> label="Gem Grades" items={gemGrades.items} fields={gemGradeFields} blank={blankGemGrade} onChange={gemGrades.save} onReset={gemGrades.reset} previewHref="/prescription-pad" />

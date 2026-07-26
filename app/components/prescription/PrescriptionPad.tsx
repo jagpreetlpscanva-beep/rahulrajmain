@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { CITIES } from "@/lib/calculators";
-import { PLANETS, MISC_REMEDY_CATEGORY, DEFAULT_PAD_SECTIONS, type PadSection, type Anushthan, type GemGrade, type CaratOption } from "@/lib/cms";
+import { PLANETS, MISC_REMEDY_CATEGORY, DEFAULT_PAD_SECTIONS, DEFAULT_PAD_LABELS, resolveLabel, type PadSection, type PadLabel, type Anushthan, type GemGrade, type CaratOption } from "@/lib/cms";
 import { generatePrescriptionPdf, downloadPdf, type PrescriptionPdfData } from "@/lib/prescriptionPad/generatePdf";
 import { toHindi } from "@/lib/prescriptionPad/hindi";
 
@@ -57,33 +57,36 @@ function parseDMY(str: string): string {
   return `${y}-${mo}-${d}`;
 }
 
-/* ---------------- letterhead + footer (page banners + print) ---------------- */
-function Letterhead() {
+/* ---------------- letterhead + footer (page banners + print) ----------------
+   Every line is admin-editable via the padLabels collection (resolver `L`). */
+type LabelFn = (key: string, fallback: string) => string;
+
+function Letterhead({ L }: { L: LabelFn }) {
   return (
     <div className="flex items-start justify-between gap-4 bg-gradient-to-r from-[#6d1414] via-[#8a2020] to-[#e2662a] px-5 py-3 text-white sm:px-8">
       <div>
-        <p className="font-serif text-2xl font-extrabold leading-tight sm:text-3xl">🕉 डॉ० राहुल राज <span className="text-amber-200">‘ज्योतिष गुरु’</span> 🕉</p>
-        <p className="text-sm font-semibold">पी.एच.डी., गोल्ड मेडलिस्ट</p>
-        <p className="mt-1 text-xs">ज्योतिष पारिजात · ज्योतिष रत्नश्री · ज्योतिष भास्कर</p>
-        <p className="text-xs">शिष्य — पं० के.ए. दूबे पद्मेश</p>
+        <p className="font-serif text-2xl font-extrabold leading-tight sm:text-3xl">{L("lh_name", "🕉 डॉ० राहुल राज ‘ज्योतिष गुरु’ 🕉")}</p>
+        <p className="text-sm font-semibold">{L("lh_qual", "पी.एच.डी., गोल्ड मेडलिस्ट")}</p>
+        <p className="mt-1 text-xs">{L("lh_titles", "ज्योतिष पारिजात · ज्योतिष रत्नश्री · ज्योतिष भास्कर")}</p>
+        <p className="text-xs">{L("lh_shishya", "शिष्य — पं० के.ए. दूबे पद्मेश")}</p>
       </div>
       <div className="text-right text-[11px] leading-snug">
-        <p className="text-sm font-bold text-amber-200">परामर्श हेतु कॉल करें</p>
-        <p className="text-lg font-extrabold">📞 9415312590</p>
-        <p className="mt-1 opacity-90"><b>कार्यालय/निवास:</b> डी-10, श्रवण अपार्टमेंट के सामने, सेक्टर-ई, लखनऊ</p>
-        <p className="opacity-90"><b>शाखा:</b> ‘ज्योतिष योग’ सी-100, सेक्टर-डी, एल.डी.ए. कालोनी, कानपुर रोड, लखनऊ</p>
+        <p className="text-sm font-bold text-amber-200">{L("lh_call", "परामर्श हेतु कॉल करें")}</p>
+        <p className="text-lg font-extrabold">{L("lh_phone", "📞 9415312590")}</p>
+        <p className="mt-1 opacity-90">{L("lh_office", "कार्यालय/निवास: डी-10, श्रवण अपार्टमेंट के सामने, सेक्टर-ई, लखनऊ")}</p>
+        <p className="opacity-90">{L("lh_branch", "शाखा: ‘ज्योतिष योग’ सी-100, सेक्टर-डी, एल.डी.ए. कालोनी, कानपुर रोड, लखनऊ")}</p>
       </div>
     </div>
   );
 }
-function Footer() {
+function Footer({ L }: { L: LabelFn }) {
   return (
     <div className="bg-gradient-to-r from-[#e2662a] via-[#8a2020] to-[#6d1414] px-5 py-3 text-center text-white sm:px-8">
-      <p className="text-sm font-bold text-amber-200">: सम्पर्क समय : <span className="text-white/90">(केवल अपॉइंटमेंट हेतु)</span></p>
-      <p className="text-xs">प्रातः 11:00 से 1:00 · सायं 06:00 से 8:00 · रविवार सायं अवकाश</p>
-      <p className="mt-1 text-[11px]">कुण्डली निर्माण, वास्तु दोष निवारण एवं सिद्ध रत्न, रुद्राक्ष एवं यन्त्रों की सुविधा।</p>
-      <p className="mt-0.5 text-[11px] font-semibold text-amber-200">कृपया टोने-टोटके, वशीकरण इत्यादि के लिए सम्पर्क न करें।</p>
-      <p className="mt-1 text-sm font-bold tracking-wide">astrorahulraj.com</p>
+      <p className="text-sm font-bold text-amber-200">{L("ft_title", ": सम्पर्क समय :")} <span className="text-white/90">{L("ft_note", "(केवल अपॉइंटमेंट हेतु)")}</span></p>
+      <p className="text-xs">{L("ft_timings", "प्रातः 11:00 से 1:00 · सायं 06:00 से 8:00 · रविवार सायं अवकाश")}</p>
+      <p className="mt-1 text-[11px]">{L("ft_services", "कुण्डली निर्माण, वास्तु दोष निवारण एवं सिद्ध रत्न, रुद्राक्ष एवं यन्त्रों की सुविधा।")}</p>
+      <p className="mt-0.5 text-[11px] font-semibold text-amber-200">{L("ft_warning", "कृपया टोने-टोटके, वशीकरण इत्यादि के लिए सम्पर्क न करें।")}</p>
+      <p className="mt-1 text-sm font-bold tracking-wide">{L("ft_website", "astrorahulraj.com")}</p>
     </div>
   );
 }
@@ -100,6 +103,8 @@ export function PrescriptionPad() {
   const [carats, setCarats] = useState<CaratOption[]>([]);
   const [anushthanRows, setAnushthanRows] = useState<AnuRow[]>([]);
   const [anuQuery, setAnuQuery] = useState("");
+  const [padLabels, setPadLabels] = useState<PadLabel[]>(DEFAULT_PAD_LABELS);
+  const L = useCallback((key: string, fallback: string) => resolveLabel(padLabels, key, fallback), [padLabels]);
 
   const [patientName, setPatientName] = useState("");
   const [mobile, setMobile] = useState("");
@@ -127,7 +132,7 @@ export function PrescriptionPad() {
   const [notes, setNotes] = useState("");
 
   const [now] = useState(() => new Date());
-  const astrologer = "डॉ० राहुल राज";
+  const astrologer = L("astrologer_name", "डॉ० राहुल राज");
 
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -151,6 +156,7 @@ export function PrescriptionPad() {
     fetch("/api/content/remedyCounts").then((r) => r.json()).then((d) => Array.isArray(d) && setCountOptions(d)).catch(() => {});
     fetch("/api/content/gemstones").then((r) => r.json()).then((d) => Array.isArray(d) && setGemDefaults(d)).catch(() => {});
     fetch("/api/content/padSections").then((r) => r.json()).then((d) => Array.isArray(d) && d.length && setPadSections(d)).catch(() => {});
+    fetch("/api/content/padLabels").then((r) => r.json()).then((d) => Array.isArray(d) && d.length && setPadLabels(d)).catch(() => {});
     fetch("/api/content/anushthan").then((r) => r.json()).then((d) => Array.isArray(d) && setAnushthanCatalog(d)).catch(() => {});
     fetch("/api/content/gemGrades").then((r) => r.json()).then((d) => Array.isArray(d) && setGemGrades(d)).catch(() => {});
     fetch("/api/content/carats").then((r) => r.json()).then((d) => Array.isArray(d) && setCarats(d)).catch(() => {});
@@ -303,9 +309,19 @@ export function PrescriptionPad() {
       gemRows: gems.filter((g) => g.stone).map((g) => ({ ...g, price: gemPrice(g) })),
       sections: padSections,
       anushthanRows,
+      labels: {
+        plabel_name: L("plabel_name", "नाम"),
+        plabel_yajman: L("plabel_yajman", "यजमान"),
+        plabel_mobile: L("plabel_mobile", "मोबाइल"),
+        plabel_gender: L("plabel_gender", "लिंग"),
+        plabel_birth: L("plabel_birth", "जन्म"),
+        plabel_place: L("plabel_place", "स्थान"),
+        plabel_date: L("plabel_date", "दिनांक"),
+        plabel_astrologer: L("plabel_astrologer", "ज्योतिषी"),
+      },
       notes,
     };
-  }, [patientName, mobile, gender, dob, tob, place, now, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kPlanets, rows, gems, gemPrice, padSections, anushthanRows, notes]);
+  }, [patientName, mobile, gender, dob, tob, place, now, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kPlanets, rows, gems, gemPrice, padSections, anushthanRows, L, notes]);
 
   /** डॉ० राहुल राज — ज्योतिष परामर्श - {PatientName}.pdf */
   const pdfFileName = useCallback(() => {
@@ -422,7 +438,7 @@ export function PrescriptionPad() {
       <style>{`@media print { .rx-noprint { display:none !important; } .rx-print-footer { position:fixed; bottom:0; left:0; right:0; } }`}</style>
 
       {/* ===== PAGE HEADER (top) ===== */}
-      <header className="rx-noprint shadow-md"><Letterhead /></header>
+      <header className="rx-noprint shadow-md"><Letterhead L={L} /></header>
 
       {/* ===== controls ===== */}
       <div className="rx-noprint mx-auto flex max-w-[1120px] flex-wrap items-center gap-2 px-3 pt-4">
@@ -499,7 +515,7 @@ export function PrescriptionPad() {
           {/* kundali (BIG) + dasha */}
           <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[1fr,1fr]">
             <div>
-              <p className="mb-2 font-serif text-xl font-bold text-[#a01414]">लग्न कुण्डली</p>
+              <p className="mb-2 font-serif text-xl font-bold text-[#a01414]">{L("heading_kundali", "लग्न कुण्डली")}</p>
               <div onClick={() => chart && setZoom(true)} className={`grid aspect-square w-full max-w-[380px] place-items-center rounded-xl border-2 border-[#a01414]/70 bg-[#fffdf8] p-3 ${chart ? "cursor-zoom-in" : ""}`}>
                 {kundaliState === "loading" ? <span className="text-sm text-ink/50">बन रही है…</span>
                   : chart ? <img src={chart} alt="लग्न कुण्डली" className="h-full w-full object-contain" />
@@ -508,7 +524,7 @@ export function PrescriptionPad() {
               {chart && <p className="rx-noprint mt-1 text-center text-[11px] text-ink/45">(बड़ा देखने के लिए क्लिक करें)</p>}
             </div>
             <div className="space-y-2">
-              {[["महादशा", mahadasha, setMahadasha], ["अन्तर्दशा", antardasha, setAntardasha], ["प्र० दशा", pratyantar, setPratyantar], ["दोष", dosha, setDosha], ["योग", yog, setYog]].map(([label, val, set]) => (
+              {[[L("label_mahadasha", "महादशा"), mahadasha, setMahadasha], [L("label_antardasha", "अन्तर्दशा"), antardasha, setAntardasha], [L("label_pratyantar", "प्र० दशा"), pratyantar, setPratyantar], [L("label_dosha", "दोष"), dosha, setDosha], [L("label_yog", "योग"), yog, setYog]].map(([label, val, set]) => (
                 <div key={label as string} className="flex items-center gap-2">
                   <span className="w-20 shrink-0 text-sm font-bold text-[#a01414]">{label as string} —</span>
                   <input className={inp} value={val as string} onChange={(e) => (set as (v: string) => void)(e.target.value)} />
@@ -540,7 +556,7 @@ export function PrescriptionPad() {
 
           {/* remedies */}
           <div className="mt-6">
-            <p className="mb-2 font-serif text-xl font-bold text-[#a01414]">ग्रह उपाय</p>
+            <p className="mb-2 font-serif text-xl font-bold text-[#a01414]">{L("heading_remedies", "ग्रह उपाय")}</p>
             <div className="space-y-3">
               {rows.map((row, i) => (
                 <div key={i} className="rounded-xl border border-[#8a2020]/20 p-3">
@@ -588,7 +604,7 @@ export function PrescriptionPad() {
 
           {/* anushthan — searchable dropdown (results after 3 letters) + chosen chips */}
           <div className="mt-6">
-            <p className="mb-1 font-serif text-xl font-bold text-[#a01414]">अनुष्ठान</p>
+            <p className="mb-1 font-serif text-xl font-bold text-[#a01414]">{L("heading_anushthan", "अनुष्ठान")}</p>
             <p className="mb-2 text-[11px] text-ink/45">PDF/प्रिंट में सबसे ऊपर के 3 अनुष्ठान ही आते हैं।</p>
             {anushthanCatalog.length === 0 ? (
               <p className="text-xs text-ink/45">एडमिन → “Anushthan” में अनुष्ठान जोड़ें, फिर यहाँ खोजें।</p>
@@ -644,7 +660,7 @@ export function PrescriptionPad() {
 
           {/* gemstones */}
           <div className="mt-6">
-            <p className="mb-2 font-serif text-xl font-bold text-[#a01414]">रत्न</p>
+            <p className="mb-2 font-serif text-xl font-bold text-[#a01414]">{L("heading_gemstones", "रत्न")}</p>
             <div className="space-y-3">
               {gems.map((g, i) => (
                 <div key={i} className="rounded-xl border border-[#8a2020]/20 p-3">
@@ -672,19 +688,19 @@ export function PrescriptionPad() {
             <button onClick={() => setGems((gs) => [...gs, blankGem()])} className="mt-2 rounded-lg border border-[#8a2020]/40 px-3 py-1.5 text-sm font-semibold text-[#8a2020]">＋ रत्न जोड़ें</button>
           </div>
 
-          <div className="mt-4"><label className={lbl}>अतिरिक्त टिप्पणी</label><textarea className={inp} rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+          <div className="mt-4"><label className={lbl}>{L("heading_notes", "अतिरिक्त टिप्पणी")}</label><textarea className={inp} rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
         </div>
       </div>
 
       {/* ===== PAGE FOOTER (end) ===== */}
-      <footer className="rx-noprint mt-2 shadow-inner"><Footer /></footer>
+      <footer className="rx-noprint mt-2 shadow-inner"><Footer L={L} /></footer>
 
       {/* zoom modal */}
       {zoom && chart && (
         <div className="rx-noprint fixed inset-0 z-[120] grid place-items-center bg-black/70 p-4" onClick={() => setZoom(false)}>
           <div className="relative w-full max-w-[620px] rounded-2xl bg-white p-4" onClick={(e) => e.stopPropagation()}>
             <button onClick={() => setZoom(false)} className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-ink/10 text-ink">✕</button>
-            <p className="mb-2 text-center font-serif text-2xl font-bold text-[#a01414]">लग्न कुण्डली</p>
+            <p className="mb-2 text-center font-serif text-2xl font-bold text-[#a01414]">{L("heading_kundali", "लग्न कुण्डली")}</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={chart} alt="लग्न कुण्डली (बड़ी)" className="mx-auto w-full max-w-[540px]" />
           </div>
@@ -707,7 +723,7 @@ export function PrescriptionPad() {
       {portal && createPortal(
         <div className="hidden print:block">
           <div className="mx-auto w-[210mm] bg-white text-[#222]">
-            <Letterhead />
+            <Letterhead L={L} />
             <div className="px-6 py-4 pb-[30mm] text-sm">
               <div className="grid grid-cols-3 gap-x-4 gap-y-1">
                 <p><b>ग्राहक:</b> {patientName}</p><p><b>मोबाइल:</b> {mobile}</p><p><b>लिंग:</b> {gender}</p>
@@ -738,7 +754,7 @@ export function PrescriptionPad() {
               )}
               {notes && <p className="mt-2 text-[12px]"><b>टिप्पणी:</b> {notes}</p>}
             </div>
-            <div className="rx-print-footer"><Footer /></div>
+            <div className="rx-print-footer"><Footer L={L} /></div>
           </div>
         </div>,
         portal

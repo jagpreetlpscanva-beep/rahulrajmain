@@ -17,6 +17,7 @@ import {
   DEFAULT_GEMSTONES, type Gemstone,
   DEFAULT_ANUSHTHAN, type Anushthan,
   DEFAULT_PAD_SECTIONS, type PadSection,
+  DEFAULT_PAD_LABELS, type PadLabel,
   DEFAULT_GEM_GRADES, type GemGrade,
   DEFAULT_CARATS, type CaratOption,
 } from "@/lib/cms";
@@ -60,6 +61,11 @@ const padSectionFields: FieldDef[] = [
   { name: "col2", label: "Column 2 label", type: "text", optional: true },
   { name: "col3", label: "Column 3 label", type: "text", optional: true },
 ];
+const padLabelFields: FieldDef[] = [
+  { name: "title", label: "Text (as shown on pad/PDF)", type: "textarea", hint: "Edit to change this heading/label/banner line everywhere." },
+  { name: "enabled", label: "Show this text", type: "toggle" },
+  { name: "key", label: "Slot key (do not change)", type: "text" },
+];
 
 const blankRemedy = (): PlanetRemedy => ({ id: newId("rem"), planet: "Saturn", title: "" });
 const blankMisc = (): MiscRemedy => ({ id: newId("rem"), title: "" });
@@ -69,14 +75,16 @@ const blankAnu = (): Anushthan => ({ id: newId("anu"), title: "", purpose: "", d
 const blankCarat = (): CaratOption => ({ id: newId("carat"), title: "" });
 const blankGrade = (): GemGrade => ({ id: newId("grade"), title: "" });
 const blankSection = (): PadSection => ({ id: newId("sec"), title: "", enabled: true });
+const blankLabel = (): PadLabel => ({ id: newId("lbl"), key: "", title: "", enabled: true });
 
-type TabKey = "remedies" | "anushthan" | "gemstones" | "misc" | "layout";
+type TabKey = "remedies" | "anushthan" | "gemstones" | "misc" | "layout" | "labels";
 const TABS: { key: TabKey; label: string }[] = [
   { key: "remedies", label: "Remedies" },
   { key: "anushthan", label: "Anushthan" },
   { key: "gemstones", label: "Gemstones" },
   { key: "misc", label: "Misc & Counts" },
   { key: "layout", label: "Print Layout" },
+  { key: "labels", label: "Text/Labels" },
 ];
 
 export default function PrescriptionAdminPage() {
@@ -96,6 +104,7 @@ export default function PrescriptionAdminPage() {
   const carats = useCollection<CaratOption>("carats", DEFAULT_CARATS);
   const grades = useCollection<GemGrade>("gemGrades", DEFAULT_GEM_GRADES);
   const sections = useCollection<PadSection>("padSections", DEFAULT_PAD_SECTIONS);
+  const labels = useCollection<PadLabel>("padLabels", DEFAULT_PAD_LABELS);
 
   useEffect(() => {
     fetch("/api/admin/session", { cache: "no-store" })
@@ -185,6 +194,9 @@ export default function PrescriptionAdminPage() {
               edited per-consultation directly on the pad — there is no separate list to manage here.
             </p>
           </div>
+        )}
+        {tab === "labels" && (
+          <CollectionManager<PadLabel> label="Pad Text / Labels" items={labels.items} fields={padLabelFields} blank={blankLabel} onChange={labels.save} onReset={labels.reset} previewHref="/prescription-pad" />
         )}
       </main>
     </div>

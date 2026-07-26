@@ -947,6 +947,69 @@ export const DEFAULT_PAD_SECTIONS: PadSection[] = [
   { id: "gemstones", title: "रत्न", enabled: true },
 ];
 
+/* ---------------- Prescription pad: editable labels / headings / banner text ----
+ *  Every fixed piece of text on the pad (section headings, dasha & patient
+ *  labels, the letterhead and footer lines) is a row here. `key` is the stable
+ *  slot the code looks up; `title` is the shown text (edit this); `enabled:false`
+ *  hides that piece. Unknown/deleted rows simply fall back to the built-in
+ *  default via resolveLabel(), so nothing ever breaks. */
+export interface PadLabel {
+  id: string;
+  key: string;
+  title: string;
+  enabled?: boolean;
+}
+
+export const DEFAULT_PAD_LABELS: PadLabel[] = [
+  // on-screen section headings
+  { id: "lbl-h-kundali", key: "heading_kundali", title: "लग्न कुण्डली", enabled: true },
+  { id: "lbl-h-remedies", key: "heading_remedies", title: "ग्रह उपाय", enabled: true },
+  { id: "lbl-h-anushthan", key: "heading_anushthan", title: "अनुष्ठान", enabled: true },
+  { id: "lbl-h-gemstones", key: "heading_gemstones", title: "रत्न", enabled: true },
+  { id: "lbl-h-notes", key: "heading_notes", title: "अतिरिक्त टिप्पणी", enabled: true },
+  // dasha / dosh / yog row labels
+  { id: "lbl-mahadasha", key: "label_mahadasha", title: "महादशा", enabled: true },
+  { id: "lbl-antardasha", key: "label_antardasha", title: "अन्तर्दशा", enabled: true },
+  { id: "lbl-pratyantar", key: "label_pratyantar", title: "प्र० दशा", enabled: true },
+  { id: "lbl-dosha", key: "label_dosha", title: "दोष", enabled: true },
+  { id: "lbl-yog", key: "label_yog", title: "योग", enabled: true },
+  // patient block labels (used in the PDF)
+  { id: "lbl-p-name", key: "plabel_name", title: "नाम", enabled: true },
+  { id: "lbl-p-yajman", key: "plabel_yajman", title: "यजमान", enabled: true },
+  { id: "lbl-p-mobile", key: "plabel_mobile", title: "मोबाइल", enabled: true },
+  { id: "lbl-p-gender", key: "plabel_gender", title: "लिंग", enabled: true },
+  { id: "lbl-p-birth", key: "plabel_birth", title: "जन्म", enabled: true },
+  { id: "lbl-p-place", key: "plabel_place", title: "स्थान", enabled: true },
+  { id: "lbl-p-date", key: "plabel_date", title: "दिनांक", enabled: true },
+  { id: "lbl-p-astrologer", key: "plabel_astrologer", title: "ज्योतिषी", enabled: true },
+  { id: "lbl-astrologer-name", key: "astrologer_name", title: "डॉ० राहुल राज", enabled: true },
+  // letterhead
+  { id: "lbl-lh-name", key: "lh_name", title: "🕉 डॉ० राहुल राज ‘ज्योतिष गुरु’ 🕉", enabled: true },
+  { id: "lbl-lh-qual", key: "lh_qual", title: "पी.एच.डी., गोल्ड मेडलिस्ट", enabled: true },
+  { id: "lbl-lh-titles", key: "lh_titles", title: "ज्योतिष पारिजात · ज्योतिष रत्नश्री · ज्योतिष भास्कर", enabled: true },
+  { id: "lbl-lh-shishya", key: "lh_shishya", title: "शिष्य — पं० के.ए. दूबे पद्मेश", enabled: true },
+  { id: "lbl-lh-call", key: "lh_call", title: "परामर्श हेतु कॉल करें", enabled: true },
+  { id: "lbl-lh-phone", key: "lh_phone", title: "📞 9415312590", enabled: true },
+  { id: "lbl-lh-office", key: "lh_office", title: "कार्यालय/निवास: डी-10, श्रवण अपार्टमेंट के सामने, सेक्टर-ई, लखनऊ", enabled: true },
+  { id: "lbl-lh-branch", key: "lh_branch", title: "शाखा: ‘ज्योतिष योग’ सी-100, सेक्टर-डी, एल.डी.ए. कालोनी, कानपुर रोड, लखनऊ", enabled: true },
+  // footer
+  { id: "lbl-ft-title", key: "ft_title", title: ": सम्पर्क समय :", enabled: true },
+  { id: "lbl-ft-note", key: "ft_note", title: "(केवल अपॉइंटमेंट हेतु)", enabled: true },
+  { id: "lbl-ft-timings", key: "ft_timings", title: "प्रातः 11:00 से 1:00 · सायं 06:00 से 8:00 · रविवार सायं अवकाश", enabled: true },
+  { id: "lbl-ft-services", key: "ft_services", title: "कुण्डली निर्माण, वास्तु दोष निवारण एवं सिद्ध रत्न, रुद्राक्ष एवं यन्त्रों की सुविधा।", enabled: true },
+  { id: "lbl-ft-warning", key: "ft_warning", title: "कृपया टोने-टोटके, वशीकरण इत्यादि के लिए सम्पर्क न करें।", enabled: true },
+  { id: "lbl-ft-website", key: "ft_website", title: "astrorahulraj.com", enabled: true },
+];
+
+/** Resolve a pad label by key: hidden when enabled===false, else the row's text,
+ *  else the built-in fallback (so deleting a row safely reverts to default). */
+export function resolveLabel(labels: PadLabel[] | undefined, key: string, fallback: string): string {
+  const f = labels?.find((l) => l.key === key);
+  if (!f) return fallback;
+  if (f.enabled === false) return "";
+  return f.title || fallback;
+}
+
 /* ---------------- Prescription pad: gemstone grades + carat options ----------------
  *  Grades (A/B/C) whose labels are editable; each gemstone stores a per-grade
  *  rate (rateA/rateB/rateC). Carat options feed the pad's carat dropdown. */
@@ -1034,6 +1097,7 @@ export const COLLECTIONS = {
   gemstones: DEFAULT_GEMSTONES,
   anushthan: DEFAULT_ANUSHTHAN,
   padSections: DEFAULT_PAD_SECTIONS,
+  padLabels: DEFAULT_PAD_LABELS,
   gemGrades: DEFAULT_GEM_GRADES,
   carats: DEFAULT_CARATS,
 } as const;
