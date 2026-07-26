@@ -54,6 +54,7 @@ export function CollectionManager<T extends Item>({
   const [draft, setDraft] = useState<T | null>(null);
   const [isNew, setIsNew] = useState(false);
   const [query, setQuery] = useState("");
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const q = query.trim().toLowerCase();
   const filtered = q
@@ -104,6 +105,15 @@ export function CollectionManager<T extends Item>({
     if (target < 0 || target >= items.length) return;
     const next = [...items];
     [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  };
+
+  /** Drag & drop reorder: move item from `from` to `to`. */
+  const reorder = (from: number, to: number) => {
+    if (from === to || from < 0 || to < 0) return;
+    const next = [...items];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
     onChange(next);
   };
 
@@ -194,8 +204,14 @@ export function CollectionManager<T extends Item>({
               return (
               <li
                 key={item.id}
-                className="flex items-center gap-3 rounded-xl border border-ink/10 bg-white p-3 shadow-sm"
+                draggable={!q}
+                onDragStart={() => setDragIndex(i)}
+                onDragOver={(e) => { if (dragIndex !== null) e.preventDefault(); }}
+                onDrop={() => { if (dragIndex !== null) reorder(dragIndex, i); setDragIndex(null); }}
+                onDragEnd={() => setDragIndex(null)}
+                className={`flex items-center gap-2 rounded-xl border border-ink/10 bg-white p-3 shadow-sm ${!q ? "cursor-move" : ""} ${dragIndex === i ? "opacity-50" : ""}`}
               >
+                {!q && <span className="select-none text-ink/30" title="Drag to reorder" aria-hidden>⠿</span>}
                 {img ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={img} alt={item.title} className="h-11 w-11 shrink-0 rounded-lg object-cover" />

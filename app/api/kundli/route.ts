@@ -40,10 +40,13 @@ export async function POST(req: Request) {
   try {
     const k = computeKundli({ day: d, month: m, year: y, hour: hh || 0, min: mm || 0, lat, lon, tzone });
     // Gochar (current transit) at the same place — astrologer reference only.
-    const nw = new Date();
+    // IMPORTANT: build the "now" wall-clock in IST from the true UTC instant so it
+    // is correct no matter what timezone the server runs in (Vercel = UTC). Reading
+    // new Date().getHours() on a UTC server gave a gochar 5.5h in the past (wrong).
+    const ist = new Date(Date.now() + 5.5 * 3600 * 1000);
     const g = computeKundli({
-      day: nw.getDate(), month: nw.getMonth() + 1, year: nw.getFullYear(),
-      hour: nw.getHours(), min: nw.getMinutes(), lat, lon, tzone: 5.5,
+      day: ist.getUTCDate(), month: ist.getUTCMonth() + 1, year: ist.getUTCFullYear(),
+      hour: ist.getUTCHours(), min: ist.getUTCMinutes(), lat, lon, tzone: 5.5,
     });
     // Gochar chart must be framed on the NATAL lagna (house-1 = birth ascendant),
     // with today's planets dropped into their houses relative to it — NOT on the

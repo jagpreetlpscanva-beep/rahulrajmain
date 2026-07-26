@@ -27,6 +27,7 @@ import {
   KUNDALI_PLANET,
   PRINT_KUNDALI_PLANET_SCALE,
   PRINT_KUNDALI_SHIFT_XMM,
+  KUNDALI_HOUSE_NUMBER,
   HOUSE_CENTERS,
   DASHA_FIELDS,
   DASHA_MAX_WIDTH_MM,
@@ -206,6 +207,16 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
   // is unchanged so planets stay inside their houses.
   const planetSize = mode === "print" ? KUNDALI_PLANET.fontSize * PRINT_KUNDALI_PLANET_SCALE : KUNDALI_PLANET.fontSize;
   const planetShiftX = mode === "print" ? PRINT_KUNDALI_SHIFT_XMM : 0;
+  // house numbers 1–12 in every house (fixed box positions, not shifted with planets)
+  const HN = KUNDALI_HOUSE_NUMBER;
+  for (let h = 1; h <= 12; h++) {
+    const [fx, fy] = HOUSE_CENTERS[h];
+    const cxMm = KUNDALI_BOX.xMm + fx * KUNDALI_BOX.widthMm;
+    const cyMm = KUNDALI_BOX.yMm + fy * KUNDALI_BOX.heightMm;
+    const label = String(h);
+    const wMm = font.widthOfTextAtSize(label, HN.fontSize) / MM_TO_PT;
+    drawText(page, font, label, cxMm - wMm / 2, cyMm + HN.dyMm, mode, { size: HN.fontSize, color: HN.color });
+  }
   const byHouse: Record<number, PdfPlanet[]> = {};
   for (const p of data.planets) (byHouse[p.house] ||= []).push(p);
   for (let h = 1; h <= 12; h++) {

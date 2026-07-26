@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { CITIES } from "@/lib/calculators";
 import { PLANETS, MISC_REMEDY_CATEGORY, DEFAULT_PAD_SECTIONS, type PadSection, type Anushthan, type GemGrade, type CaratOption } from "@/lib/cms";
 import { generatePrescriptionPdf, downloadPdf, type PrescriptionPdfData } from "@/lib/prescriptionPad/generatePdf";
+import { toHindi } from "@/lib/prescriptionPad/hindi";
 
 /* ---------------- types ---------------- */
 type Rem = { id: string; planet: string; title: string };
@@ -240,12 +241,22 @@ export function PrescriptionPad() {
     return `₹${Math.round(caratNum * rate).toLocaleString("en-IN")}`;
   }, [gemGrades]);
 
-  /** Toggle an Anushthan catalog row on/off for this prescription (matched by title). */
-  const toggleAnushthan = (a: Anushthan) =>
+  /** Admin enters English; the pad/PDF/record store the Hindi form (manual
+   *  `titleHi` override wins, else auto-converted). */
+  const anuHi = useCallback((a: Anushthan): AnuRow => ({
+    title: toHindi(a.title, a.titleHi),
+    purpose: toHindi(a.purpose),
+    dakshina: a.dakshina,
+  }), []);
+
+  /** Toggle an Anushthan catalog row on/off for this prescription (matched by its Hindi name). */
+  const toggleAnushthan = (a: Anushthan) => {
+    const hi = anuHi(a);
     setAnushthanRows((rows) =>
-      rows.some((r) => r.title === a.title)
-        ? rows.filter((r) => r.title !== a.title)
-        : [...rows, { title: a.title, purpose: a.purpose, dakshina: a.dakshina }]);
+      rows.some((r) => r.title === hi.title)
+        ? rows.filter((r) => r.title !== hi.title)
+        : [...rows, hi]);
+  };
 
   const resetAll = () => {
     setPatientName(""); setMobile(""); setGender(""); setDob(""); setDobText(""); setTob(""); setPlace("Lucknow");
@@ -603,18 +614,22 @@ export function PrescriptionPad() {
                 />
                 {anuQuery.trim().length >= 3 && (() => {
                   const q = anuQuery.trim().toLowerCase();
-                  const matches = anushthanCatalog.filter((a) =>
-                    `${a.title} ${a.purpose} ${a.dakshina}`.toLowerCase().includes(q));
+                  // search matches BOTH the English admin text and its Hindi form
+                  const matches = anushthanCatalog.filter((a) => {
+                    const hi = anuHi(a);
+                    return `${a.title} ${a.purpose} ${a.dakshina} ${hi.title} ${hi.purpose}`.toLowerCase().includes(q);
+                  });
                   return (
                     <ul className="mt-1 max-h-56 divide-y divide-ink/10 overflow-y-auto rounded-lg border border-ink/15 bg-white shadow-sm">
                       {matches.length === 0 ? (
                         <li className="px-3 py-2 text-xs text-ink/45">कोई अनुष्ठान नहीं मिला।</li>
                       ) : matches.map((a) => {
-                        const on = anushthanRows.some((r) => r.title === a.title);
+                        const hi = anuHi(a);
+                        const on = anushthanRows.some((r) => r.title === hi.title);
                         return (
                           <li key={a.id}>
                             <button type="button" onClick={() => toggleAnushthan(a)} className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-[#8a2020]/5">
-                              <span><b>{a.title}</b><span className="text-ink/55"> · {a.purpose} · {a.dakshina}</span></span>
+                              <span><b>{hi.title}</b><span className="text-ink/55"> · {hi.purpose} · {hi.dakshina}</span></span>
                               <span className={`shrink-0 text-xs font-bold ${on ? "text-emerald-600" : "text-[#8a2020]"}`}>{on ? "✓ जुड़ा" : "＋ जोड़ें"}</span>
                             </button>
                           </li>

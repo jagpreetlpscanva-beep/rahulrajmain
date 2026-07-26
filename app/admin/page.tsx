@@ -297,11 +297,12 @@ const gemstoneFields: FieldDef[] = [
 const blankGemstone = (): Gemstone => ({ id: newId("gem"), planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", mantra: "", rateA: 0, rateB: 0, rateC: 0 });
 
 const anushthanFields: FieldDef[] = [
-  { name: "title", label: "Anushthan (अनुष्ठान)", type: "text", placeholder: "Rahu Jap" },
+  { name: "title", label: "Anushthan (English or Hindi)", type: "text", placeholder: "Rahu Jap", hint: "Type in English — the pad/PDF auto-shows Hindi (e.g. Rahu Jap → राहु जाप)." },
+  { name: "titleHi", label: "Hindi override", type: "text", optional: true, placeholder: "राहु जाप", hint: "Leave blank for auto Hindi; fill only to force an exact Hindi name." },
   { name: "purpose", label: "Purpose (उद्देश्य)", type: "text", placeholder: "18,000 Jap" },
   { name: "dakshina", label: "Dakshina (दक्षिणा)", type: "text", placeholder: "₹7,000" },
 ];
-const blankAnushthan = (): Anushthan => ({ id: newId("anu"), title: "", purpose: "", dakshina: "" });
+const blankAnushthan = (): Anushthan => ({ id: newId("anu"), title: "", purpose: "", dakshina: "", titleHi: "" });
 
 const padSectionFields: FieldDef[] = [
   { name: "title", label: "Section heading", type: "text", placeholder: "अनुष्ठान", hint: "Printed as the section title (Anushthan only). Reorder sections with the ↑ ↓ buttons." },

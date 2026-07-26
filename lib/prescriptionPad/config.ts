@@ -45,7 +45,10 @@ export const KUNDALI_PLANET = { fontSize: 8.5, lineMm: 3.2 };
 export const PRINT_KUNDALI_PLANET_SCALE = 1.2;
 /** PRINT MODE ONLY: shift every kundali planet label left (−ve) / right (+ve).
  *  Positions otherwise unchanged. Digital PDF unaffected. */
-export const PRINT_KUNDALI_SHIFT_XMM = -4;
+export const PRINT_KUNDALI_SHIFT_XMM = -5;
+/** Small house-number (1–12) printed in each house of the pad's Kundali box.
+ *  Drawn near the top of each house so it never sits on the planet labels. */
+export const KUNDALI_HOUSE_NUMBER = { fontSize: 5.5, dyMm: -6.2, color: { r: 0.5, g: 0.5, b: 0.5 } };
 /** House centres as fractions of the box (North-Indian layout, house1 = top diamond). */
 export const HOUSE_CENTERS: Record<number, [number, number]> = {
   1: [0.5, 0.24], 2: [0.25, 0.11], 3: [0.11, 0.25], 4: [0.25, 0.5], 5: [0.11, 0.75],

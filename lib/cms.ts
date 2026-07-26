@@ -916,6 +916,9 @@ export interface Anushthan {
   title: string;
   purpose: string;
   dakshina: string;
+  /** Optional manual Hindi override for the name. When blank, the English `title`
+   *  is auto-converted to Hindi for display on the pad/PDF. */
+  titleHi?: string;
 }
 
 export const DEFAULT_ANUSHTHAN: Anushthan[] = [
