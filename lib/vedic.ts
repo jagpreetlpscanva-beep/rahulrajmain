@@ -340,8 +340,6 @@ function navamsaSign(lon: number): number {
  */
 export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "D1" | "D9", color = "#c8902c"): string {
   const ascSign = division === "D1" ? k.asc_rashi : navamsaSign(k.ascendant_lon);
-  // sign occupying each of the 12 houses (house1 = ascSign, going forward)
-  const signInHouse = (h: number) => ((ascSign + h - 1) % 12);
   // planets grouped by house
   const byHouse: Record<number, { label: string; color: string }[]> = {};
   for (const pl of k.planets) {
@@ -367,7 +365,7 @@ export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "
   let inner = "";
   for (let h = 1; h <= 12; h++) {
     const [x, y] = c[h];
-    inner += `<text x="${x}" y="${y - 12}" font-size="12" fill="${color}" opacity="0.65" text-anchor="middle">${signInHouse(h) + 1}</text>`;
+    inner += `<text x="${x}" y="${y - 12}" font-size="12" fill="${color}" opacity="0.65" text-anchor="middle">${h}</text>`;
     const ps = byHouse[h] || [];
     ps.forEach((p, n) => {
       inner += `<text x="${x - 7}" y="${y + 6 + n * 17}" font-size="16" font-weight="bold" fill="${p.color}" text-anchor="middle">${p.label}</text>`;

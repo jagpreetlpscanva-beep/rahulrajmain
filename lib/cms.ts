@@ -879,6 +879,31 @@ export interface Gemstone {
   rateC?: number;
 }
 
+/** Editable remedy categories shown as the accordion in the pad admin + the
+ *  planet dropdown on the pad. `key` is the stable value stored on each remedy's
+ *  `planet` field (or "Miscellaneous" for the special category); `title` is the
+ *  Hindi label the astrologer can rename. Admins can add / reorder / disable. */
+export interface RemedyCategory {
+  id: string;
+  key: string;
+  title: string;
+  enabled?: boolean;
+}
+
+export const DEFAULT_REMEDY_CATEGORIES: RemedyCategory[] = [
+  { id: "cat-sun", key: "Sun", title: "सूर्य", enabled: true },
+  { id: "cat-moon", key: "Moon", title: "चंद्र", enabled: true },
+  { id: "cat-mars", key: "Mars", title: "मंगल", enabled: true },
+  { id: "cat-mercury", key: "Mercury", title: "बुध", enabled: true },
+  { id: "cat-jupiter", key: "Jupiter", title: "गुरु", enabled: true },
+  { id: "cat-venus", key: "Venus", title: "शुक्र", enabled: true },
+  { id: "cat-saturn", key: "Saturn", title: "शनि", enabled: true },
+  { id: "cat-rahu", key: "Rahu", title: "राहु", enabled: true },
+  { id: "cat-ketu", key: "Ketu", title: "केतु", enabled: true },
+  { id: "cat-lagna", key: "Lagna", title: "लग्न", enabled: true },
+  { id: "cat-misc", key: "Miscellaneous", title: "विशेष उपाय", enabled: true },
+];
+
 const REMEDY_SEED: Record<string, string[]> = {
   Sun: ["प्रतिदिन प्रातः सूर्य को जल अर्पित करें", "आदित्य हृदय स्तोत्र का पाठ करें", "रविवार को गुड़-गेहूँ का दान करें", "तांबे का कड़ा धारण करें", "ॐ सूर्याय नमः — 108 बार जाप करें"],
   Moon: ["शिव जी को जल चढ़ाएं", "चांदी धारण करें", "सोमवार को दूध/चावल का दान करें", "ॐ चन्द्राय नमः — 108 बार जाप करें", "माता का आशीर्वाद लें"],

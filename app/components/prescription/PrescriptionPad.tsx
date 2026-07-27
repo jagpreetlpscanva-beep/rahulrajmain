@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { CITIES } from "@/lib/calculators";
 import { PLANETS, MISC_REMEDY_CATEGORY, DEFAULT_PAD_SECTIONS, DEFAULT_PAD_LABELS, resolveLabel, type PadSection, type PadLabel, type Anushthan, type GemGrade, type CaratOption } from "@/lib/cms";
@@ -133,6 +133,10 @@ export function PrescriptionPad() {
 
   const [now] = useState(() => new Date());
   const astrologer = L("astrologer_name", "डॉ० राहुल राज");
+  /** Fields the astrologer has typed into (or that came from a loaded record) —
+   *  auto-fill must NEVER overwrite these, so manual corrections stick + save. */
+  const manualDasha = useRef<Record<string, boolean>>({});
+  const markDasha = (key: string) => { manualDasha.current[key] = true; };
 
   const [saving, setSaving] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
@@ -175,9 +179,15 @@ export function PrescriptionPad() {
           if (j.ok) {
             setChart(j.chart); setGochar(j.gochar || null); setKundali(j.kundali); setKundaliState("done");
             const kk = j.kundali as { dasha?: Dasha; doshaStr?: string; yogStr?: string };
-            if (kk?.dasha) { setMahadasha(kk.dasha.mahadasha); setAntardasha(kk.dasha.antardasha); }
-            if (kk?.doshaStr) setDosha(kk.doshaStr);
-            if (kk?.yogStr) setYog(kk.yogStr);
+            // Only auto-fill fields the astrologer hasn't edited/loaded — never
+            // clobber a manual correction (e.g. a hand-typed Yog/Dosh).
+            const m = manualDasha.current;
+            if (kk?.dasha) {
+              if (!m.mahadasha) setMahadasha(kk.dasha.mahadasha);
+              if (!m.antardasha) setAntardasha(kk.dasha.antardasha);
+            }
+            if (kk?.doshaStr && !m.dosha) setDosha(kk.doshaStr);
+            if (kk?.yogStr && !m.yog) setYog(kk.yogStr);
           } else setKundaliState("error");
         })
         .catch(() => setKundaliState("error"));
@@ -267,6 +277,7 @@ export function PrescriptionPad() {
   const resetAll = () => {
     setPatientName(""); setMobile(""); setGender(""); setDob(""); setDobText(""); setTob(""); setPlace("Lucknow");
     setMahadasha(""); setAntardasha(""); setPratyantar(""); setDosha(""); setYog("");
+    manualDasha.current = {}; // new patient → auto-fill is free to populate again
     setChart(null); setGochar(null); setKundali(null); setKundaliState("idle");
     setRows([emptyRow()]); setGems([blankGem()]); setAnushthanRows([]); setAnuQuery(""); setNotes(""); setSavedId(null);
   };
@@ -274,6 +285,9 @@ export function PrescriptionPad() {
   const load = (c: Consultation) => {
     setPatientName(c.patientName); setMobile(c.mobile); setGender(c.gender); setDob(c.dob); setDobText(fmtDMY(c.dob)); setTob(c.tob); setPlace(c.place || "Lucknow");
     setMahadasha(c.mahadasha); setAntardasha(c.antardasha); setPratyantar(c.pratyantar); setDosha(c.dosha); setYog(c.yog);
+    // saved values are authoritative — lock them so the kundli refetch (triggered
+    // by setDob/setTob/setPlace above) can't overwrite what was saved.
+    manualDasha.current = { mahadasha: true, antardasha: true, pratyantar: true, dosha: true, yog: true };
     setKundali(c.kundali); setRows(c.rows?.length ? c.rows : [emptyRow()]); setGems(c.gemstones?.length ? c.gemstones : [blankGem()]); setAnushthanRows(Array.isArray(c.anushthan) ? c.anushthan : []); setNotes(c.notes);
     setSavedId(c.id); setChart(null); setGochar(null); setKundaliState("idle"); setResults(null);
   };
@@ -524,10 +538,16 @@ export function PrescriptionPad() {
               {chart && <p className="rx-noprint mt-1 text-center text-[11px] text-ink/45">(बड़ा देखने के लिए क्लिक करें)</p>}
             </div>
             <div className="space-y-2">
-              {[[L("label_mahadasha", "महादशा"), mahadasha, setMahadasha], [L("label_antardasha", "अन्तर्दशा"), antardasha, setAntardasha], [L("label_pratyantar", "प्र० दशा"), pratyantar, setPratyantar], [L("label_dosha", "दोष"), dosha, setDosha], [L("label_yog", "योग"), yog, setYog]].map(([label, val, set]) => (
-                <div key={label as string} className="flex items-center gap-2">
-                  <span className="w-20 shrink-0 text-sm font-bold text-[#a01414]">{label as string} —</span>
-                  <input className={inp} value={val as string} onChange={(e) => (set as (v: string) => void)(e.target.value)} />
+              {([
+                ["mahadasha", L("label_mahadasha", "महादशा"), mahadasha, setMahadasha],
+                ["antardasha", L("label_antardasha", "अन्तर्दशा"), antardasha, setAntardasha],
+                ["pratyantar", L("label_pratyantar", "प्र० दशा"), pratyantar, setPratyantar],
+                ["dosha", L("label_dosha", "दोष"), dosha, setDosha],
+                ["yog", L("label_yog", "योग"), yog, setYog],
+              ] as [string, string, string, (v: string) => void][]).map(([key, label, val, set]) => (
+                <div key={key} className="flex items-center gap-2">
+                  <span className="w-20 shrink-0 text-sm font-bold text-[#a01414]">{label} —</span>
+                  <input className={inp} value={val} onChange={(e) => { markDasha(key); set(e.target.value); }} />
                 </div>
               ))}
               {/* Gochar — right of kundali; click to expand. Reference only (not in PDF/print). */}
