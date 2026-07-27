@@ -56,7 +56,7 @@ const mm = (v: number) => v * MM_TO_PT;
 
 export type PdfPlanet = { name: string; abbr: string; house: number; degree: number };
 export type PdfRemedyRow = { planet: string; remedyLines: string[]; notes: string };
-export type PdfGemRow = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string; rudraksha?: string; price?: string };
+export type PdfGemRow = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; rudraksha?: string; price?: string };
 export type PdfSection = { id: string; title: string; enabled: boolean; col1?: string; col2?: string; col3?: string };
 export type PdfAnushthanRow = { title: string; purpose: string; dakshina: string };
 
@@ -329,7 +329,7 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
       cursor.page.drawCircle({ x: cc.x, y: cc.y, size: mm(r), borderColor: rgb(0.25, 0.25, 0.25), borderWidth: 0.4 });
       const rud = g.rudraksha ? ` · रुद्राक्ष: ${g.rudraksha}` : "";
       const price = g.price ? ` · मूल्य: ${g.price}` : "";
-      const line = `रत्न: ${g.planet} — ${hi(STONE_HI, g.stone)} · ${weightHi(g.weight)} · ${hi(METAL_HI, g.metal)} · ${hi(FINGER_HI, g.finger)} · ${hi(DAY_HI, g.day)} · मंत्र: ${g.mantra}${rud}${price}`;
+      const line = `रत्न: ${g.planet} — ${hi(STONE_HI, g.stone)} · ${weightHi(g.weight)} · ${hi(METAL_HI, g.metal)} · ${hi(FINGER_HI, g.finger)} · ${hi(DAY_HI, g.day)}${rud}${price}`;
       drawText(cursor.page, font, line, GEMSTONE_BLOCK.startXMm + GEMSTONE_BLOCK.iconMm + 2, rowYMm, mode, { size: GEMSTONE_BLOCK.fontSize, color });
       cursor.yMm += GEMSTONE_BLOCK.rowHeightMm;
     });

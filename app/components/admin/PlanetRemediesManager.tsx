@@ -16,34 +16,36 @@ import { newId, type PlanetRemedy, type MiscRemedy } from "@/lib/cms";
 
 type Coll<T> = { items: T[]; save: (n: T[]) => void };
 type AnyRemedy = { id: string; title: string; enabled?: boolean; planet?: string };
+type Cat = { key: string; label: string };
 
-/** Accordion categories. `key` is the stored `planet` value (or "misc"). */
-const CATS: { key: string; label: string }[] = [
-  { key: "Sun", label: "सूर्य" },
-  { key: "Moon", label: "चंद्र" },
-  { key: "Mars", label: "मंगल" },
-  { key: "Mercury", label: "बुध" },
-  { key: "Jupiter", label: "गुरु" },
-  { key: "Venus", label: "शुक्र" },
-  { key: "Saturn", label: "शनि" },
-  { key: "Rahu", label: "राहु" },
-  { key: "Ketu", label: "केतु" },
-  { key: "Lagna", label: "लग्न" },
-  { key: "misc", label: "Miscellaneous (सामान्य)" },
+/** The special category whose remedies live in `miscRemedies`. */
+const MISC_KEY = "Miscellaneous";
+
+/** Built-in categories used only when none are configured in admin. */
+const FALLBACK_CATS: Cat[] = [
+  { key: "Sun", label: "सूर्य" }, { key: "Moon", label: "चंद्र" }, { key: "Mars", label: "मंगल" },
+  { key: "Mercury", label: "बुध" }, { key: "Jupiter", label: "गुरु" }, { key: "Venus", label: "शुक्र" },
+  { key: "Saturn", label: "शनि" }, { key: "Rahu", label: "राहु" }, { key: "Ketu", label: "केतु" },
+  { key: "Lagna", label: "लग्न" }, { key: MISC_KEY, label: "विशेष उपाय" },
 ];
 
 const inputCls =
   "w-full rounded-lg border border-ink/20 bg-white px-3 py-2.5 text-sm outline-none focus:border-gold-500 focus:ring-2 focus:ring-gold-500/20";
 
-export function PlanetRemediesManager({ planet, misc }: { planet: Coll<PlanetRemedy>; misc: Coll<MiscRemedy> }) {
+export function PlanetRemediesManager({ planet, misc, categories }: { planet: Coll<PlanetRemedy>; misc: Coll<MiscRemedy>; categories?: { key: string; title: string; enabled?: boolean }[] }) {
   const [open, setOpen] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [draftId, setDraftId] = useState<string | null | undefined>(undefined); // undefined = closed, null = adding, string = editing id
   const [draftText, setDraftText] = useState("");
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
-  const isMisc = open === "misc";
-  const countFor = (key: string) => (key === "misc" ? misc.items.length : planet.items.filter((r) => r.planet === key).length);
+  // admin-configured categories (enabled only), else the built-in list
+  const cats: Cat[] = categories && categories.length
+    ? categories.filter((c) => c.enabled !== false && c.key).map((c) => ({ key: c.key, label: c.title || c.key }))
+    : FALLBACK_CATS;
+
+  const isMisc = open === MISC_KEY;
+  const countFor = (key: string) => (key === MISC_KEY ? misc.items.length : planet.items.filter((r) => r.planet === key).length);
   const catItems: AnyRemedy[] = open == null ? [] : isMisc ? misc.items : planet.items.filter((r) => r.planet === open);
 
   const closeEditor = () => { setDraftId(undefined); setDraftText(""); };
@@ -106,7 +108,7 @@ export function PlanetRemediesManager({ planet, misc }: { planet: Coll<PlanetRem
       </div>
 
       <ul className="space-y-2">
-        {CATS.map((cat) => {
+        {cats.map((cat) => {
           const isOpen = open === cat.key;
           return (
             <li key={cat.key} className="overflow-hidden rounded-xl border border-ink/12 bg-white shadow-sm">

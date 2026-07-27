@@ -12,6 +12,7 @@ import { useCollection, newId } from "@/lib/adminStore";
 import {
   PLANETS,
   DEFAULT_PLANET_REMEDIES, type PlanetRemedy,
+  DEFAULT_REMEDY_CATEGORIES, type RemedyCategory,
   DEFAULT_MISC_REMEDIES, type MiscRemedy,
   DEFAULT_REMEDY_COUNTS, type RemedyCountOption,
   DEFAULT_GEMSTONES, type Gemstone,
@@ -28,6 +29,12 @@ import { PlanetRemediesManager } from "../../components/admin/PlanetRemediesMana
 const remedyCountFields: FieldDef[] = [
   { name: "title", label: "Count / Frequency", type: "text", placeholder: "e.g. 11 or 21" },
 ];
+const categoryFields: FieldDef[] = [
+  { name: "title", label: "Category name (Hindi)", type: "text", placeholder: "जैसे: शनि, विशेष उपाय, वास्तु" },
+  { name: "enabled", label: "Show this category", type: "toggle" },
+  { name: "key", label: "Key (do not change existing)", type: "text", hint: "Stable id linking remedies to this category. New category → koi unique naam (जैसे vastu)." },
+];
+const blankCategory = (): RemedyCategory => ({ id: newId("cat"), key: "", title: "", enabled: true });
 const gemstoneFields: FieldDef[] = [
   { name: "planet", label: "Planet", type: "select", options: [...PLANETS] },
   { name: "stone", label: "Stone", type: "text", placeholder: "Blue Sapphire (Neelam)" },
@@ -35,8 +42,7 @@ const gemstoneFields: FieldDef[] = [
   { name: "metal", label: "Metal", type: "text", placeholder: "Silver" },
   { name: "finger", label: "Finger", type: "text", placeholder: "Middle Finger" },
   { name: "day", label: "Day", type: "text", placeholder: "Saturday" },
-  { name: "mantra", label: "Mantra", type: "text", placeholder: "Om Sham Shanicharaya Namah" },
-  { name: "rateA", label: "Rate — Grade A (₹/Ratti)", type: "number", optional: true, hint: "Price = carat × rate." },
+  { name: "rateA", label: "Rate — Grade A (₹/Ratti)", type: "number", optional: true, hint: "Price = ratti × rate (e.g. 400 → 5 ratti = ₹2000)." },
   { name: "rateB", label: "Rate — Grade B (₹/Ratti)", type: "number", optional: true },
   { name: "rateC", label: "Rate — Grade C (₹/Ratti)", type: "number", optional: true },
 ];
@@ -62,7 +68,7 @@ const padLabelFields: FieldDef[] = [
 ];
 
 const blankCount = (): RemedyCountOption => ({ id: newId("count"), title: "" });
-const blankGem = (): Gemstone => ({ id: newId("gem"), planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", mantra: "", rateA: 0, rateB: 0, rateC: 0 });
+const blankGem = (): Gemstone => ({ id: newId("gem"), planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", rateA: 0, rateB: 0, rateC: 0 });
 const blankAnu = (): Anushthan => ({ id: newId("anu"), title: "", purpose: "", dakshina: "", titleHi: "" });
 const blankCarat = (): CaratOption => ({ id: newId("carat"), title: "" });
 const blankGrade = (): GemGrade => ({ id: newId("grade"), title: "" });
@@ -97,6 +103,7 @@ export default function PrescriptionAdminPage() {
   const grades = useCollection<GemGrade>("gemGrades", DEFAULT_GEM_GRADES);
   const sections = useCollection<PadSection>("padSections", DEFAULT_PAD_SECTIONS);
   const labels = useCollection<PadLabel>("padLabels", DEFAULT_PAD_LABELS);
+  const categories = useCollection<RemedyCategory>("remedyCategories", DEFAULT_REMEDY_CATEGORIES);
 
   useEffect(() => {
     fetch("/api/admin/session", { cache: "no-store" })
@@ -160,7 +167,19 @@ export default function PrescriptionAdminPage() {
 
       <main className="mx-auto max-w-3xl p-4 sm:p-6">
         {tab === "remedies" && (
-          <PlanetRemediesManager planet={{ items: remedies.items, save: remedies.save }} misc={{ items: misc.items, save: misc.save }} />
+          <div className="space-y-4">
+            <details className="rounded-xl border border-ink/12 bg-white p-3">
+              <summary className="cursor-pointer select-none text-sm font-semibold text-[#8a2020]">⚙ श्रेणियाँ जोड़ें / नाम बदलें / क्रम (Categories)</summary>
+              <div className="mt-3">
+                <CollectionManager<RemedyCategory> label="Categories" items={categories.items} fields={categoryFields} blank={blankCategory} onChange={categories.save} onReset={categories.reset} previewHref="/prescription-pad" />
+              </div>
+            </details>
+            <PlanetRemediesManager
+              planet={{ items: remedies.items, save: remedies.save }}
+              misc={{ items: misc.items, save: misc.save }}
+              categories={categories.items}
+            />
+          </div>
         )}
         {tab === "anushthan" && (
           <CollectionManager<Anushthan> label="Anushthan" items={anushthan.items} fields={anushthanFields} blank={blankAnu} onChange={anushthan.save} onReset={anushthan.reset} previewHref="/prescription-pad" />

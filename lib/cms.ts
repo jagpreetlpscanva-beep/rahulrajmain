@@ -871,8 +871,7 @@ export interface Gemstone {
   metal: string;
   finger: string;
   day: string;
-  mantra: string;
-  /** Price per Ratti/carat (₹) for grade A / B / C. Final price = carat × rate.
+  /** Price per Ratti (₹) for grade A / B / C. Final price = ratti × rate.
    *  Optional so older saved records keep working (treated as 0 when unset). */
   rateA?: number;
   rateB?: number;
@@ -920,19 +919,19 @@ export const DEFAULT_PLANET_REMEDIES: PlanetRemedy[] = PLANETS.flatMap((p) =>
   (REMEDY_SEED[p] ?? []).map((title, i) => ({ id: `rem-${p.toLowerCase()}-${i + 1}`, planet: p, title }))
 );
 
-const gem = (id: string, planet: string, stone: string, weight: string, metal: string, finger: string, day: string, mantra: string): Gemstone =>
-  ({ id, planet, title: `${planet} — ${stone}`, stone, weight, metal, finger, day, mantra });
+const gem = (id: string, planet: string, stone: string, weight: string, metal: string, finger: string, day: string): Gemstone =>
+  ({ id, planet, title: `${planet} — ${stone}`, stone, weight, metal, finger, day });
 
 export const DEFAULT_GEMSTONES: Gemstone[] = [
-  gem("gem-sun", "Sun", "Ruby (Manik)", "5 Ratti", "Gold / Copper", "Ring Finger", "Sunday", "Om Suryaya Namah"),
-  gem("gem-moon", "Moon", "Pearl (Moti)", "6 Ratti", "Silver", "Little Finger", "Monday", "Om Chandraya Namah"),
-  gem("gem-mars", "Mars", "Red Coral (Moonga)", "7 Ratti", "Copper / Gold", "Ring Finger", "Tuesday", "Om Mangalaya Namah"),
-  gem("gem-mercury", "Mercury", "Emerald (Panna)", "5 Ratti", "Gold", "Little Finger", "Wednesday", "Om Budhaya Namah"),
-  gem("gem-jupiter", "Jupiter", "Yellow Sapphire (Pukhraj)", "5 Ratti", "Gold", "Index Finger", "Thursday", "Om Gurave Namah"),
-  gem("gem-venus", "Venus", "Diamond (Heera)", "1 Ratti", "Silver / Platinum", "Middle Finger", "Friday", "Om Shukraya Namah"),
-  gem("gem-saturn", "Saturn", "Blue Sapphire (Neelam)", "7 Ratti", "Silver", "Middle Finger", "Saturday", "Om Sham Shanicharaya Namah"),
-  gem("gem-rahu", "Rahu", "Hessonite (Gomed)", "7 Ratti", "Silver", "Middle Finger", "Saturday", "Om Raam Rahave Namah"),
-  gem("gem-ketu", "Ketu", "Cat's Eye (Lehsunia)", "7 Ratti", "Silver", "Little Finger", "Wednesday", "Om Kem Ketave Namah"),
+  gem("gem-sun", "Sun", "Ruby (Manik)", "5 Ratti", "Gold / Copper", "Ring Finger", "Sunday"),
+  gem("gem-moon", "Moon", "Pearl (Moti)", "6 Ratti", "Silver", "Little Finger", "Monday"),
+  gem("gem-mars", "Mars", "Red Coral (Moonga)", "7 Ratti", "Copper / Gold", "Ring Finger", "Tuesday"),
+  gem("gem-mercury", "Mercury", "Emerald (Panna)", "5 Ratti", "Gold", "Little Finger", "Wednesday"),
+  gem("gem-jupiter", "Jupiter", "Yellow Sapphire (Pukhraj)", "5 Ratti", "Gold", "Index Finger", "Thursday"),
+  gem("gem-venus", "Venus", "Diamond (Heera)", "1 Ratti", "Silver / Platinum", "Middle Finger", "Friday"),
+  gem("gem-saturn", "Saturn", "Blue Sapphire (Neelam)", "7 Ratti", "Silver", "Middle Finger", "Saturday"),
+  gem("gem-rahu", "Rahu", "Hessonite (Gomed)", "7 Ratti", "Silver", "Middle Finger", "Saturday"),
+  gem("gem-ketu", "Ketu", "Cat's Eye (Lehsunia)", "7 Ratti", "Silver", "Little Finger", "Wednesday"),
 ];
 
 /* ---------------- Prescription pad: Anushthan (अनुष्ठान) catalog ----------------
@@ -1121,6 +1120,7 @@ export const COLLECTIONS = {
   coupons: DEFAULT_COUPONS,
   blog: DEFAULT_BLOG,
   planetRemedies: DEFAULT_PLANET_REMEDIES,
+  remedyCategories: DEFAULT_REMEDY_CATEGORIES,
   miscRemedies: DEFAULT_MISC_REMEDIES,
   remedyCounts: DEFAULT_REMEDY_COUNTS,
   gemstones: DEFAULT_GEMSTONES,

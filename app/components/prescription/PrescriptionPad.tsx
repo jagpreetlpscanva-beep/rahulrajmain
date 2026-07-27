@@ -11,7 +11,7 @@ import { toHindi } from "@/lib/prescriptionPad/hindi";
 type Rem = { id: string; planet: string; title: string; enabled?: boolean };
 type MiscRem = { id: string; title: string; enabled?: boolean };
 type CountOpt = { id: string; title: string };
-type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; mantra: string; rudraksha: string; carat?: string; grade?: string; rateA?: number; rateB?: number; rateC?: number };
+type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; rudraksha: string; carat?: string; grade?: string; rateA?: number; rateB?: number; rateC?: number };
 type AnuRow = { title: string; purpose: string; dakshina: string };
 type Row = { planet: string; remedies: string[]; notes: string; remedyCounts?: Record<string, string> };
 type KPlanet = { name: string; color?: string; abbr: string; lon: number; rashi: number; house: number; sign: string; nakshatra: string; nakshatra_lord?: string };
@@ -23,7 +23,7 @@ type Consultation = {
 };
 
 const emptyRow = (): Row => ({ planet: "", remedies: [], notes: "" });
-const blankGem = (planet = ""): Gem => ({ planet, stone: "", weight: "", metal: "", finger: "", day: "", mantra: "", rudraksha: "", carat: "", grade: "" });
+const blankGem = (planet = ""): Gem => ({ planet, stone: "", weight: "", metal: "", finger: "", day: "", rudraksha: "", carat: "", grade: "" });
 
 /** sidereal longitude -> "12°34'" */
 function fmtDeg(lon: number): string {
@@ -103,6 +103,7 @@ export function PrescriptionPad() {
   const [carats, setCarats] = useState<CaratOption[]>([]);
   const [anushthanRows, setAnushthanRows] = useState<AnuRow[]>([]);
   const [anuQuery, setAnuQuery] = useState("");
+  const [remedyCats, setRemedyCats] = useState<{ key: string; title: string; enabled?: boolean }[]>([]);
   const [padLabels, setPadLabels] = useState<PadLabel[]>(DEFAULT_PAD_LABELS);
   const L = useCallback((key: string, fallback: string) => resolveLabel(padLabels, key, fallback), [padLabels]);
 
@@ -156,6 +157,7 @@ export function PrescriptionPad() {
 
   useEffect(() => {
     fetch("/api/content/planetRemedies").then((r) => r.json()).then((d) => Array.isArray(d) && setRemedies(d)).catch(() => {});
+    fetch("/api/content/remedyCategories").then((r) => r.json()).then((d) => Array.isArray(d) && setRemedyCats(d)).catch(() => {});
     fetch("/api/content/miscRemedies").then((r) => r.json()).then((d) => Array.isArray(d) && setMiscRemedies(d)).catch(() => {});
     fetch("/api/content/remedyCounts").then((r) => r.json()).then((d) => Array.isArray(d) && setCountOptions(d)).catch(() => {});
     fetch("/api/content/gemstones").then((r) => r.json()).then((d) => Array.isArray(d) && setGemDefaults(d)).catch(() => {});
@@ -241,20 +243,21 @@ export function PrescriptionPad() {
     const d = gemDefaults.find((x) => x.planet === planet);
     setGems((gs) => gs.map((g, idx) => idx === i
       ? (d
-          ? { planet, stone: d.stone, weight: d.weight, metal: d.metal, finger: d.finger, day: d.day, mantra: d.mantra, rudraksha: "", carat: g.carat || "", grade: g.grade || "", rateA: d.rateA, rateB: d.rateB, rateC: d.rateC }
+          ? { planet, stone: d.stone, weight: d.weight, metal: d.metal, finger: d.finger, day: d.day, rudraksha: "", carat: g.carat || "", grade: g.grade || "", rateA: d.rateA, rateB: d.rateB, rateC: d.rateC }
           : { ...blankGem(planet), carat: g.carat || "", grade: g.grade || "" })
       : g));
   };
 
-  /** Numeric ₹ price for a gem = carat × (rate for the selected grade). The grade's
-   *  index in the admin grade list picks rateA / rateB / rateC. "" when not priced. */
+  /** Auto price = ratti × per-ratti rate. Ratti comes from the कैरेट/रत्ती field
+   *  (else parsed from the weight). Grade picks rateA/B/C; defaults to Grade A so
+   *  a plain "5 ratti" with a ₹400/ratti rate = ₹2000 without choosing a grade. */
   const gemPrice = useCallback((g: Gem): string => {
-    const caratNum = parseFloat(String(g.carat || "").replace(/[^\d.]/g, ""));
-    if (!caratNum || !g.grade) return "";
-    const gi = gemGrades.findIndex((x) => x.title === g.grade);
-    const rate = gi === 0 ? g.rateA : gi === 1 ? g.rateB : gi === 2 ? g.rateC : undefined;
+    const ratti = parseFloat(String(g.carat || g.weight || "").replace(/[^\d.]/g, ""));
+    if (!ratti) return "";
+    const gi = g.grade ? gemGrades.findIndex((x) => x.title === g.grade) : 0;
+    const rate = gi === 1 ? g.rateB : gi === 2 ? g.rateC : g.rateA; // default = Grade A
     if (!rate || rate <= 0) return "";
-    return `₹${Math.round(caratNum * rate).toLocaleString("en-IN")}`;
+    return `₹${Math.round(ratti * rate).toLocaleString("en-IN")}`;
   }, [gemGrades]);
 
   /** Admin enters English; the pad/PDF/record store the Hindi form (manual
@@ -583,9 +586,14 @@ export function PrescriptionPad() {
                   <div><label className={lbl}>ग्रह / श्रेणी</label>
                     <select className={`${inp} sm:max-w-[220px]`} value={row.planet} onChange={(e) => setRow(i, { planet: e.target.value, remedies: [], remedyCounts: {} })}>
                       <option value="">—</option>
-                      {PLANETS.map((p) => <option key={p} value={p}>{p}</option>)}
-                      <option value="Lagna">Lagna (लग्न)</option>
-                      <option value={MISC_REMEDY_CATEGORY}>{MISC_REMEDY_CATEGORY} (सामान्य उपाय)</option>
+                      {(remedyCats.length
+                        ? remedyCats.filter((c) => c.enabled !== false)
+                        : [
+                            ...PLANETS.map((p) => ({ key: p, title: p })),
+                            { key: "Lagna", title: "लग्न" },
+                            { key: MISC_REMEDY_CATEGORY, title: "विशेष उपाय" },
+                          ]
+                      ).map((c) => <option key={c.key} value={c.key}>{c.title}</option>)}
                     </select>
                   </div>
                   {row.planet && (
@@ -694,8 +702,7 @@ export function PrescriptionPad() {
                     <div><label className={lbl}>दिन</label><input className={inp} value={g.day} onChange={(e) => setGemAt(i, { day: e.target.value })} /></div>
                     <div><label className={lbl}>रुद्राक्ष</label><input className={inp} value={g.rudraksha || ""} onChange={(e) => setGemAt(i, { rudraksha: e.target.value })} placeholder="जैसे 7 मुखी" /></div>
                     <div><label className={lbl}>कैरेट / रत्ती</label><select className={inp} value={g.carat || ""} onChange={(e) => setGemAt(i, { carat: e.target.value })}><option value="">—</option>{carats.map((c) => <option key={c.id} value={c.title}>{c.title}</option>)}</select></div>
-                    <div><label className={lbl}>ग्रेड</label><select className={inp} value={g.grade || ""} onChange={(e) => setGemAt(i, { grade: e.target.value })}><option value="">—</option>{gemGrades.map((gr) => <option key={gr.id} value={gr.title}>{gr.title}</option>)}</select></div>
-                    <div className="sm:col-span-2"><label className={lbl}>मंत्र</label><input className={inp} value={g.mantra} onChange={(e) => setGemAt(i, { mantra: e.target.value })} /></div>
+                    <div><label className={lbl}>ग्रेड</label><select className={inp} value={g.grade || ""} onChange={(e) => setGemAt(i, { grade: e.target.value })}><option value="">— (A)</option>{gemGrades.map((gr) => <option key={gr.id} value={gr.title}>{gr.title}</option>)}</select></div>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     {gemPrice(g)
@@ -769,7 +776,7 @@ export function PrescriptionPad() {
               {gems.some((g) => g.stone) && (
                 <div className="mt-3 space-y-1">
                   {gems.filter((g) => g.stone).map((g, i) => (
-                    <div key={i} className="rounded border border-[#a01414]/40 p-2 text-[12px]"><b className="text-[#a01414]">रत्न:</b> {g.planet} → {g.stone} · {g.weight} · {g.metal} · {g.finger} · {g.day} · मंत्र: {g.mantra}</div>
+                    <div key={i} className="rounded border border-[#a01414]/40 p-2 text-[12px]"><b className="text-[#a01414]">रत्न:</b> {g.planet} → {g.stone} · {g.weight} · {g.metal} · {g.finger} · {g.day}{gemPrice(g) ? ` · मूल्य: ${gemPrice(g)}` : ""}</div>
                   ))}
                 </div>
               )}

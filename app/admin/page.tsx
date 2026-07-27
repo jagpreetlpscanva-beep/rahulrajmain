@@ -291,12 +291,11 @@ const gemstoneFields: FieldDef[] = [
   { name: "metal", label: "Metal", type: "text", placeholder: "Silver" },
   { name: "finger", label: "Finger", type: "text", placeholder: "Middle Finger" },
   { name: "day", label: "Day", type: "text", placeholder: "Saturday" },
-  { name: "mantra", label: "Mantra", type: "text", placeholder: "Om Sham Shanicharaya Namah" },
-  { name: "rateA", label: "Rate — Grade A (₹ per Ratti/carat)", type: "number", optional: true, hint: "Price is calculated as carat × this rate. Leave 0 if not priced." },
-  { name: "rateB", label: "Rate — Grade B (₹ per Ratti/carat)", type: "number", optional: true },
-  { name: "rateC", label: "Rate — Grade C (₹ per Ratti/carat)", type: "number", optional: true },
+  { name: "rateA", label: "Rate — Grade A (₹ per Ratti)", type: "number", optional: true, hint: "Price = ratti × this rate (e.g. 400 → 5 ratti = ₹2000). Leave 0 if not priced." },
+  { name: "rateB", label: "Rate — Grade B (₹ per Ratti)", type: "number", optional: true },
+  { name: "rateC", label: "Rate — Grade C (₹ per Ratti)", type: "number", optional: true },
 ];
-const blankGemstone = (): Gemstone => ({ id: newId("gem"), planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", mantra: "", rateA: 0, rateB: 0, rateC: 0 });
+const blankGemstone = (): Gemstone => ({ id: newId("gem"), planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", rateA: 0, rateB: 0, rateC: 0 });
 
 const anushthanFields: FieldDef[] = [
   { name: "title", label: "Anushthan (English or Hindi)", type: "text", placeholder: "Rahu Jap", hint: "Type in English — the pad/PDF auto-shows Hindi (e.g. Rahu Jap → राहु जाप)." },
