@@ -254,11 +254,17 @@ export function PrescriptionPad() {
   const gemPrice = useCallback((g: Gem): string => {
     const ratti = parseFloat(String(g.carat || g.weight || "").replace(/[^\d.]/g, ""));
     if (!ratti) return "";
+    // rate comes from the row, else falls back to the admin gemstone for this planet
+    // (so setting the ₹/ratti in admin shows a price even on already-added rows)
+    const src = gemDefaults.find((x) => x.planet === g.planet);
+    const rateA = g.rateA ?? src?.rateA;
+    const rateB = g.rateB ?? src?.rateB;
+    const rateC = g.rateC ?? src?.rateC;
     const gi = g.grade ? gemGrades.findIndex((x) => x.title === g.grade) : 0;
-    const rate = gi === 1 ? g.rateB : gi === 2 ? g.rateC : g.rateA; // default = Grade A
+    const rate = gi === 1 ? rateB : gi === 2 ? rateC : rateA; // default = Grade A
     if (!rate || rate <= 0) return "";
     return `₹${Math.round(ratti * rate).toLocaleString("en-IN")}`;
-  }, [gemGrades]);
+  }, [gemGrades, gemDefaults]);
 
   /** Admin enters English; the pad/PDF/record store the Hindi form (manual
    *  `titleHi` override wins, else auto-converted). */
