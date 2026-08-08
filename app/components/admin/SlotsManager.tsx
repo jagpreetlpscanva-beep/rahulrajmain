@@ -16,15 +16,16 @@ function fmtDate(d: string) {
   }
 }
 
-// Working hours: 10:00 AM - 2:00 PM and 6:00 PM - 8:00 PM, 15-minute slots
+// Working hours: 11:00 AM - 2:00 PM and 6:00 PM - 8:00 PM.
+// Each slot is 15 minutes + a 5-minute break → slots start every 20 minutes.
 function buildDayTimes(): string[] {
   const ranges: [number, number][] = [
-    [10 * 60, 14 * 60], // 10:00 AM - 2:00 PM
+    [11 * 60, 14 * 60], // 11:00 AM - 2:00 PM
     [18 * 60, 20 * 60], // 6:00 PM - 8:00 PM
   ];
   const times: string[] = [];
   for (const [start, end] of ranges) {
-    for (let mins = start; mins < end; mins += 15) {
+    for (let mins = start; mins + 15 <= end; mins += 20) {
       const h24 = Math.floor(mins / 60);
       const m = mins % 60;
       const suffix = h24 >= 12 ? "PM" : "AM";
@@ -58,6 +59,9 @@ export function SlotsManager() {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [dateFilter, setDateFilter] = useState<string>("all");
   const [feedback, setFeedback] = useState<string>("");
+  const [genDays, setGenDays] = useState(60);
+  const [genOnline, setGenOnline] = useState(true);
+  const [genOffline, setGenOffline] = useState(true);
 
   const norm = (s: Slot): "online" | "offline" => s.type ?? "online";
 
@@ -105,6 +109,43 @@ export function SlotsManager() {
       setFeedback(`✓ Added ${additions.length} ${slotType} slots for ${date}.`);
     } else {
       setFeedback(`All ${slotType} slots for ${date} already exist.`);
+    }
+  };
+
+  // Bulk-generate slots for the next `genDays` days, for the chosen type(s),
+  // using the working-hours grid. Skips any slot (date+time+type) that already
+  // exists, so it never duplicates and safely tops up an existing schedule.
+  const generateBulk = (daysArg?: number) => {
+    const types: ("online" | "offline")[] = [];
+    if (genOnline) types.push("online");
+    if (genOffline) types.push("offline");
+    if (!types.length) { setFeedback("Choose Online and/or Offline first."); return; }
+    const days = Math.max(1, Math.min(120, Math.floor(daysArg ?? genDays) || 0));
+    const pad2 = (n: number) => String(n).padStart(2, "0");
+    const existing = new Set(items.map((s) => `${s.date}|${s.time}|${norm(s)}`));
+    const start = new Date(`${todayStr}T00:00:00`);
+    const additions: Slot[] = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const ds = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+      for (const t of DAY_TIMES) {
+        for (const ty of types) {
+          const key = `${ds}|${t}|${ty}`;
+          if (!existing.has(key)) {
+            existing.add(key);
+            additions.push({ id: newId("slot"), date: ds, time: t, type: ty });
+          }
+        }
+      }
+    }
+    if (additions.length) {
+      save([...items, ...additions]);
+      setTypeFilter("all");
+      setDateFilter("all");
+      setFeedback(`✓ Generated ${additions.length} slots for the next ${days} days (${types.join(" + ")}).`);
+    } else {
+      setFeedback("All those slots already exist — nothing to add.");
     }
   };
 
@@ -253,6 +294,47 @@ export function SlotsManager() {
             {feedback}
           </p>
         )}
+      </div>
+
+      {/* bulk generate */}
+      <div className="mb-6 rounded-2xl border border-emerald-300/50 bg-emerald-50/40 p-5 shadow-card">
+        <h3 className="font-serif text-lg font-bold text-ink">Bulk Generate Slots</h3>
+        <p className="mb-4 text-sm text-ink/55">
+          Fills 11:00 AM–2:00 PM &amp; 6:00 PM–8:00 PM (15-min slots · 5-min break) for the next N days. Existing slots are skipped.
+        </p>
+        <div className="flex flex-wrap items-end gap-4">
+          <div>
+            <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-ink/60">Days from today</label>
+            <input
+              type="number"
+              min={1}
+              max={120}
+              className={inputCls}
+              value={genDays}
+              onChange={(e) => setGenDays(Number(e.target.value))}
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm font-semibold text-sky-700">
+            <input type="checkbox" checked={genOnline} onChange={(e) => setGenOnline(e.target.checked)} /> 🌐 Online
+          </label>
+          <label className="flex items-center gap-2 text-sm font-semibold text-rose-700">
+            <input type="checkbox" checked={genOffline} onChange={(e) => setGenOffline(e.target.checked)} /> 📍 Offline
+          </label>
+          <button
+            type="button"
+            onClick={() => { setGenDays(60); generateBulk(60); }}
+            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700"
+          >
+            Generate 2 Months
+          </button>
+          <button
+            type="button"
+            onClick={() => generateBulk()}
+            className="rounded-lg border border-emerald-500/50 bg-white px-4 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50"
+          >
+            Generate {genDays} Days
+          </button>
+        </div>
       </div>
 
       {/* filters */}
