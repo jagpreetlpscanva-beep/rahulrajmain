@@ -3,6 +3,11 @@
 import { useState } from "react";
 import { CITIES } from "@/lib/calculators";
 import { RemedyPicker } from "./RemedyPicker";
+import { generateReportPdf, svgToPng, downloadBlob, shareOrDownloadPdf, type ReportBlock } from "@/lib/prescriptionPad/reportPdf";
+
+const ASTRO = "डॉ० राहुल राज — ज्योतिष परामर्श";
+const FOOTER = "astrorahulraj.in · +91 94153 12590";
+const fmtDMY = (ymd: string) => { if (!ymd) return ""; const [y, m, d] = ymd.split("-"); return d ? `${d}/${m}/${y}` : ymd; };
 
 type Person = { name: string; dob: string; tob: string; place: string; gender: string };
 type Koot = { key: string; name: string; max: number; obtained: number; area: string };
@@ -18,6 +23,7 @@ export function KundaliMilan({ onBack }: { onBack: () => void }) {
   const [girl, setGirl] = useState<Person>(blank("स्त्री"));
   const [result, setResult] = useState<Result | null>(null);
   const [busy, setBusy] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState<"pdf" | "share" | null>(null);
   const [error, setError] = useState("");
   const [remedies, setRemedies] = useState<string[]>([]);
 
@@ -38,6 +44,38 @@ export function KundaliMilan({ onBack }: { onBack: () => void }) {
       else setError(j.message || "गणना नहीं हो सकी।");
     } catch { setError("नेटवर्क त्रुटि — दोबारा प्रयास करें।"); }
     finally { setBusy(false); }
+  };
+
+  const fileName = () => `कुंडली मिलान - ${(boy.name || "लड़का").replace(/[\\/:*?"<>|]/g, "")} व ${(girl.name || "लड़की").replace(/[\\/:*?"<>|]/g, "")}.pdf`;
+
+  const makePdf = async (mode: "pdf" | "share") => {
+    if (!result || pdfBusy) return;
+    setPdfBusy(mode);
+    try {
+      const boyPng = await svgToPng(result.boy.chart);
+      const girlPng = await svgToPng(result.girl.chart);
+      const blocks: ReportBlock[] = [
+        { type: "heading", text: "जन्म विवरण" },
+        { type: "kv", cols: 2, rows: [
+          ["लड़का — नाम", boy.name], ["लड़की — नाम", girl.name],
+          ["जन्म तिथि", fmtDMY(boy.dob)], ["जन्म तिथि", fmtDMY(girl.dob)],
+          ["जन्म समय", boy.tob], ["जन्म समय", girl.tob],
+          ["जन्म स्थान", boy.place], ["जन्म स्थान", girl.place],
+        ] },
+        { type: "two-images", a: { png: boyPng, caption: `लड़के की कुंडली — ${boy.name}` }, b: { png: girlPng, caption: `लड़की की कुंडली — ${girl.name}` }, widthMm: 88 },
+        { type: "heading", text: "गुण मिलान" },
+        { type: "kv", cols: 2, rows: [["कुल गुण", `${result.milan.total} / 36`], ["परिणाम", result.milan.verdict]] },
+        { type: "table", cols: ["कूट", "अधिकतम अंक", "प्राप्त अंक", "जीवन क्षेत्र"], widths: [30, 30, 30, 92],
+          rows: [...result.milan.koots.map((k) => [k.name, String(k.max), String(k.obtained), k.area]),
+                 ["कुल गुण", "36", String(result.milan.total), result.milan.verdict]] },
+      ];
+      if (remedies.length) blocks.push({ type: "heading", text: "उपाय" }, { type: "list", items: remedies });
+      blocks.push({ type: "note", text: "यह पारंपरिक अष्टकूट गुण मिलान है — केवल मार्गदर्शन हेतु; अंतिम निर्णय ज्योतिषी के विवेक पर।" });
+      const blob = await generateReportPdf({ brandTitle: ASTRO, brandSub: "कुंडली मिलान रिपोर्ट", title: "कुंडली मिलान", footer: FOOTER, blocks });
+      if (mode === "pdf") downloadBlob(blob, fileName());
+      else { const r = await shareOrDownloadPdf(blob, fileName()); if (r === "downloaded") alert("शेयर इस डिवाइस पर समर्थित नहीं — PDF डाउनलोड कर दी गई।"); }
+    } catch (e) { alert("PDF नहीं बन सकी: " + (e instanceof Error ? e.message : String(e))); }
+    finally { setPdfBusy(null); }
   };
 
   const inp = "w-full rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm outline-none focus:border-[#8a2020] focus:ring-2 focus:ring-[#8a2020]/15";
@@ -64,7 +102,13 @@ export function KundaliMilan({ onBack }: { onBack: () => void }) {
       <div className="rx-noprint mb-4 flex items-center justify-between gap-3">
         <button onClick={onBack} className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm font-semibold text-ink/70">← वापस</button>
         <h1 className="font-serif text-2xl font-bold text-[#a01414]">कुंडली मिलान</h1>
-        {result && <button onClick={() => window.print()} className="rounded-lg bg-[#6d1414] px-4 py-2 text-sm font-bold text-white">🖨️ प्रिंट / PDF</button>}
+        {result && (
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => makePdf("pdf")} disabled={pdfBusy !== null} className="rounded-lg bg-[#6d1414] px-3 py-2 text-sm font-bold text-white disabled:opacity-60">{pdfBusy === "pdf" ? "बन रही…" : "📄 PDF डाउनलोड करें"}</button>
+            <button onClick={() => window.print()} className="rounded-lg bg-[#3a3a3a] px-3 py-2 text-sm font-bold text-white">🖨️ प्रिंट करें</button>
+            <button onClick={() => makePdf("share")} disabled={pdfBusy !== null} className="rounded-lg bg-emerald-600 px-3 py-2 text-sm font-bold text-white disabled:opacity-60">{pdfBusy === "share" ? "…" : "🔗 शेयर करें"}</button>
+          </div>
+        )}
       </div>
 
       {/* form */}
