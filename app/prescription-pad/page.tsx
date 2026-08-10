@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PrescriptionPad } from "../components/prescription/PrescriptionPad";
+import { PrescriptionModule } from "../components/prescription/PrescriptionModule";
 
 export const metadata: Metadata = {
   title: "Prescription Pad — Dr. Rahul Raj",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function PrescriptionPadPage() {
-  return <PrescriptionPad />;
+  return <PrescriptionModule />;
 }
