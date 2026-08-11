@@ -133,11 +133,17 @@ export async function notifyBookingEmail(b: Booking): Promise<boolean> {
  * Forward the booking to an automation webhook (n8n / Make / Zapier) as clean
  * JSON. The webhook (with the owner's Meta WhatsApp credentials) then sends the
  * WhatsApp confirmation to the CLIENT and an alert to the ASTROLOGER — so no
- * WhatsApp token ever lives in this app. Set env BOOKING_WEBHOOK_URL. Never throws.
+ * WhatsApp token ever lives in this app. Set env BOOKING_WEBHOOK_URL.
+ *
+ * Never throws — but now logs the actual failure reason to the Vercel function
+ * logs instead of swallowing it, so a silent failure is diagnosable.
  */
 export async function notifyBookingWebhook(b: Booking): Promise<boolean> {
   const url = process.env.BOOKING_WEBHOOK_URL;
-  if (!url) return false;
+  if (!url) {
+    console.error("[notifyBookingWebhook] BOOKING_WEBHOOK_URL env var is missing");
+    return false;
+  }
 
   const amountNum = Number(String(b.amount || "").replace(/[^\d.]/g, "")) || 0;
   const payload = {
@@ -169,8 +175,13 @@ export async function notifyBookingWebhook(b: Booking): Promise<boolean> {
       signal: ctrl.signal,
       cache: "no-store",
     });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.error(`[notifyBookingWebhook] non-OK response: ${res.status} ${text}`);
+    }
     return res.ok;
-  } catch {
+  } catch (err) {
+    console.error("[notifyBookingWebhook] fetch failed:", err);
     return false;
   } finally {
     clearTimeout(timer);
