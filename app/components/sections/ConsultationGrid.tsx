@@ -51,7 +51,7 @@ function ConsultationCard({ consultation: c }: { consultation: Consultation }) {
 
       <span
         className="h-1.5 w-12 rounded-full"
-        style={{ background: `linear-gradient(90deg, ${c.accent[0]}, ${c.accent[1]})` }}
+        style={{ background: `linear-gradient(90deg, ${c.accent?.[0] ?? "#C08A2E"}, ${c.accent?.[1] ?? "#7A5212"})` }}
       />
       <h3 className="mt-4 font-serif text-xl font-bold leading-snug text-ink">{c.title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-ink/70">{c.description}</p>
