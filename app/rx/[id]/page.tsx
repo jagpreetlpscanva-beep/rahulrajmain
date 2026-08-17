@@ -94,7 +94,7 @@ export default async function RxPage({ params }: { params: Promise<{ id: string 
           {c.gemstones.some((g) => g.stone) && (
             <div className="mt-3 space-y-1">
               {c.gemstones.filter((g) => g.stone).map((g, i) => (
-                <div key={i} className="rounded border border-[#a01414]/40 p-2 text-[12px]"><b className="text-[#a01414]">रत्न:</b> {g.planet} → {g.stone} · {g.weight} · {g.metal} · {g.finger} · {g.day} · मंत्र: {g.mantra}</div>
+                <div key={i} className="rounded border border-[#a01414]/40 p-2 text-[12px]"><b className="text-[#a01414]">रत्न:</b> {g.planet} → {g.stone} · {g.weight} · {g.metal} · {g.finger} · {g.day}{g.mantra ? ` · मंत्र: ${g.mantra}` : ""}{typeof g.price === "number" && g.price > 0 ? <> · <b>मूल्य: ₹{g.price.toLocaleString("en-IN")}</b></> : null}</div>
               ))}
             </div>
           )}
