@@ -12,7 +12,8 @@ export type FieldType =
   | "select"
   | "date"
   | "number"
-  | "toggle";
+  | "toggle"
+  | "rateList";
 
 export interface FieldDef {
   name: string;
@@ -159,7 +160,7 @@ export function CollectionManager<T extends Item>({
           </h3>
           <div className="grid gap-4 sm:grid-cols-2">
             {fields.map((f) => (
-              <div key={f.name} className={f.type === "textarea" || f.type === "list" ? "sm:col-span-2" : ""}>
+              <div key={f.name} className={f.type === "textarea" || f.type === "list" || f.type === "rateList" ? "sm:col-span-2" : ""}>
                 <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink/60">
                   {f.label}
                   {f.optional && <span className="ml-1 font-normal text-ink/35">(optional)</span>}
@@ -394,6 +395,58 @@ function FieldInput({
         </span>
         {on ? "Enabled" : "Disabled"}
       </button>
+    );
+  }
+  if (field.type === "rateList") {
+    type Rate = { id: string; label: string; price: number };
+    const rates = (Array.isArray(value) ? value : []) as Rate[];
+    const setRates = (next: Rate[]) => onChange(next);
+    const updateRate = (idx: number, patch: Partial<Rate>) => {
+      const next = rates.map((r, i) => (i === idx ? { ...r, ...patch } : r));
+      setRates(next);
+    };
+    const addRate = () => {
+      const id = `rate_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      setRates([...rates, { id, label: "", price: 0 }]);
+    };
+    const removeRate = (idx: number) => setRates(rates.filter((_, i) => i !== idx));
+    return (
+      <div className="space-y-2">
+        {rates.map((r, idx) => (
+          <div key={r.id} className="flex items-center gap-2">
+            <input
+              type="text"
+              className={inputCls}
+              placeholder="e.g. 1 Ratti"
+              value={r.label}
+              onChange={(e) => updateRate(idx, { label: e.target.value })}
+            />
+            <input
+              type="number"
+              className={`${inputCls} w-32 shrink-0`}
+              placeholder="₹ Price"
+              value={r.price === undefined || r.price === null ? "" : r.price}
+              onChange={(e) => updateRate(idx, { price: e.target.value === "" ? 0 : Number(e.target.value) })}
+            />
+            <button
+              type="button"
+              onClick={() => removeRate(idx)}
+              aria-label="Remove rate"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-md text-rose-600 hover:bg-rose-50"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={addRate}
+          className="rounded-lg border border-gold-500/40 bg-gold-50 px-3 py-1.5 text-xs font-semibold text-gold-700 hover:bg-gold-100"
+        >
+          + Add rate option
+        </button>
+        {rates.length === 0 && <p className="text-xs text-ink/40">No rate options yet — click “Add rate option”.</p>}
+      </div>
     );
   }
   if (field.type === "image" || field.type === "video") {
