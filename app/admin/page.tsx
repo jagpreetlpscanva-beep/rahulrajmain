@@ -612,7 +612,7 @@ export default function AdminPage() {
             <CollectionManager<RemedyCountOption> label="Remedy Count / Frequency Options" items={remedyCounts.items} fields={remedyCountFields} blank={blankRemedyCount} onChange={remedyCounts.save} onReset={remedyCounts.reset} previewHref="/prescription-pad" />
           )}
           {tab === "gemstones" && (
-            <CollectionManager<Gemstone> label="Gemstones" items={gemstones.items} fields={gemstoneFields} blank={blankGemstone} onChange={gemstones.save} onReset={gemstones.reset} previewHref="/prescription-pad" />
+           <CollectionManager<Gemstone> label="Gemstones & Upratna" items={gemstones.items} fields={gemstoneFields} blank={blankGemstone} onChange={gemstones.save} onReset={gemstones.reset} previewHref="/prescription-pad" />
           {tab === "anushthan" && (
             <CollectionManager<Anushthan> label="Anushthan" items={anushthan.items} fields={anushthanFields} blank={blankAnushthan} onChange={anushthan.save} onReset={anushthan.reset} previewHref="/prescription-pad" />
           )}
