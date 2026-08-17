@@ -365,7 +365,11 @@ export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "
   let inner = "";
   for (let h = 1; h <= 12; h++) {
     const [x, y] = c[h];
-    inner += `<text x="${x}" y="${y - 12}" font-size="12" fill="${color}" opacity="0.65" text-anchor="middle">${h}</text>`;
+    // House box shows the RASHI number occupying that house (not the fixed
+    // house index) — house 1 always shows the Lagna's own rashi number, and
+    // the rest follow in order. e.g. Lagna(rashi)=5 -> 5,6,7,8,9,10,11,12,1,2,3,4
+    const rashiNum = ((ascSign + (h - 1)) % 12) + 1;
+    inner += `<text x="${x}" y="${y - 12}" font-size="12" fill="${color}" opacity="0.65" text-anchor="middle">${rashiNum}</text>`;
     const ps = byHouse[h] || [];
     ps.forEach((p, n) => {
       inner += `<text x="${x - 7}" y="${y + 6 + n * 17}" font-size="16" font-weight="bold" fill="${p.color}" text-anchor="middle">${p.label}</text>`;
