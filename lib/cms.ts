@@ -861,9 +861,22 @@ export interface PlanetRemedy {
   enabled?: boolean;
 }
 
-/** Gemstone recommendation for a planet (one row per planet, editable). */
+/** One selectable rate/price option on a Gemstone or Upratna, e.g.
+ *  "1 Ratti" → ₹5000. Admin can add unlimited rate options per item. */
+export interface GemstoneRate {
+  id: string;
+  label: string;
+  price: number;
+}
+
+/** Gemstone / Upratna recommendation for a planet (one row per planet,
+ *  editable). `rates` holds unlimited admin-defined price options; the
+ *  astrologer picks one on the pad and its label + price are snapshotted
+ *  onto the saved prescription so later admin edits never change old
+ *  prescriptions' prices. */
 export interface Gemstone {
   id: string;
+  kind?: "gemstone" | "upratna";
   planet: string;
   title: string;
   stone: string;
@@ -871,8 +884,7 @@ export interface Gemstone {
   metal: string;
   finger: string;
   day: string;
-  /** Price per Ratti (₹) for grade A / B / C. Final price = ratti × rate.
-   *  Optional so older saved records keep working (treated as 0 when unset). */
+  rates?: GemstoneRate[];
   rateA?: number;
   rateB?: number;
   rateC?: number;
@@ -920,7 +932,7 @@ export const DEFAULT_PLANET_REMEDIES: PlanetRemedy[] = PLANETS.flatMap((p) =>
 );
 
 const gem = (id: string, planet: string, stone: string, weight: string, metal: string, finger: string, day: string): Gemstone =>
-  ({ id, planet, title: `${planet} — ${stone}`, stone, weight, metal, finger, day });
+  ({ id, kind: "gemstone", planet, title: `${planet} — ${stone}`, stone, weight, metal, finger, day, rates: [] });
 
 export const DEFAULT_GEMSTONES: Gemstone[] = [
   gem("gem-sun", "Sun", "Ruby (Manik)", "5 Ratti", "Gold / Copper", "Ring Finger", "Sunday"),
