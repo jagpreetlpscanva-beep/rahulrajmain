@@ -285,17 +285,16 @@ const remedyCountFields: FieldDef[] = [
 const blankRemedyCount = (): RemedyCountOption => ({ id: newId("count"), title: "" });
 
 const gemstoneFields: FieldDef[] = [
+  { name: "kind", label: "Type", type: "select", options: ["gemstone", "upratna"], hint: "रत्न (gemstone) or उपरत्न (upratna)." },
   { name: "planet", label: "Planet", type: "select", options: [...PLANETS] },
   { name: "stone", label: "Stone", type: "text", placeholder: "Blue Sapphire (Neelam)" },
   { name: "weight", label: "Weight", type: "text", placeholder: "7 Ratti" },
   { name: "metal", label: "Metal", type: "text", placeholder: "Silver" },
   { name: "finger", label: "Finger", type: "text", placeholder: "Middle Finger" },
   { name: "day", label: "Day", type: "text", placeholder: "Saturday" },
-  { name: "rateA", label: "Rate — Grade A (₹ per Ratti)", type: "number", optional: true, hint: "Price = ratti × this rate (e.g. 400 → 5 ratti = ₹2000). Leave 0 if not priced." },
-  { name: "rateB", label: "Rate — Grade B (₹ per Ratti)", type: "number", optional: true },
-  { name: "rateC", label: "Rate — Grade C (₹ per Ratti)", type: "number", optional: true },
+  { name: "rates", label: "Rates (unlimited)", type: "rateList", optional: true, hint: "Add as many rate options as needed, e.g. 1 Ratti ₹5000, 2 Ratti ₹9500, 3 Ratti ₹14000. The astrologer picks one on the prescription pad." },
 ];
-const blankGemstone = (): Gemstone => ({ id: newId("gem"), planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", rateA: 0, rateB: 0, rateC: 0 });
+const blankGemstone = (): Gemstone => ({ id: newId("gem"), kind: "gemstone", planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", rates: [] });
 
 const anushthanFields: FieldDef[] = [
   { name: "title", label: "Anushthan (English or Hindi)", type: "text", placeholder: "Rahu Jap", hint: "Type in English — the pad/PDF auto-shows Hindi (e.g. Rahu Jap → राहु जाप)." },
@@ -375,7 +374,7 @@ const NAV: { key: TabKey; label: string; icon: (p: { className?: string }) => Re
   { key: "planetRemedies", label: "Planet Remedies", icon: OmIcon },
   { key: "miscRemedies", label: "Misc. Remedies", icon: OmIcon },
   { key: "remedyCounts", label: "Remedy Counts", icon: MedalIcon },
-  { key: "gemstones", label: "Gemstones", icon: MedalIcon },
+  { key: "gemstones", label: "Gemstones & Upratna", icon: MedalIcon },
   { key: "anushthan", label: "Anushthan", icon: OmIcon },
   { key: "padSections", label: "Pad Sections", icon: GridIcon },
   { key: "padLabels", label: "Pad Text/Labels", icon: MedalIcon },
@@ -614,7 +613,6 @@ export default function AdminPage() {
           )}
           {tab === "gemstones" && (
             <CollectionManager<Gemstone> label="Gemstones" items={gemstones.items} fields={gemstoneFields} blank={blankGemstone} onChange={gemstones.save} onReset={gemstones.reset} previewHref="/prescription-pad" />
-          )}
           {tab === "anushthan" && (
             <CollectionManager<Anushthan> label="Anushthan" items={anushthan.items} fields={anushthanFields} blank={blankAnushthan} onChange={anushthan.save} onReset={anushthan.reset} previewHref="/prescription-pad" />
           )}
