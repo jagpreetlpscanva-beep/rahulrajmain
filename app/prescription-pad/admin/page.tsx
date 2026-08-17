@@ -36,15 +36,14 @@ const categoryFields: FieldDef[] = [
 ];
 const blankCategory = (): RemedyCategory => ({ id: newId("cat"), key: "", title: "", enabled: true });
 const gemstoneFields: FieldDef[] = [
+  { name: "kind", label: "Type", type: "select", options: ["gemstone", "upratna"], hint: "रत्न (gemstone) or उपरत्न (upratna)." },
   { name: "planet", label: "Planet", type: "select", options: [...PLANETS] },
   { name: "stone", label: "Stone", type: "text", placeholder: "Blue Sapphire (Neelam)" },
   { name: "weight", label: "Weight", type: "text", placeholder: "7 Ratti" },
   { name: "metal", label: "Metal", type: "text", placeholder: "Silver" },
   { name: "finger", label: "Finger", type: "text", placeholder: "Middle Finger" },
   { name: "day", label: "Day", type: "text", placeholder: "Saturday" },
-  { name: "rateA", label: "Rate — Grade A (₹/Ratti)", type: "number", optional: true, hint: "Price = ratti × rate (e.g. 400 → 5 ratti = ₹2000)." },
-  { name: "rateB", label: "Rate — Grade B (₹/Ratti)", type: "number", optional: true },
-  { name: "rateC", label: "Rate — Grade C (₹/Ratti)", type: "number", optional: true },
+  { name: "rates", label: "Rates (unlimited)", type: "rateList", optional: true, hint: "Add as many rate options as needed, e.g. 1 Ratti ₹5000, 2 Ratti ₹9500, 3 Ratti ₹14000." },
 ];
 const anushthanFields: FieldDef[] = [
   { name: "title", label: "Anushthan (English or Hindi)", type: "text", placeholder: "Rahu Jap", hint: "English auto-shows in Hindi on the pad (Rahu Jap → राहु जाप)." },
@@ -68,7 +67,7 @@ const padLabelFields: FieldDef[] = [
 ];
 
 const blankCount = (): RemedyCountOption => ({ id: newId("count"), title: "" });
-const blankGem = (): Gemstone => ({ id: newId("gem"), planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", rateA: 0, rateB: 0, rateC: 0 });
+const blankGem = (): Gemstone => ({ id: newId("gem"), kind: "gemstone", planet: "Saturn", title: "New Gemstone", stone: "", weight: "", metal: "", finger: "", day: "", rates: [] });
 const blankAnu = (): Anushthan => ({ id: newId("anu"), title: "", purpose: "", dakshina: "", titleHi: "" });
 const blankCarat = (): CaratOption => ({ id: newId("carat"), title: "" });
 const blankGrade = (): GemGrade => ({ id: newId("grade"), title: "" });
@@ -79,7 +78,7 @@ type TabKey = "remedies" | "anushthan" | "gemstones" | "misc" | "layout" | "labe
 const TABS: { key: TabKey; label: string }[] = [
   { key: "remedies", label: "Remedies" },
   { key: "anushthan", label: "Anushthan" },
-  { key: "gemstones", label: "Gemstones" },
+  { key: "gemstones", label: "Gemstones & Upratna" },
   { key: "misc", label: "Remedy Counts" },
   { key: "layout", label: "Print Layout" },
   { key: "labels", label: "Text/Labels" },
@@ -186,7 +185,7 @@ export default function PrescriptionAdminPage() {
         )}
         {tab === "gemstones" && (
           <div className="space-y-8">
-            <CollectionManager<Gemstone> label="Gemstones" items={gemstones.items} fields={gemstoneFields} blank={blankGem} onChange={gemstones.save} onReset={gemstones.reset} previewHref="/prescription-pad" />
+            <CollectionManager<Gemstone> label="Gemstones & Upratna" items={gemstones.items} fields={gemstoneFields} blank={blankGem} onChange={gemstones.save} onReset={gemstones.reset} previewHref="/prescription-pad" />
             <CollectionManager<CaratOption> label="Carat Options" items={carats.items} fields={caratFields} blank={blankCarat} onChange={carats.save} onReset={carats.reset} previewHref="/prescription-pad" />
             <CollectionManager<GemGrade> label="Gem Grades" items={grades.items} fields={gemGradeFields} blank={blankGrade} onChange={grades.save} onReset={grades.reset} previewHref="/prescription-pad" />
           </div>
