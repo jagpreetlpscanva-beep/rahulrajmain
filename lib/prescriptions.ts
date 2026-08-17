@@ -32,6 +32,17 @@ export interface GemstonePick {
   rateA?: number;
   rateB?: number;
   rateC?: number;
+  /** Catalog gemstone/upratna picked (id from the "gemstones" content collection) and
+   *  its type, kept for reference only — NOT used to recompute price. */
+  itemId?: string;
+  kind?: "gemstone" | "upratna";
+  /** Selected rate option's id (from that catalog item's `rates` list) — reference only. */
+  rateId?: string;
+  /** Snapshot of the selected rate's label + price at the moment it was chosen.
+   *  Printed/saved as-is; later admin edits or deletions to the catalog rate
+   *  NEVER change an already-saved prescription's price. */
+  rateLabel?: string;
+  price?: number;
 }
 
 /** One Anushthan (ritual) added to a prescription. */
