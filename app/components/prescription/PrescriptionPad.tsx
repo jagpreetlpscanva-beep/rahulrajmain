@@ -11,7 +11,7 @@ import { toHindi } from "@/lib/prescriptionPad/hindi";
 type Rem = { id: string; planet: string; title: string; enabled?: boolean };
 type MiscRem = { id: string; title: string; enabled?: boolean };
 type CountOpt = { id: string; title: string };
-type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; rudraksha: string; carat?: string; grade?: string; rateA?: number; rateB?: number; rateC?: number };
+type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; rudraksha: string; carat?: string; grade?: string; rateA?: number; rateB?: number; rateC?: number; price?: number };
 type AnuRow = { title: string; purpose: string; dakshina: string };
 type Row = { planet: string; remedies: string[]; notes: string; remedyCounts?: Record<string, string> };
 type KPlanet = { name: string; color?: string; abbr: string; lon: number; rashi: number; house: number; sign: string; nakshatra: string; nakshatra_lord?: string };
@@ -238,22 +238,15 @@ export function PrescriptionPad() {
     return c ? `${title} (${c})` : title;
   };
 
-  const setGemAt = (i: number, patch: Partial<Gem>) => setGems((gs) => gs.map((g, idx) => (idx === i ? { ...g, ...patch } : g)));
-  const loadGemInto = (i: number, planet: string) => {
-    const d = gemDefaults.find((x) => x.planet === planet);
-    setGems((gs) => gs.map((g, idx) => idx === i
-      ? (d
-          ? { planet, stone: d.stone, weight: d.weight, metal: d.metal, finger: d.finger, day: d.day, rudraksha: "", carat: g.carat || "", grade: g.grade || "", rateA: d.rateA, rateB: d.rateB, rateC: d.rateC }
-          : { ...blankGem(planet), carat: g.carat || "", grade: g.grade || "" })
-      : g));
-  };
-
   /** Auto price = ratti × per-ratti rate. Ratti comes from the कैरेट/रत्ती field
    *  (else parsed from the weight). Grade picks rateA/B/C; defaults to Grade A so
-   *  a plain "5 ratti" with a ₹400/ratti rate = ₹2000 without choosing a grade. */
-  const gemPrice = useCallback((g: Gem): string => {
+   *  a plain "5 ratti" with a ₹400/ratti rate = ₹2000 without choosing a grade.
+   *  Used only to compute a FRESH price while the astrologer is actively picking/
+   *  editing a row — once picked, the number is snapshotted onto `price` (see
+   *  setGemAt/loadGemInto below) so later admin rate edits never change it. */
+  const calcGemPriceNumber = useCallback((g: Gem): number => {
     const ratti = parseFloat(String(g.carat || g.weight || "").replace(/[^\d.]/g, ""));
-    if (!ratti) return "";
+    if (!ratti) return 0;
     // rate comes from the row, else falls back to the admin gemstone for this planet
     // (so setting the ₹/ratti in admin shows a price even on already-added rows)
     const src = gemDefaults.find((x) => x.planet === g.planet);
@@ -262,9 +255,37 @@ export function PrescriptionPad() {
     const rateC = g.rateC ?? src?.rateC;
     const gi = g.grade ? gemGrades.findIndex((x) => x.title === g.grade) : 0;
     const rate = gi === 1 ? rateB : gi === 2 ? rateC : rateA; // default = Grade A
-    if (!rate || rate <= 0) return "";
-    return `₹${Math.round(ratti * rate).toLocaleString("en-IN")}`;
+    if (!rate || rate <= 0) return 0;
+    return Math.round(ratti * rate);
   }, [gemGrades, gemDefaults]);
+
+  /** Display/print price. Prefers the SAVED snapshot (`g.price`) — the exact
+   *  number chosen at pick-time — so Screen, Print, PDF, Save and Share always
+   *  show the identical figure, unaffected by later Admin price changes. Falls
+   *  back to a live calc only for a row that hasn't been snapshotted yet. */
+  const gemPrice = useCallback((g: Gem): string => {
+    const n = typeof g.price === "number" && g.price > 0 ? g.price : calcGemPriceNumber(g);
+    return n > 0 ? `₹${n.toLocaleString("en-IN")}` : "";
+  }, [calcGemPriceNumber]);
+
+  const setGemAt = (i: number, patch: Partial<Gem>) =>
+    setGems((gs) => gs.map((g, idx) => {
+      if (idx !== i) return g;
+      const next = { ...g, ...patch };
+      const price = calcGemPriceNumber(next);
+      return { ...next, price: price > 0 ? price : undefined };
+    }));
+  const loadGemInto = (i: number, planet: string) => {
+    const d = gemDefaults.find((x) => x.planet === planet);
+    setGems((gs) => gs.map((g, idx) => {
+      if (idx !== i) return g;
+      const next: Gem = d
+        ? { planet, stone: d.stone, weight: d.weight, metal: d.metal, finger: d.finger, day: d.day, rudraksha: "", carat: g.carat || "", grade: g.grade || "", rateA: d.rateA, rateB: d.rateB, rateC: d.rateC }
+        : { ...blankGem(planet), carat: g.carat || "", grade: g.grade || "" };
+      const price = calcGemPriceNumber(next);
+      return { ...next, price: price > 0 ? price : undefined };
+    }));
+  };
 
   /** Admin enters English; the pad/PDF/record store the Hindi form (manual
    *  `titleHi` override wins, else auto-converted). */
@@ -328,6 +349,9 @@ export function PrescriptionPad() {
       date: fmtDMY(now.toISOString().slice(0, 10)), astrologer,
       mahadasha, antardasha, pratyantar, dosha, yog,
       planets: kPlanets.map((p) => ({ name: p.name, abbr: p.abbr, house: p.house, degree: Math.floor(((p.lon % 30) + 30) % 30) })),
+      // SAME asc_rashi as the on-screen chart (kundali is the single source of
+      // truth) — the PDF's house-number labels must never be recalculated separately.
+      ascRashi: (kundali as { asc_rashi?: number } | null)?.asc_rashi ?? 0,
       remedyRows: rows.filter((r) => r.planet).map((r) => ({ planet: r.planet, remedyLines: r.remedies.map((x) => remedyLine(r, x)), notes: r.notes })),
       gemRows: gems.filter((g) => g.stone).map((g) => ({ ...g, price: gemPrice(g) })),
       sections: padSections,
@@ -344,7 +368,7 @@ export function PrescriptionPad() {
       },
       notes,
     };
-  }, [patientName, mobile, gender, dob, tob, place, now, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kPlanets, rows, gems, gemPrice, padSections, anushthanRows, L, notes]);
+  }, [patientName, mobile, gender, dob, tob, place, now, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kPlanets, kundali, rows, gems, gemPrice, padSections, anushthanRows, L, notes]);
 
   /** डॉ० राहुल राज — ज्योतिष परामर्श - {PatientName}.pdf */
   const pdfFileName = useCallback(() => {
@@ -406,13 +430,13 @@ export function PrescriptionPad() {
     if (antardasha) L.push(`अन्तर्दशा: ${antardasha}`);
     const rem = rows.filter((r) => r.planet && r.remedies.length).map((r) => `${r.planet}: ${r.remedies.map((x) => remedyLine(r, x)).join(", ")}`);
     if (rem.length) { L.push("*उपाय:*"); rem.forEach((x) => L.push("• " + x)); }
-    const gem = gems.filter((g) => g.stone).map((g) => `${g.planet} → ${g.stone} (${g.weight}, ${g.finger})`);
+    const gem = gems.filter((g) => g.stone).map((g) => `${g.planet} → ${g.stone} (${g.weight}, ${g.finger})${gemPrice(g) ? ` — ${gemPrice(g)}` : ""}`);
     if (gem.length) { L.push("*रत्न:*"); gem.forEach((x) => L.push("• " + x)); }
     if (notes) L.push(`टिप्पणी: ${notes}`);
     if (link) L.push(`\n📄 पूरी रिपोर्ट देखें/डाउनलोड करें:\n${link}`);
     L.push("\n— astrorahulraj.in · +91 94153 12590");
     return L.join("\n");
-  }, [patientName, dob, tob, place, mahadasha, antardasha, rows, gems, notes]);
+  }, [patientName, dob, tob, place, mahadasha, antardasha, rows, gems, gemPrice, notes]);
 
   const shareWhatsApp = async () => {
     const savedFor = savedId || (await doSave());
