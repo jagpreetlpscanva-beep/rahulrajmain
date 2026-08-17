@@ -76,6 +76,11 @@ export interface PrescriptionPdfData {
   yog: string;
   /** Planets to place inside the pad's pre-printed Kundali box (no grid is drawn). */
   planets: PdfPlanet[];
+  /** Ascendant (Lagna) rashi index (0=Mesha..11=Meena), from the SAME computeKundli()
+   *  result shown on screen. House-1 always shows this rashi's own number, and the
+   *  rest follow in order — matching the on-screen chart exactly (never recalculated
+   *  separately here). Falls back to 0 (Mesha) only for legacy callers that omit it. */
+  ascRashi?: number;
   remedyRows: PdfRemedyRow[];
   gemRows: PdfGemRow[];
   /** Admin-defined section order + on/off (both digital & print). Falls back to
@@ -211,13 +216,19 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
   // is unchanged so planets stay inside their houses.
   const planetSize = mode === "print" ? KUNDALI_PLANET.fontSize * PRINT_KUNDALI_PLANET_SCALE : KUNDALI_PLANET.fontSize;
   const planetShiftX = mode === "print" ? PRINT_KUNDALI_SHIFT_XMM : 0;
-  // house numbers 1–12 in every house (fixed box positions, not shifted with planets)
+  // Rashi numbers in every house (fixed box positions, not shifted with planets).
+  // Same rule as the on-screen chart (lib/vedic.ts chartSvgDataUri): house 1 shows
+  // the Lagna's own rashi number, the rest follow in order — e.g. Lagna=5 ->
+  // 5,6,7,8,9,10,11,12,1,2,3,4. Uses data.ascRashi from the SAME computeKundli()
+  // result as the screen; NEVER recalculated independently for the PDF.
   const HN = KUNDALI_HOUSE_NUMBER;
+  const ascRashi = data.ascRashi ?? 0;
   for (let h = 1; h <= 12; h++) {
     const [fx, fy] = HOUSE_CENTERS[h];
     const cxMm = KUNDALI_BOX.xMm + fx * KUNDALI_BOX.widthMm;
     const cyMm = KUNDALI_BOX.yMm + fy * KUNDALI_BOX.heightMm;
-    const label = String(h);
+    const rashiNum = ((ascRashi + (h - 1)) % 12) + 1;
+    const label = String(rashiNum);
     const wMm = font.widthOfTextAtSize(label, HN.fontSize) / MM_TO_PT;
     drawText(page, font, label, cxMm - wMm / 2, cyMm + HN.dyMm, mode, { size: HN.fontSize, color: HN.color });
   }
