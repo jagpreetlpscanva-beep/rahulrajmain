@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getDb } from '@/lib/mongodb';
+import clientPromise from '@/lib/mongodb';
 import { getAdminSession } from '@/lib/auth';
+
+async function getDb() {
+  const client = await clientPromise;
+  return client.db(); // Aapka DB name default string se pick ho jayega
+}
 
 export async function GET() {
   try {
