@@ -60,6 +60,14 @@ export type PdfGemRow = { planet: string; stone: string; weight: string; metal: 
 export type PdfSection = { id: string; title: string; enabled: boolean; col1?: string; col2?: string; col3?: string };
 export type PdfAnushthanRow = { title: string; purpose: string; dakshina: string };
 
+export interface SelectedGemstonePayload {
+  gemstoneId: string;
+  gemstoneName: string;
+  selectedWeight: string;
+  selectedPrice: number;
+  quality?: string;
+}
+
 export interface PrescriptionPdfData {
   patientName: string;
   mobile: string;
@@ -83,6 +91,8 @@ export interface PrescriptionPdfData {
   ascRashi?: number;
   remedyRows: PdfRemedyRow[];
   gemRows: PdfGemRow[];
+  /** Admin-defined gemstone selected via RemedyPicker */
+  selectedGemstone?: SelectedGemstonePayload;
   /** Admin-defined section order + on/off (both digital & print). Falls back to
    *  anushthan → remedies → gemstones when not provided. */
   sections?: PdfSection[];
@@ -328,8 +338,20 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
     });
   };
 
-  // -- Gemstones: one row each, with a coloured gem marker + optional price --
+  // -- Gemstones: dynamic RemedyPicker gemstone selection + standard gem rows --
   const drawGemstones = () => {
+    if (data.selectedGemstone) {
+      ensureSpace(GEMSTONE_BLOCK.rowHeightMm * 2);
+      const { gemstoneName, selectedWeight, selectedPrice, quality } = data.selectedGemstone;
+      const qualStr = quality ? ` (${quality})` : "";
+      const selectedLine = `अनुशंसित रत्न: ${gemstoneName} · ${selectedWeight}${qualStr} · मूल्य: ₹${selectedPrice}`;
+      drawText(cursor.page, font, selectedLine, GEMSTONE_BLOCK.startXMm, cursor.yMm, mode, {
+        size: GEMSTONE_BLOCK.fontSize + 1,
+        color: SECTION_HEADING_COLOR,
+      });
+      cursor.yMm += GEMSTONE_BLOCK.rowHeightMm + 2;
+    }
+
     data.gemRows.forEach((g) => {
       ensureSpace(GEMSTONE_BLOCK.rowHeightMm);
       const color = PLANET_COLORS[g.planet] ?? DEFAULT_TEXT_COLOR;
