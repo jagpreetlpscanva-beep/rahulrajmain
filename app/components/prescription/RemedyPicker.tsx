@@ -2,19 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 
-interface GemPrice {
+export interface GemPrice {
   caratOrWeight: string;
   price: number;
   quality?: string;
 }
 
-interface GemstoneItem {
+export interface GemstoneItem {
   id: string;
   name: string;
   prices: GemPrice[];
 }
 
-interface SelectedGemstonePayload {
+export interface SelectedGemstonePayload {
   gemstoneId: string;
   gemstoneName: string;
   selectedWeight: string;
@@ -22,12 +22,12 @@ interface SelectedGemstonePayload {
   quality?: string;
 }
 
-interface RemedyPickerProps {
+export interface RemedyPickerProps {
   onSelectGemstone?: (gemstoneData: SelectedGemstonePayload) => void;
   initialValue?: SelectedGemstonePayload;
 }
 
-export default function RemedyPicker({ onSelectGemstone, initialValue }: RemedyPickerProps) {
+export function RemedyPicker({ onSelectGemstone, initialValue }: RemedyPickerProps) {
   const [gemstones, setGemstones] = useState<GemstoneItem[]>([]);
   const [selectedGemId, setSelectedGemId] = useState<string>(initialValue?.gemstoneId || '');
   const [selectedPriceIdx, setSelectedPriceIdx] = useState<number>(0);
@@ -122,3 +122,5 @@ export default function RemedyPicker({ onSelectGemstone, initialValue }: RemedyP
     </div>
   );
 }
+
+export default RemedyPicker;
