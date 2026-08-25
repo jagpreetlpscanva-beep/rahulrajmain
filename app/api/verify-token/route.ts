@@ -1,38 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import mongoose from "mongoose";
+import { MongoClient } from "mongodb";
 
-// MongoDB Connection helper inline
 const MONGODB_URI = process.env.MONGODB_URI;
 
-async function connectToDatabase() {
-  if (mongoose.connection.readyState >= 1) {
-    return;
-  }
-  if (!MONGODB_URI) {
-    throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
-  }
-  return await mongoose.connect(MONGODB_URI);
+if (!MONGODB_URI) {
+  throw new Error("Please define the MONGODB_URI environment variable inside .env.local");
 }
 
-// Token Schema/Model definition inline (prevents import errors)
-const VerificationTokenSchema = new mongoose.Schema(
-  {
-    token: { type: String, required: true, unique: true },
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    expires: { type: Date },
-  },
-  { timestamps: true }
-);
+let client: MongoClient;
+let clientPromise: Promise<MongoClient>;
 
-const VerificationToken =
-  mongoose.models.VerificationToken ||
-  mongoose.model("VerificationToken", VerificationTokenSchema);
+declare global {
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
+}
 
-// GET API Handler
+if (process.env.NODE_ENV === "development") {
+  if (!global._mongoClientPromise) {
+    client = new MongoClient(MONGODB_URI);
+    global._mongoClientPromise = client.connect();
+  }
+  clientPromise = global._mongoClientPromise;
+} else {
+  client = new MongoClient(MONGODB_URI);
+  clientPromise = client.connect();
+}
+
 export async function GET(req: NextRequest) {
   try {
-    await connectToDatabase();
-
     const { searchParams } = new URL(req.url);
     const token = searchParams.get("token");
 
@@ -43,7 +37,15 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const verificationToken = await VerificationToken.findOne({ token });
+    const mongoClient = await clientPromise;
+    
+    // Agar DB name URI me specified nahi hai toh default DB use hoga ya 'test'
+    const db = mongoClient.db();
+
+    // VerificationTokens collection me token search karein
+    const verificationToken = await db
+      .collection("verificationtokens")
+      .findOne({ token });
 
     if (!verificationToken) {
       return NextResponse.json(
