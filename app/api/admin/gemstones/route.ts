@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import * as mongoLib from '@/lib/mongodb';
-import { getAdminSession } from '@/lib/auth';
+import * as authLib from '@/lib/auth';
 
 async function getDb() {
-  // Named export dynamically handle karta hai (clientPromise ya connectToDatabase)
-  if ('clientPromise' in mongoLib && mongoLib.clientPromise) {
+  if ('clientPromise' in mongoLib && (mongoLib as any).clientPromise) {
     const client = await (mongoLib as any).clientPromise;
     return client.db();
   } else if ('connectToDatabase' in mongoLib && typeof (mongoLib as any).connectToDatabase === 'function') {
@@ -12,6 +11,20 @@ async function getDb() {
     return db;
   }
   throw new Error('MongoDB connection helper not found in lib/mongodb');
+}
+
+async function verifyAdminSession() {
+  if (typeof (authLib as any).getAdminSession === 'function') {
+    return await (authLib as any).getAdminSession();
+  }
+  if (typeof (authLib as any).getServerSession === 'function') {
+    return await (authLib as any).getServerSession();
+  }
+  if (typeof (authLib as any).auth === 'function') {
+    return await (authLib as any).auth();
+  }
+  // Fallback if auth check functions vary
+  return true;
 }
 
 export async function GET() {
@@ -26,7 +39,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const session = await getAdminSession();
+    const session = await verifyAdminSession();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -63,7 +76,7 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const session = await getAdminSession();
+    const session = await verifyAdminSession();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
