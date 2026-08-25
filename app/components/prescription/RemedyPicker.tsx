@@ -23,11 +23,18 @@ export interface SelectedGemstonePayload {
 }
 
 export interface RemedyPickerProps {
+  value?: string[];
+  onChange?: (value: string[] | ((prev: string[]) => string[])) => void;
   onSelectGemstone?: (gemstoneData: SelectedGemstonePayload) => void;
   initialValue?: SelectedGemstonePayload;
 }
 
-export function RemedyPicker({ onSelectGemstone, initialValue }: RemedyPickerProps) {
+export function RemedyPicker({
+  value = [],
+  onChange,
+  onSelectGemstone,
+  initialValue,
+}: RemedyPickerProps) {
   const [gemstones, setGemstones] = useState<GemstoneItem[]>([]);
   const [selectedGemId, setSelectedGemId] = useState<string>(initialValue?.gemstoneId || '');
   const [selectedPriceIdx, setSelectedPriceIdx] = useState<number>(0);
@@ -55,14 +62,19 @@ export function RemedyPicker({ onSelectGemstone, initialValue }: RemedyPickerPro
     setSelectedPriceIdx(0);
 
     const found = gemstones.find((g) => g.id === gemId);
-    if (found && found.prices.length > 0 && onSelectGemstone) {
-      onSelectGemstone({
-        gemstoneId: found.id,
-        gemstoneName: found.name,
-        selectedWeight: found.prices[0].caratOrWeight,
-        selectedPrice: found.prices[0].price,
-        quality: found.prices[0].quality,
-      });
+    if (found) {
+      if (onChange) {
+        onChange((prev) => Array.from(new Set([...prev, found.name])));
+      }
+      if (found.prices.length > 0 && onSelectGemstone) {
+        onSelectGemstone({
+          gemstoneId: found.id,
+          gemstoneName: found.name,
+          selectedWeight: found.prices[0].caratOrWeight,
+          selectedPrice: found.prices[0].price,
+          quality: found.prices[0].quality,
+        });
+      }
     }
   };
 
@@ -84,7 +96,30 @@ export function RemedyPicker({ onSelectGemstone, initialValue }: RemedyPickerPro
 
   return (
     <div className="bg-amber-50/50 p-4 rounded-xl border border-amber-200 space-y-4">
-      <h4 className="font-semibold text-amber-900 text-sm">Select Recommended Gemstone</h4>
+      <h4 className="font-semibold text-amber-900 text-sm">Select Recommended Gemstone / Remedy</h4>
+      
+      {Array.isArray(value) && value.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-2">
+          {value.map((item, idx) => (
+            <span
+              key={idx}
+              className="inline-flex items-center gap-1 text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full border border-amber-300"
+            >
+              {item}
+              {onChange && (
+                <button
+                  type="button"
+                  onClick={() => onChange(value.filter((_, i) => i !== idx))}
+                  className="hover:text-amber-950 font-bold ml-1"
+                >
+                  ×
+                </button>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">Gemstone</label>
