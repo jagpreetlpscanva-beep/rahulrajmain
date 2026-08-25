@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
-import clientPromise from '@/lib/mongodb';
+import * as mongoLib from '@/lib/mongodb';
 import { getAdminSession } from '@/lib/auth';
 
 async function getDb() {
-  const client = await clientPromise;
-  return client.db(); // Aapka DB name default string se pick ho jayega
+  // Named export dynamically handle karta hai (clientPromise ya connectToDatabase)
+  if ('clientPromise' in mongoLib && mongoLib.clientPromise) {
+    const client = await (mongoLib as any).clientPromise;
+    return client.db();
+  } else if ('connectToDatabase' in mongoLib && typeof (mongoLib as any).connectToDatabase === 'function') {
+    const { db } = await (mongoLib as any).connectToDatabase();
+    return db;
+  }
+  throw new Error('MongoDB connection helper not found in lib/mongodb');
 }
 
 export async function GET() {
