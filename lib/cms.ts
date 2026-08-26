@@ -932,13 +932,16 @@ export const DEFAULT_PLANET_REMEDIES: PlanetRemedy[] = PLANETS.flatMap((p) =>
 );
 
 /** Turns a plain list of prices into admin-editable {id,label,price} rate rows.
- *  Labels are auto-lettered: Grade A, Grade B, Grade C ... */
+ *  Sorted highest price first so the priciest stone is always "Grade A"
+ *  (Grade A = best quality = costliest, per trade convention), then B, C ... */
 const mkRates = (gemId: string, prices: number[]): GemstoneRate[] =>
-  prices.map((price, i) => ({
-    id: `${gemId}-rate-${i + 1}`,
-    label: `Grade ${String.fromCharCode(65 + i)}`,
-    price,
-  }));
+  [...prices]
+    .sort((a, b) => b - a)
+    .map((price, i) => ({
+      id: `${gemId}-rate-${i + 1}`,
+      label: `Grade ${String.fromCharCode(65 + i)}`,
+      price,
+    }));
 
 const gem = (
   id: string,
