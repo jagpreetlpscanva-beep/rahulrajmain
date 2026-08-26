@@ -97,7 +97,7 @@ export function PrescriptionPad() {
   const [remedies, setRemedies] = useState<Rem[]>([]);
   const [miscRemedies, setMiscRemedies] = useState<MiscRem[]>([]);
   const [countOptions, setCountOptions] = useState<CountOpt[]>([]);
-  const [gemDefaults, setGemDefaults] = useState<(Gem & { rateA?: number; rateB?: number; rateC?: number; rates?: GemRate[] })[]>([]);
+  const [gemDefaults, setGemDefaults] = useState<(Gem & { kind?: string; rateA?: number; rateB?: number; rateC?: number; rates?: GemRate[] })[]>([]);
   const [padSections, setPadSections] = useState<PadSection[]>(DEFAULT_PAD_SECTIONS);
   const [anushthanCatalog, setAnushthanCatalog] = useState<Anushthan[]>([]);
   const [gemGrades, setGemGrades] = useState<GemGrade[]>([]);
@@ -277,7 +277,7 @@ export function PrescriptionPad() {
       return { ...next, price: price > 0 ? price : undefined };
     }));
   const loadGemInto = (i: number, planet: string) => {
-    const d = gemDefaults.find((x) => x.planet === planet && x.kind !== "upratna") || gemDefaults.find((x) => x.planet === planet);
+    const d = gemDefaults.find((x) => x.planet === planet);
     setGems((gs) => gs.map((g, idx) => {
       if (idx !== i) return g;
       const next: Gem = d
