@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import * as mongoLib from '@/lib/mongodb';
-import * as authLib from '@/lib/auth';
+import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
 async function getDb() {
   if ('clientPromise' in mongoLib && (mongoLib as any).clientPromise) {
@@ -14,19 +15,9 @@ async function getDb() {
 }
 
 async function verifyAdminSession() {
-  if (typeof (authLib as any).getAdminSession === 'function') {
-    return await (authLib as any).getAdminSession();
-  }
-  if (typeof (authLib as any).getServerSession === 'function') {
-    return await (authLib as any).getServerSession();
-  }
-  if (typeof (authLib as any).auth === 'function') {
-    return await (authLib as any).auth();
-  }
-  // Fallback if auth check functions vary
-  return true;
+  const token = (await cookies()).get(COOKIE_NAME)?.value;
+  return verifyToken(token);
 }
-
 export async function GET() {
   try {
     const db = await getDb();
