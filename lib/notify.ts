@@ -98,11 +98,19 @@ function bookingEmailHtml(b: Booking): string {
   </div>`;
 }
 
+/** Owner emails that always receive a booking alert, regardless of the
+ *  BOOKING_ALERT_EMAIL env var. Add/remove addresses here. */
+const ALWAYS_NOTIFY_EMAILS = ["rahulrajastro@gmail.com"];
+
 /** Email the owner about a new booking (Resend HTTP API). Never throws. */
 export async function notifyBookingEmail(b: Booking): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
-  const to = process.env.BOOKING_ALERT_EMAIL;
-  if (!apiKey || !to) return false;
+  const envTo = (process.env.BOOKING_ALERT_EMAIL || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const to = Array.from(new Set([...envTo, ...ALWAYS_NOTIFY_EMAILS]));
+  if (!apiKey || to.length === 0) return false;
   const from = process.env.BOOKING_ALERT_FROM || "Rahul Raj Astro <onboarding@resend.dev>";
 
   const ctrl = new AbortController();
@@ -113,7 +121,7 @@ export async function notifyBookingEmail(b: Booking): Promise<boolean> {
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         from,
-        to: to.split(",").map((s) => s.trim()).filter(Boolean),
+        to,
         subject: `🔔 Nayi Booking: ${b.itemTitle || b.itemType} — ${b.name}`,
         html: bookingEmailHtml(b),
         text: bookingAlertText(b),
