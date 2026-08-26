@@ -11,7 +11,8 @@ import { toHindi } from "@/lib/prescriptionPad/hindi";
 type Rem = { id: string; planet: string; title: string; enabled?: boolean };
 type MiscRem = { id: string; title: string; enabled?: boolean };
 type CountOpt = { id: string; title: string };
-type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; rudraksha: string; carat?: string; grade?: string; rateA?: number; rateB?: number; rateC?: number; price?: number };
+type GemRate = { id: string; label: string; price: number };
+type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; rudraksha: string; carat?: string; grade?: string; rateA?: number; rateB?: number; rateC?: number; rates?: GemRate[]; rateLabel?: string; price?: number };
 type AnuRow = { title: string; purpose: string; dakshina: string };
 type Row = { planet: string; remedies: string[]; notes: string; remedyCounts?: Record<string, string> };
 type KPlanet = { name: string; color?: string; abbr: string; lon: number; rashi: number; house: number; sign: string; nakshatra: string; nakshatra_lord?: string };
@@ -96,7 +97,7 @@ export function PrescriptionPad() {
   const [remedies, setRemedies] = useState<Rem[]>([]);
   const [miscRemedies, setMiscRemedies] = useState<MiscRem[]>([]);
   const [countOptions, setCountOptions] = useState<CountOpt[]>([]);
-  const [gemDefaults, setGemDefaults] = useState<(Gem & { rateA?: number; rateB?: number; rateC?: number })[]>([]);
+  const [gemDefaults, setGemDefaults] = useState<(Gem & { rateA?: number; rateB?: number; rateC?: number; rates?: GemRate[] })[]>([]);
   const [padSections, setPadSections] = useState<PadSection[]>(DEFAULT_PAD_SECTIONS);
   const [anushthanCatalog, setAnushthanCatalog] = useState<Anushthan[]>([]);
   const [gemGrades, setGemGrades] = useState<GemGrade[]>([]);
@@ -280,12 +281,25 @@ export function PrescriptionPad() {
     setGems((gs) => gs.map((g, idx) => {
       if (idx !== i) return g;
       const next: Gem = d
-        ? { planet, stone: d.stone, weight: d.weight, metal: d.metal, finger: d.finger, day: d.day, rudraksha: "", carat: g.carat || "", grade: g.grade || "", rateA: d.rateA, rateB: d.rateB, rateC: d.rateC }
+        ? { planet, stone: d.stone, weight: d.weight, metal: d.metal, finger: d.finger, day: d.day, rudraksha: "", carat: g.carat || "", grade: g.grade || "", rateA: d.rateA, rateB: d.rateB, rateC: d.rateC, rates: d.rates || [] }
         : { ...blankGem(planet), carat: g.carat || "", grade: g.grade || "" };
       const price = calcGemPriceNumber(next);
       return { ...next, price: price > 0 ? price : undefined };
     }));
   };
+
+  /** Astrologer picks one admin-defined rate option (e.g. "5 Ratti — ₹10,000") for the
+   *  currently-selected planet. Its exact label+price snapshot onto the row so later
+   *  admin edits never change an already-picked prescription. Blank selection falls
+   *  back to the old carat×rate calc. */
+  const selectGemRate = (i: number, rateId: string) =>
+    setGems((gs) => gs.map((g, idx) => {
+      if (idx !== i) return g;
+      const src = gemDefaults.find((x) => x.planet === g.planet);
+      const r = src?.rates?.find((x) => x.id === rateId);
+      if (!r) return { ...g, rateLabel: undefined, price: calcGemPriceNumber(g) || undefined };
+      return { ...g, rateLabel: r.label, price: r.price };
+    }));
 
   /** Admin enters English; the pad/PDF/record store the Hindi form (manual
    *  `titleHi` override wins, else auto-converted). */
@@ -734,6 +748,21 @@ export function PrescriptionPad() {
                     <div><label className={lbl}>कैरेट / रत्ती</label><select className={inp} value={g.carat || ""} onChange={(e) => setGemAt(i, { carat: e.target.value })}><option value="">—</option>{carats.map((c) => <option key={c.id} value={c.title}>{c.title}</option>)}</select></div>
                     <div><label className={lbl}>ग्रेड</label><select className={inp} value={g.grade || ""} onChange={(e) => setGemAt(i, { grade: e.target.value })}><option value="">— (A)</option>{gemGrades.map((gr) => <option key={gr.id} value={gr.title}>{gr.title}</option>)}</select></div>
                   </div>
+                  {!!g.rates?.length && (
+                    <div className="mt-2">
+                      <label className={lbl}>मूल्य चुनें</label>
+                      <select
+                        className={inp}
+                        value={g.rates.find((r) => r.label === g.rateLabel)?.id || ""}
+                        onChange={(e) => selectGemRate(i, e.target.value)}
+                      >
+                        <option value="">— चुनें —</option>
+                        {g.rates.map((r) => (
+                          <option key={r.id} value={r.id}>{r.label} — ₹{r.price.toLocaleString("en-IN")}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                   <div className="mt-2 flex items-center justify-between">
                     {gemPrice(g)
                       ? <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-sm font-bold text-emerald-700">मूल्य: {gemPrice(g)}</span>
