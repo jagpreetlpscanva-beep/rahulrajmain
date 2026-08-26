@@ -931,19 +931,65 @@ export const DEFAULT_PLANET_REMEDIES: PlanetRemedy[] = PLANETS.flatMap((p) =>
   (REMEDY_SEED[p] ?? []).map((title, i) => ({ id: `rem-${p.toLowerCase()}-${i + 1}`, planet: p, title }))
 );
 
-const gem = (id: string, planet: string, stone: string, weight: string, metal: string, finger: string, day: string): Gemstone =>
-  ({ id, kind: "gemstone", planet, title: `${planet} — ${stone}`, stone, weight, metal, finger, day, rates: [] });
+/** Turns a plain list of prices into admin-editable {id,label,price} rate rows.
+ *  Labels are auto-lettered: Grade A, Grade B, Grade C ... */
+const mkRates = (gemId: string, prices: number[]): GemstoneRate[] =>
+  prices.map((price, i) => ({
+    id: `${gemId}-rate-${i + 1}`,
+    label: `Grade ${String.fromCharCode(65 + i)}`,
+    price,
+  }));
+
+const gem = (
+  id: string,
+  planet: string,
+  stone: string,
+  weight: string,
+  metal: string,
+  finger: string,
+  day: string,
+  prices: number[] = [],
+  kind: "gemstone" | "upratna" = "gemstone"
+): Gemstone => ({
+  id,
+  kind,
+  planet,
+  title: `${planet} — ${stone}`,
+  stone,
+  weight,
+  metal,
+  finger,
+  day,
+  rates: mkRates(id, prices),
+});
 
 export const DEFAULT_GEMSTONES: Gemstone[] = [
-  gem("gem-sun", "Sun", "Ruby (Manik)", "5 Ratti", "Gold / Copper", "Ring Finger", "Sunday"),
-  gem("gem-moon", "Moon", "Pearl (Moti)", "6 Ratti", "Silver", "Little Finger", "Monday"),
-  gem("gem-mars", "Mars", "Red Coral (Moonga)", "7 Ratti", "Copper / Gold", "Ring Finger", "Tuesday"),
-  gem("gem-mercury", "Mercury", "Emerald (Panna)", "5 Ratti", "Gold", "Little Finger", "Wednesday"),
-  gem("gem-jupiter", "Jupiter", "Yellow Sapphire (Pukhraj)", "5 Ratti", "Gold", "Index Finger", "Thursday"),
-  gem("gem-venus", "Venus", "Diamond (Heera)", "1 Ratti", "Silver / Platinum", "Middle Finger", "Friday"),
-  gem("gem-saturn", "Saturn", "Blue Sapphire (Neelam)", "7 Ratti", "Silver", "Middle Finger", "Saturday"),
-  gem("gem-rahu", "Rahu", "Hessonite (Gomed)", "7 Ratti", "Silver", "Middle Finger", "Saturday"),
-  gem("gem-ketu", "Ketu", "Cat's Eye (Lehsunia)", "7 Ratti", "Silver", "Little Finger", "Wednesday"),
+  gem("gem-sun", "Sun", "Ruby (Manik)", "5 Ratti", "Gold / Copper", "Ring Finger", "Sunday",
+    [4500, 8500, 12000, 16500, 22500, 27000, 35000, 41000]),
+  gem("gem-moon", "Moon", "Pearl (Moti)", "6 Ratti", "Silver", "Little Finger", "Monday",
+    [2500, 4500, 6500, 11500, 18000, 22000]),
+  gem("gem-mars", "Mars", "Red Coral (Moonga)", "7 Ratti", "Copper / Gold", "Ring Finger", "Tuesday",
+    [8000, 12000, 14000, 20000, 25000, 28000]),
+  gem("gem-mercury", "Mercury", "Emerald (Panna)", "5 Ratti", "Gold", "Little Finger", "Wednesday",
+    []),
+  gem("gem-jupiter", "Jupiter", "Yellow Sapphire (Pukhraj)", "5 Ratti", "Gold", "Index Finger", "Thursday",
+    [60000, 80000, 100000, 130000, 150000]),
+  gem("gem-jupiter-upratna", "Jupiter", "Pukhraj Upratna", "5 Ratti", "Gold", "Index Finger", "Thursday",
+    [3500, 4500, 6000, 5500], "upratna"),
+  gem("gem-venus", "Venus", "Diamond (Heera)", "1 Ratti", "Silver / Platinum", "Middle Finger", "Friday",
+    []),
+  gem("gem-venus-opal", "Venus", "Opal", "5 Ratti", "Silver / Platinum", "Middle Finger", "Friday",
+    [15000, 25000, 30000, 35000, 40000]),
+  gem("gem-venus-opal-upratna", "Venus", "Opal Upratna", "5 Ratti", "Silver", "Middle Finger", "Friday",
+    [5500, 6500, 7000], "upratna"),
+  gem("gem-saturn", "Saturn", "Blue Sapphire (Neelam)", "7 Ratti", "Silver", "Middle Finger", "Saturday",
+    [60000, 100000, 110000, 120000]),
+  gem("gem-saturn-upratna", "Saturn", "Neelam Upratna", "7 Ratti", "Silver", "Middle Finger", "Saturday",
+    [4000, 6000, 8000, 11000], "upratna"),
+  gem("gem-rahu", "Rahu", "Hessonite (Gomed)", "7 Ratti", "Silver", "Middle Finger", "Saturday",
+    [5500, 8500, 12000, 15000, 20000]),
+  gem("gem-ketu", "Ketu", "Cat's Eye (Lahsuniya)", "7 Ratti", "Silver", "Little Finger", "Wednesday",
+    [3000, 4500, 5500, 7500, 11000]),
 ];
 
 /* ---------------- Prescription pad: Anushthan (अनुष्ठान) catalog ----------------
