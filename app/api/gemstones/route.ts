@@ -1,158 +1,84 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { getMongoClient, getDbName } from '@/lib/mongodb';
+import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
-// Interface defining the Gemstone data structure
-export interface GemstoneData {
-  _id?: string;
-  name: string;
-  planet: string;
-  rati: string;
-  grade: string;
-  mantra: string;
-  day: string;
-  finger: string;
-  prices: number[];
+async function getDb() {
+  const client = await getMongoClient();
+  return client.db(getDbName());
 }
 
-// In-Memory Data Store (Replace with MongoDB / Database Model queries if using DB)
-let gemstonesStore: GemstoneData[] = [
-  {
-    _id: "1",
-    name: "Ruby (Manikyam)",
-    planet: "Sun (Surya)",
-    rati: "5.25 - 7 Rati",
-    grade: "Natural / Unheated",
-    mantra: "Om Suryaya Namah (108 times)",
-    day: "Sunday Morning",
-    finger: "Ring Finger (Right Hand)",
-    prices: [3500, 7000, 11000],
-  },
-  {
-    _id: "2",
-    name: "Yellow Sapphire (Pukhraj)",
-    planet: "Jupiter (Guru)",
-    rati: "4.25 - 6 Rati",
-    grade: "Ceylon Natural",
-    mantra: "Om Gram Greem Groom Sah Gurave Namah",
-    day: "Thursday Morning",
-    finger: "Index Finger (Right Hand)",
-    prices: [5100, 10500, 21000],
-  },
-];
+async function verifyAdminSession() {
+  const token = (await cookies()).get(COOKIE_NAME)?.value;
+  return verifyToken(token);
+}
 
-// GET: Fetch all gemstone records
 export async function GET() {
   try {
-    return NextResponse.json(gemstonesStore, { status: 200 });
+    const db = await getDb();
+    const gemstones = await db.collection('gemstones').find({}).toArray();
+    return NextResponse.json(gemstones);
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to fetch gemstones data." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch gemstones' }, { status: 500 });
   }
 }
 
-// POST: Add a new gemstone record
 export async function POST(req: Request) {
   try {
-    const body: GemstoneData = await req.json();
-
-    if (!body.name || !body.planet) {
-      return NextResponse.json(
-        { error: "Gemstone Name and Planet are required." },
-        { status: 400 }
-      );
+    const session = await verifyAdminSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const newGemstone: GemstoneData = {
-      _id: Date.now().toString(),
-      name: body.name,
-      planet: body.planet,
-      rati: body.rati || "",
-      grade: body.grade || "",
-      mantra: body.mantra || "",
-      day: body.day || "",
-      finger: body.finger || "",
-      prices: body.prices || [],
-    };
+    const body = await req.json();
+    const { id, name, prices, active } = body;
 
-    gemstonesStore.push(newGemstone);
+    if (!name || !Array.isArray(prices)) {
+      return NextResponse.json({ error: 'Name and prices array are required' }, { status: 400 });
+    }
 
-    return NextResponse.json(newGemstone, { status: 201 });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to create gemstone entry." },
-      { status: 500 }
+    const gemId = id || name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+    const db = await getDb();
+
+    await db.collection('gemstones').updateOne(
+      { id: gemId },
+      {
+        $set: {
+          id: gemId,
+          name,
+          prices,
+          active: active !== undefined ? active : true,
+          updatedAt: new Date(),
+        },
+      },
+      { upsert: true }
     );
+
+    return NextResponse.json({ success: true, id: gemId });
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to save gemstone' }, { status: 500 });
   }
 }
 
-// PUT: Update an existing gemstone record
-export async function PUT(req: Request) {
-  try {
-    const body: GemstoneData = await req.json();
-    const { _id, ...updateFields } = body;
-
-    if (!_id) {
-      return NextResponse.json(
-        { error: "Gemstone ID is required for update." },
-        { status: 400 }
-      );
-    }
-
-    const index = gemstonesStore.findIndex((g) => g._id === _id);
-
-    if (index === -1) {
-      return NextResponse.json(
-        { error: "Gemstone not found." },
-        { status: 404 }
-      );
-    }
-
-    gemstonesStore[index] = {
-      ...gemstonesStore[index],
-      ...updateFields,
-    };
-
-    return NextResponse.json(gemstonesStore[index], { status: 200 });
-  } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to update gemstone entry." },
-      { status: 500 }
-    );
-  }
-}
-
-// DELETE: Delete a gemstone by ID
 export async function DELETE(req: Request) {
   try {
+    const session = await verifyAdminSession();
+    if (!session) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get("id");
+    const id = searchParams.get('id');
 
     if (!id) {
-      return NextResponse.json(
-        { error: "Gemstone ID parameter is missing." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Gemstone ID required' }, { status: 400 });
     }
 
-    const initialLength = gemstonesStore.length;
-    gemstonesStore = gemstonesStore.filter((g) => g._id !== id);
+    const db = await getDb();
+    await db.collection('gemstones').deleteOne({ id });
 
-    if (gemstonesStore.length === initialLength) {
-      return NextResponse.json(
-        { error: "Gemstone not found." },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(
-      { message: "Gemstone deleted successfully." },
-      { status: 200 }
-    );
+    return NextResponse.json({ success: true });
   } catch (error) {
-    return NextResponse.json(
-      { error: "Failed to delete gemstone entry." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to delete gemstone' }, { status: 500 });
   }
 }
