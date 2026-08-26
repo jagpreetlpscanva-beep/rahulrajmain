@@ -1,24 +1,36 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import { Plus, Trash2, Edit2 } from "lucide-react";
 
-interface PriceOption {
-  caratOrWeight: string;
-  price: number;
-  quality?: string;
-}
-
-interface Gemstone {
-  id: string;
+export interface Gemstone {
+  _id?: string;
   name: string;
-  prices: PriceOption[];
-  active: boolean;
+  planet: string;
+  rati: string;
+  grade: string;
+  mantra: string;
+  day: string;
+  finger: string;
+  prices: number[]; // Multiple price options added by admin
 }
+
+const DEFAULT_GEMSTONE: Gemstone = {
+  name: "",
+  planet: "",
+  rati: "",
+  grade: "",
+  mantra: "",
+  day: "",
+  finger: "",
+  prices: [1100, 2100, 5100],
+};
 
 export default function GemstonesManager() {
   const [gemstones, setGemstones] = useState<Gemstone[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [editingGem, setEditingGem] = useState<Partial<Gemstone> | null>(null);
+  const [formData, setFormData] = useState<Gemstone>(DEFAULT_GEMSTONE);
+  const [priceInput, setPriceInput] = useState<string>("");
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchGemstones();
@@ -26,209 +38,222 @@ export default function GemstonesManager() {
 
   const fetchGemstones = async () => {
     try {
-      setLoading(true);
-      const res = await fetch('/api/admin/gemstones');
-      if (res.ok) {
-        const data = await res.json();
-        setGemstones(data);
-      }
+      const res = await fetch("/api/admin/gemstones");
+      const data = await res.json();
+      if (Array.isArray(data)) setGemstones(data);
     } catch (err) {
-      console.error('Failed to load gemstones:', err);
-    } finally {
-      setLoading(false);
+      console.error("Failed to load gemstones", err);
     }
   };
 
-  const handleSave = async () => {
-    if (!editingGem?.name) return;
+  const handleAddPrice = () => {
+    const val = parseFloat(priceInput);
+    if (!isNaN(val) && val > 0) {
+      setFormData({ ...formData, prices: [...formData.prices, val] });
+      setPriceInput("");
+    }
+  };
+
+  const handleRemovePrice = (index: number) => {
+    const updated = formData.prices.filter((_, i) => i !== index);
+    setFormData({ ...formData, prices: updated });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      const res = await fetch('/api/admin/gemstones', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingGem),
+      const res = await fetch("/api/admin/gemstones", {
+        method: editingId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingId ? { ...formData, _id: editingId } : formData),
       });
+
       if (res.ok) {
-        setEditingGem(null);
         fetchGemstones();
+        setFormData(DEFAULT_GEMSTONE);
+        setEditingId(null);
       }
     } catch (err) {
-      console.error('Failed to save gemstone:', err);
+      console.error("Failed to save gemstone", err);
     }
+  };
+
+  const handleEdit = (gem: Gemstone) => {
+    setEditingId(gem._id || null);
+    setFormData({ ...gem, prices: gem.prices || [] });
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this gemstone?')) return;
+    if (!confirm("Are you sure?")) return;
     try {
-      const res = await fetch(`/api/admin/gemstones?id=${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        fetchGemstones();
-      }
+      await fetch(`/api/admin/gemstones?id=${id}`, { method: "DELETE" });
+      fetchGemstones();
     } catch (err) {
-      console.error('Failed to delete gemstone:', err);
+      console.error("Failed to delete", err);
     }
   };
 
-  const addPriceTier = () => {
-    if (!editingGem) return;
-    const prices = editingGem.prices || [];
-    setEditingGem({
-      ...editingGem,
-      prices: [...prices, { caratOrWeight: '', price: 0, quality: '' }],
-    });
-  };
-
-  const updatePriceTier = (index: number, field: keyof PriceOption, value: any) => {
-    if (!editingGem || !editingGem.prices) return;
-    const updatedPrices = [...editingGem.prices];
-    updatedPrices[index] = { ...updatedPrices[index], [field]: value };
-    setEditingGem({ ...editingGem, prices: updatedPrices });
-  };
-
-  const removePriceTier = (index: number) => {
-    if (!editingGem || !editingGem.prices) return;
-    const updatedPrices = editingGem.prices.filter((_, i) => i !== index);
-    setEditingGem({ ...editingGem, prices: updatedPrices });
-  };
-
   return (
-    <div className="bg-white p-6 rounded-xl shadow-md space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-amber-900">Gemstone Pricing & Controls</h2>
-        <button
-          onClick={() => setEditingGem({ name: '', prices: [], active: true })}
-          className="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-amber-700 font-medium"
-        >
-          + Add New Gemstone
-        </button>
-      </div>
+    <div className="p-6 bg-white rounded-xl shadow-md space-y-6">
+      <h2 className="text-2xl font-bold text-amber-900">Gemstones Master Settings</h2>
 
-      {loading ? (
-        <p className="text-gray-500">Loading gemstones...</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {gemstones.map((gem) => (
-            <div key={gem.id} className="border border-amber-200 rounded-lg p-4 space-y-3 bg-amber-50/30">
-              <div className="flex justify-between items-center">
-                <h3 className="font-semibold text-amber-900 text-lg">{gem.name}</h3>
-                <div className="space-x-2">
-                  <button
-                    onClick={() => setEditingGem(gem)}
-                    className="text-amber-700 hover:text-amber-900 text-sm font-medium"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(gem.id)}
-                    className="text-red-600 hover:text-red-800 text-sm font-medium"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-xs font-semibold text-gray-500 uppercase">Prices & Tiers:</p>
-                {gem.prices && gem.prices.length > 0 ? (
-                  <ul className="text-sm space-y-1">
-                    {gem.prices.map((p, idx) => (
-                      <li key={idx} className="flex justify-between text-gray-700 bg-white px-3 py-1.5 rounded border border-gray-100">
-                        <span>{p.caratOrWeight} {p.quality ? `(${p.quality})` : ''}</span>
-                        <span className="font-medium text-amber-900">₹{p.price}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-xs text-gray-400 italic">No pricing tiers defined.</p>
-                )}
-              </div>
-            </div>
-          ))}
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-4 rounded-lg bg-amber-50/40">
+        <div>
+          <label className="block text-sm font-semibold mb-1">Gemstone Name</label>
+          <input
+            type="text"
+            required
+            placeholder="e.g. Ruby (Manikyam)"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            className="w-full p-2 border rounded-md"
+          />
         </div>
-      )}
 
-      {editingGem && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-lg w-full p-6 space-y-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-amber-900">
-              {editingGem.id ? 'Edit Gemstone' : 'Add New Gemstone'}
-            </h3>
+        <div>
+          <label className="block text-sm font-semibold mb-1">Planet (Grah)</label>
+          <input
+            type="text"
+            required
+            placeholder="e.g. Sun (Surya)"
+            value={formData.planet}
+            onChange={(e) => setFormData({ ...formData, planet: e.target.value })}
+            className="w-full p-2 border rounded-md"
+          />
+        </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Gemstone Name</label>
-              <input
-                type="text"
-                value={editingGem.name || ''}
-                onChange={(e) => setEditingGem({ ...editingGem, name: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:ring-amber-500 focus:border-amber-500"
-                placeholder="e.g. Yellow Sapphire (Pukhraj)"
-              />
-            </div>
+        <div>
+          <label className="block text-sm font-semibold mb-1">Rati / Weight</label>
+          <input
+            type="text"
+            placeholder="e.g. 5.25 - 7 Rati"
+            value={formData.rati}
+            onChange={(e) => setFormData({ ...formData, rati: e.target.value })}
+            className="w-full p-2 border rounded-md"
+          />
+        </div>
 
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <label className="block text-sm font-medium text-gray-700">Price Options & Tiers</label>
-                <button
-                  type="button"
-                  onClick={addPriceTier}
-                  className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded hover:bg-amber-200"
-                >
-                  + Add Tier
+        <div>
+          <label className="block text-sm font-semibold mb-1">Grade / Quality</label>
+          <input
+            type="text"
+            placeholder="e.g. Natural / Unheated"
+            value={formData.grade}
+            onChange={(e) => setFormData({ ...formData, grade: e.target.value })}
+            className="w-full p-2 border rounded-md"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold mb-1">Wearing Day</label>
+          <input
+            type="text"
+            placeholder="e.g. Sunday Morning"
+            value={formData.day}
+            onChange={(e) => setFormData({ ...formData, day: e.target.value })}
+            className="w-full p-2 border rounded-md"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold mb-1">Wearing Finger</label>
+          <input
+            type="text"
+            placeholder="e.g. Ring Finger (Right Hand)"
+            value={formData.finger}
+            onChange={(e) => setFormData({ ...formData, finger: e.target.value })}
+            className="w-full p-2 border rounded-md"
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-semibold mb-1">Mantra</label>
+          <input
+            type="text"
+            placeholder="e.g. Om Suryaya Namah (108 times)"
+            value={formData.mantra}
+            onChange={(e) => setFormData({ ...formData, mantra: e.target.value })}
+            className="w-full p-2 border rounded-md"
+          />
+        </div>
+
+        {/* Dynamic Multiple Price Section */}
+        <div className="md:col-span-2 border-t pt-3">
+          <label className="block text-sm font-semibold mb-1">Add Dynamic Prices (Admin Multiple Prices)</label>
+          <div className="flex gap-2 mb-2">
+            <input
+              type="number"
+              placeholder="Enter price (e.g. 3500)"
+              value={priceInput}
+              onChange={(e) => setPriceInput(e.target.value)}
+              className="p-2 border rounded-md flex-1"
+            />
+            <button
+              type="button"
+              onClick={handleAddPrice}
+              className="bg-amber-800 text-white px-4 py-2 rounded-md hover:bg-amber-900"
+            >
+              Add Price
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {formData.prices.map((p, idx) => (
+              <span key={idx} className="bg-amber-200 text-amber-950 px-3 py-1 rounded-full text-sm font-semibold flex items-center gap-2">
+                ₹{p}
+                <button type="button" onClick={() => handleRemovePrice(idx)} className="text-red-600 font-bold hover:text-red-800">
+                  ×
                 </button>
-              </div>
-
-              {(editingGem.prices || []).map((tier, idx) => (
-                <div key={idx} className="flex gap-2 items-center bg-gray-50 p-2 rounded-lg border">
-                  <input
-                    type="text"
-                    placeholder="Weight/Carat (e.g. 5 Ratti)"
-                    value={tier.caratOrWeight}
-                    onChange={(e) => updatePriceTier(idx, 'caratOrWeight', e.target.value)}
-                    className="flex-1 border text-sm rounded px-2 py-1"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Price (₹)"
-                    value={tier.price || ''}
-                    onChange={(e) => updatePriceTier(idx, 'price', parseFloat(e.target.value) || 0)}
-                    className="w-24 border text-sm rounded px-2 py-1"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Quality"
-                    value={tier.quality || ''}
-                    onChange={(e) => updatePriceTier(idx, 'quality', e.target.value)}
-                    className="w-24 border text-sm rounded px-2 py-1"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removePriceTier(idx)}
-                    className="text-red-500 hover:text-red-700 font-bold px-1"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4 border-t">
-              <button
-                type="button"
-                onClick={() => setEditingGem(null)}
-                className="px-4 py-2 border text-gray-600 rounded-lg text-sm hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSave}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700"
-              >
-                Save Gemstone
-              </button>
-            </div>
+              </span>
+            ))}
           </div>
         </div>
-      )}
+
+        <div className="md:col-span-2">
+          <button type="submit" className="w-full bg-amber-900 text-white py-2 rounded-md hover:bg-amber-950 font-bold">
+            {editingId ? "Update Gemstone" : "Save Gemstone Master"}
+          </button>
+        </div>
+      </form>
+
+      {/* Gemstones List Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse border border-amber-200">
+          <thead>
+            <tr className="bg-amber-100 text-amber-900">
+              <th className="border p-2">Gemstone</th>
+              <th className="border p-2">Planet</th>
+              <th className="border p-2">Details</th>
+              <th className="border p-2">Prices</th>
+              <th className="border p-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {gemstones.map((gem) => (
+              <tr key={gem._id} className="text-center">
+                <td className="border p-2 font-semibold">{gem.name}</td>
+                <td className="border p-2">{gem.planet}</td>
+                <td className="border p-2 text-sm text-left">
+                  <div><b>Finger:</b> {gem.finger}</div>
+                  <div><b>Day:</b> {gem.day}</div>
+                  <div><b>Rati:</b> {gem.rati}</div>
+                </td>
+                <td className="border p-2">
+                  {gem.prices?.map((p) => `₹${p}`).join(", ")}
+                </td>
+                <td className="border p-2 space-x-2">
+                  <button onClick={() => handleEdit(gem)} className="p-1 text-blue-600 hover:text-blue-800">
+                    <Edit2 size={18} />
+                  </button>
+                  <button onClick={() => handleDelete(gem._id!)} className="p-1 text-red-600 hover:text-red-800">
+                    <Trash2 size={18} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
