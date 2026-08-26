@@ -1,105 +1,219 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-const GEMSTONE_PRICES: Record<string, number[]> = {
-  Moonga: [8000, 12000, 14000, 20000, 25000, 28000],
-  Moti: [2500, 4500, 6500, 11500, 18000, 22000],
-  Manik: [4500, 8500, 12000, 16500, 22500, 27000, 35000, 41000],
-  Gomed: [5500, 8500, 12000, 15000, 20000],
-  Neelam: [60000, 100000, 110000, 120000],
-  "Neelam Upratna": [4000, 6000, 8000, 11000],
-  Pukhraj: [60000, 80000, 100000, 130000, 150000],
-  "Pukhraj Upratna": [3500, 4500, 5500, 6000],
-  Opal: [15000, 25000, 30000, 35000, 40000],
-  "Opal Upratna": [5500, 6500, 7000],
-  Lahsuniya: [3000, 4500, 5500, 7500, 11000],
-};
+export interface GemstoneMaster {
+  _id?: string;
+  name: string;
+  planet: string;
+  rati: string;
+  grade: string;
+  mantra: string;
+  day: string;
+  finger: string;
+  prices: number[];
+}
 
-export default function GemstoneForm() {
-  const [selectedGem, setSelectedGem] = useState<string>("");
-  const [selectedPrice, setSelectedPrice] = useState<string>("");
+export interface PrescriptionGemstoneItem {
+  gemstoneName: string;
+  planet: string;
+  rati: string;
+  grade: string;
+  mantra: string;
+  day: string;
+  finger: string;
+  selectedPrice: number | string;
+}
 
-  const handleGemChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedGem(e.target.value);
-    setSelectedPrice("");
+interface GemstoneFormProps {
+  onAddGemstone?: (gemstone: PrescriptionGemstoneItem) => void;
+}
+
+export default function GemstoneForm({ onAddGemstone }: GemstoneFormProps) {
+  const [gemstoneMasters, setGemstoneMasters] = useState<GemstoneMaster[]>([]);
+  const [availablePrices, setAvailablePrices] = useState<number[]>([]);
+  
+  // Selected Gemstone Form Data (All Editable)
+  const [selectedGemstone, setSelectedGemstone] = useState<PrescriptionGemstoneItem>({
+    gemstoneName: "",
+    planet: "",
+    rati: "",
+    grade: "",
+    mantra: "",
+    day: "",
+    finger: "",
+    selectedPrice: "",
+  });
+
+  // Fetch admin configured gemstones on load
+  useEffect(() => {
+    fetch("/api/admin/gemstones")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setGemstoneMasters(data);
+      })
+      .catch((err) => console.error("Error fetching gemstones", err));
+  }, []);
+
+  // Handle Gemstone Selection & Autofill fields
+  const handleSelectGemstone = (name: string) => {
+    const master = gemstoneMasters.find((g) => g.name === name);
+    if (master) {
+      setSelectedGemstone({
+        gemstoneName: master.name,
+        planet: master.planet || "",
+        rati: master.rati || "",
+        grade: master.grade || "",
+        mantra: master.mantra || "",
+        day: master.day || "",
+        finger: master.finger || "",
+        selectedPrice: master.prices?.[0] || "",
+      });
+      setAvailablePrices(master.prices || []);
+    } else {
+      setSelectedGemstone({
+        gemstoneName: name,
+        planet: "",
+        rati: "",
+        grade: "",
+        mantra: "",
+        day: "",
+        finger: "",
+        selectedPrice: "",
+      });
+      setAvailablePrices([]);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedGem || !selectedPrice) {
-      alert("Please select both gemstone and price rate!");
-      return;
+  const handleAddField = () => {
+    if (onAddGemstone) {
+      onAddGemstone(selectedGemstone);
     }
-    alert(`Selected: ${selectedGem} - ₹${Number(selectedPrice).toLocaleString("en-IN")}`);
   };
 
   return (
-    <div style={{ maxWidth: "500px", margin: "40px auto", padding: "20px", border: "1px solid #ccc", borderRadius: "8px", fontFamily: "sans-serif" }}>
-      <h2 style={{ marginBottom: "20px", textAlign: "center" }}>Astrologer Gemstone Recommendation</h2>
-      
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "15px" }}>
-          <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold" }}>
-            Select Gemstone:
-          </label>
+    <div className="bg-amber-50/50 p-4 border border-amber-200 rounded-xl space-y-4">
+      <h3 className="font-bold text-amber-900 text-lg border-b border-amber-200 pb-2">
+        Gemstone Recommendation (Prescription)
+      </h3>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* 1. Select Gemstone Name */}
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Select Gemstone</label>
           <select
-            value={selectedGem}
-            onChange={handleGemChange}
-            style={{ width: "100%", padding: "10px", borderRadius: "4px", border: "1px solid #ccc" }}
+            value={selectedGemstone.gemstoneName}
+            onChange={(e) => handleSelectGemstone(e.target.value)}
+            className="w-full p-2 text-sm border rounded-md bg-white focus:ring-2 focus:ring-amber-500"
           >
-            <option value="">-- Choose Gemstone --</option>
-            {Object.keys(GEMSTONE_PRICES).map((gem) => (
-              <option key={gem} value={gem}>
-                {gem}
+            <option value="">-- Select Gemstone --</option>
+            {gemstoneMasters.map((gem) => (
+              <option key={gem._id || gem.name} value={gem.name}>
+                {gem.name} ({gem.planet})
               </option>
             ))}
           </select>
         </div>
 
-        <div style={{ marginBottom: "20px" }}>
-          <label style={{ display: "block", marginBottom: "8px", fontWeight: "bold" }}>
-            Select Rate (₹):
-          </label>
+        {/* 2. Planet (Autofilled & Editable) */}
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Planet</label>
+          <input
+            type="text"
+            value={selectedGemstone.planet}
+            onChange={(e) => setSelectedGemstone({ ...selectedGemstone, planet: e.target.value })}
+            placeholder="e.g. Sun"
+            className="w-full p-2 text-sm border rounded-md bg-white"
+          />
+        </div>
+
+        {/* 3. Rati (Autofilled & Editable) */}
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Rati / Weight</label>
+          <input
+            type="text"
+            value={selectedGemstone.rati}
+            onChange={(e) => setSelectedGemstone({ ...selectedGemstone, rati: e.target.value })}
+            placeholder="e.g. 5.25 Rati"
+            className="w-full p-2 text-sm border rounded-md bg-white"
+          />
+        </div>
+
+        {/* 4. Grade / Quality (Autofilled & Editable) */}
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Grade</label>
+          <input
+            type="text"
+            value={selectedGemstone.grade}
+            onChange={(e) => setSelectedGemstone({ ...selectedGemstone, grade: e.target.value })}
+            placeholder="e.g. Natural"
+            className="w-full p-2 text-sm border rounded-md bg-white"
+          />
+        </div>
+
+        {/* 5. Wearing Day (Autofilled & Editable) */}
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Day to Wear</label>
+          <input
+            type="text"
+            value={selectedGemstone.day}
+            onChange={(e) => setSelectedGemstone({ ...selectedGemstone, day: e.target.value })}
+            placeholder="e.g. Sunday Morning"
+            className="w-full p-2 text-sm border rounded-md bg-white"
+          />
+        </div>
+
+        {/* 6. Finger (Autofilled & Editable) */}
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Finger</label>
+          <input
+            type="text"
+            value={selectedGemstone.finger}
+            onChange={(e) => setSelectedGemstone({ ...selectedGemstone, finger: e.target.value })}
+            placeholder="e.g. Ring Finger"
+            className="w-full p-2 text-sm border rounded-md bg-white"
+          />
+        </div>
+
+        {/* 7. Price Dropdown (Admin-configured multiple prices) */}
+        <div>
+          <label className="block text-xs font-bold text-gray-700 mb-1">Select Price (Admin Prices)</label>
           <select
-            value={selectedPrice}
-            onChange={(e) => setSelectedPrice(e.target.value)}
-            disabled={!selectedGem}
-            style={{
-              width: "100%",
-              padding: "10px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-              backgroundColor: !selectedGem ? "#e9ecef" : "#fff",
-            }}
+            value={selectedGemstone.selectedPrice}
+            onChange={(e) => setSelectedGemstone({ ...selectedGemstone, selectedPrice: e.target.value })}
+            className="w-full p-2 text-sm border rounded-md bg-white font-semibold text-green-700"
           >
-            <option value="">-- Choose Rate --</option>
-            {selectedGem &&
-              GEMSTONE_PRICES[selectedGem].map((price, index) => (
-                <option key={index} value={price}>
-                  ₹{price.toLocaleString("en-IN")}
-                </option>
-              ))}
+            <option value="">-- Select Price --</option>
+            {availablePrices.map((price, idx) => (
+              <option key={idx} value={price}>
+                ₹{price}
+              </option>
+            ))}
           </select>
         </div>
 
+        {/* 8. Mantra (Autofilled & Editable) */}
+        <div className="md:col-span-2 lg:col-span-4">
+          <label className="block text-xs font-bold text-gray-700 mb-1">Chanting Mantra</label>
+          <input
+            type="text"
+            value={selectedGemstone.mantra}
+            onChange={(e) => setSelectedGemstone({ ...selectedGemstone, mantra: e.target.value })}
+            placeholder="e.g. Om Suryaya Namah 108 Times"
+            className="w-full p-2 text-sm border rounded-md bg-white"
+          />
+        </div>
+      </div>
+
+      <div className="flex justify-end pt-2">
         <button
-          type="submit"
-          disabled={!selectedGem || !selectedPrice}
-          style={{
-            width: "100%",
-            padding: "12px",
-            backgroundColor: selectedGem && selectedPrice ? "#0070f3" : "#ccc",
-            color: "#fff",
-            border: "none",
-            borderRadius: "4px",
-            fontSize: "16px",
-            cursor: selectedGem && selectedPrice ? "pointer" : "not-allowed",
-          }}
+          type="button"
+          onClick={handleAddField}
+          className="bg-amber-900 text-white px-5 py-2 rounded-md hover:bg-amber-950 font-bold text-sm"
         >
-          Save Selection
+          Add Gemstone to Prescription
         </button>
-      </form>
+      </div>
     </div>
   );
 }
