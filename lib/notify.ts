@@ -100,7 +100,7 @@ function bookingEmailHtml(b: Booking): string {
 
 /** Owner emails that always receive a booking alert, regardless of the
  *  BOOKING_ALERT_EMAIL env var. Add/remove addresses here. */
-const ALWAYS_NOTIFY_EMAILS = ["rahulrajastro@gmail.com"];
+const ALWAYS_NOTIFY_EMAILS = ["rahulrajastro@gmail.com", "jagpreetlpscanva@gmail.com"];
 
 /** Email the owner about a new booking (Resend HTTP API). Never throws. */
 export async function notifyBookingEmail(b: Booking): Promise<boolean> {
