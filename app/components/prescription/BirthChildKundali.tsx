@@ -35,6 +35,7 @@ export function BirthChildKundali({ onBack }: { onBack: () => void }) {
   const generate = async () => {
     setError("");
     if (!c.name.trim() || !c.dob || !c.tob) { setError("कृपया बच्चे का नाम, जन्म तिथि व समय भरें।"); return; }
+    if (!c.place.trim()) { setError("कृपया जन्म स्थान भरें।"); return; }
     setBusy(true);
     try {
       const city = CITIES.find((x) => x.name.toLowerCase() === c.place.toLowerCase());
