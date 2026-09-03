@@ -35,6 +35,10 @@ export function KundaliMilan({ onBack }: { onBack: () => void }) {
       setError("कृपया लड़के और लड़की — दोनों का नाम, जन्म तिथि व समय भरें।");
       return;
     }
+    if (!boy.place.trim() || !girl.place.trim()) {
+      setError("कृपया लड़के और लड़की — दोनों का जन्म स्थान भरें।");
+      return;
+    }
     setBusy(true);
     try {
       const mk = (p: Person) => { const c = cityOf(p.place); return { dob: p.dob, tob: p.tob, place: p.place, lat: c?.lat, lon: c?.lon, tzone: c?.tzone }; };
