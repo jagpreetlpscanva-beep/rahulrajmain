@@ -173,6 +173,11 @@ export function PrescriptionPad() {
   // auto-generate Kundali + auto-fill dasha once birth date + time are present
   useEffect(() => {
     if (!dob || !tob) return;
+    // जन्म स्थान खाली कर दिया गया — पुरानी/गलत कुंडली दिखाने के बजाय साफ कर दें और रुक जाएं।
+    if (!place.trim()) {
+      setChart(null); setGochar(null); setKundali(null); setKundaliState("idle");
+      return;
+    }
     const c = CITIES.find((x) => x.name.toLowerCase() === place.toLowerCase());
     setKundaliState("loading");
     const t = setTimeout(() => {
