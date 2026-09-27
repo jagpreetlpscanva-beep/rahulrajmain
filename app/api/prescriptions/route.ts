@@ -23,8 +23,8 @@ export async function POST(req: Request) {
   } catch {
     /* ignore */
   }
-  if (!b.patientName || !b.mobile) {
-    return NextResponse.json({ error: "Patient name and mobile are required" }, { status: 400 });
+  if (!b.patientName) {
+    return NextResponse.json({ error: "Patient name is required" }, { status: 400 });
   }
 
   const c: Consultation = {
@@ -69,8 +69,8 @@ export async function PUT(req: Request) {
   } catch {
     /* ignore */
   }
-  if (!b.patientName || !b.mobile) {
-    return NextResponse.json({ error: "Patient name and mobile are required" }, { status: 400 });
+  if (!b.patientName) {
+    return NextResponse.json({ error: "Patient name is required" }, { status: 400 });
   }
 
   const patch: Partial<Consultation> = {
