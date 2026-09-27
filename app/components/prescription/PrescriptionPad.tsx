@@ -623,157 +623,203 @@ export function PrescriptionPad() {
           </div>
           <p className="mt-2 text-[11px] text-ink/50">दिनांक: {fmtDMY(now.toISOString().slice(0, 10))} · समय: {now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} · ज्योतिषी: <b>{astrologer}</b></p>
 
-          {/* kundali (BIG) + dasha fields */}
-          <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-[1fr,1fr]">
-            <div>
-              <p className="mb-2 font-serif text-xl font-bold text-[#a01414]">{L("heading_kundali", "लग्न कुण्डली")}</p>
-              {/* D1 chart — always shows natal Lagna chart */}
-              <div onClick={() => chart && setZoom(true)} className={`grid aspect-square w-full max-w-[380px] place-items-center rounded-xl border-2 border-[#a01414]/70 bg-[#fffdf8] p-3 ${chart ? "cursor-zoom-in" : ""}`}>
-                {kundaliState === "loading" ? <span className="text-sm text-ink/50">बन रही है…</span>
-                  : chart ? <img src={chart} alt="लग्न कुण्डली" className="h-full w-full object-contain" />
-                  : <span className="px-4 text-center text-xs text-ink/45">नाम, जन्म तिथि, समय व स्थान भरते ही कुण्डली अपने आप बन जायेगी।</span>}
-              </div>
-              {chart && <p className="rx-noprint mt-1 text-center text-[11px] text-ink/45">(बड़ा देखने के लिए क्लिक करें)</p>}
+          {/* ══ KUNDALI + GOCHAR side by side, then chart selector, then dasha fields ══ */}
 
-              {/* ── Chart selector ── */}
-              {chart && (
-                <div className="rx-noprint mt-3 rounded-xl border border-ink/10 bg-[#faf6ee] p-3">
-                  <p className="mb-2 text-[11px] font-bold text-[#a01414]">विभाजन चार्ट / Gochar चुनें</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {(["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10", "Gochar"] as DivisionCode[]).map((div) => {
-                      const labels: Record<DivisionCode, string> = {
-                        D1: "D1 लग्न", D2: "D2 होरा", D3: "D3 द्रेष्काण", D4: "D4 चतुर्थांश",
-                        D5: "D5 पंचमांश", D6: "D6 षष्ठांश", D7: "D7 सप्तमांश",
-                        D8: "D8 अष्टमांश", D9: "D9 नवांश", D10: "D10 दशमांश", Gochar: "गोचर",
-                      };
-                      const isActive = selectedDiv === div;
-                      return (
-                        <button
-                          key={div}
-                          onClick={() => selectDiv(div)}
-                          disabled={divBusy}
-                          className={`rounded-md px-2 py-1 text-[11px] font-semibold transition-colors ${
-                            isActive
-                              ? div === "Gochar"
-                                ? "bg-[#1a5276] text-white"
-                                : "bg-[#a01414] text-white"
-                              : "border border-ink/20 bg-white text-ink/70 hover:border-[#a01414]/50 hover:text-[#a01414]"
-                          }`}
-                        >
-                          {labels[div]}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  {/* Selected divisional chart display */}
-                  {divBusy ? (
-                    <div className="mt-3 flex h-[280px] items-center justify-center text-sm text-ink/50">चार्ट बन रहा है…</div>
-                  ) : divChart && selectedDiv !== "D1" ? (
-                    <div className="mt-3">
-                      <div className={`grid aspect-square w-full max-w-[320px] place-items-center rounded-xl border-2 p-2 ${selectedDiv === "Gochar" ? "border-[#1a5276]/70 bg-[#f0f8ff]" : "border-[#8a2020]/40 bg-[#fffdf8]"}`}>
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={divChart} alt={selectedDiv} className="h-full w-full object-contain" />
-                      </div>
-                      {selectedDiv === "Gochar" && (
-                        <p className="mt-1 text-[10px] text-ink/45">गोचर — वर्तमान तिथि के ग्रह, जन्म लग्न पर आधारित।</p>
-                      )}
-                    </div>
-                  ) : null}
-                </div>
-              )}
+          {/* Row 1: Lagna (left) + Gochar (right) — always visible once chart loads */}
+          <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {/* Lagna D1 */}
+            <div>
+              <p className="mb-1.5 font-serif text-base font-bold text-[#a01414]">{L("heading_kundali", "लग्न कुण्डली")} (D1)</p>
+              <div
+                onClick={() => chart && setZoom(true)}
+                className={`grid aspect-square w-full place-items-center rounded-xl border-2 border-[#a01414]/70 bg-[#fffdf8] p-2 ${chart ? "cursor-zoom-in" : ""}`}
+              >
+                {kundaliState === "loading"
+                  ? <span className="text-sm text-ink/50">बन रही है…</span>
+                  : chart
+                  ? <img src={chart} alt="लग्न कुण्डली" className="h-full w-full object-contain" />
+                  : <span className="px-3 text-center text-xs text-ink/40">जन्म विवरण भरते ही कुण्डली अपने आप बनेगी।</span>}
+              </div>
+              {chart && <p className="rx-noprint mt-1 text-center text-[10px] text-ink/40">🔍 बड़ा देखने के लिए क्लिक करें</p>}
             </div>
-            <div className="space-y-2">
-              {([
-                ["mahadasha", L("label_mahadasha", "महादशा"), mahadasha, setMahadasha],
-                ["antardasha", L("label_antardasha", "अन्तर्दशा"), antardasha, setAntardasha],
-                ["pratyantar", L("label_pratyantar", "प्र० दशा"), pratyantar, setPratyantar],
-                ["dosha", L("label_dosha", "दोष"), dosha, setDosha],
-                ["yog", L("label_yog", "योग"), yog, setYog],
-              ] as [string, string, string, (v: string) => void][]).map(([key, label, val, set]) => (
-                <div key={key} className="flex items-center gap-2">
-                  <span className="w-20 shrink-0 text-sm font-bold text-[#a01414]">{label} —</span>
-                  <input className={inp} value={val} onChange={(e) => { markDasha(key); set(e.target.value); }} />
-                </div>
-              ))}
+
+            {/* Gochar — always right of Lagna */}
+            <div>
+              <p className="mb-1.5 font-serif text-base font-bold text-[#1a5276]">गोचर (वर्तमान)</p>
+              <div
+                onClick={() => gochar && setGocharZoom(true)}
+                className={`grid aspect-square w-full place-items-center rounded-xl border-2 border-[#1a5276]/60 bg-[#f0f7ff] p-2 ${gochar ? "cursor-zoom-in" : ""}`}
+              >
+                {kundaliState === "loading"
+                  ? <span className="text-sm text-ink/50">बन रही है…</span>
+                  : gochar
+                  ? <img src={gochar} alt="गोचर कुण्डली" className="h-full w-full object-contain" />
+                  : <span className="px-3 text-center text-xs text-ink/40">जन्म विवरण भरते ही गोचर अपने आप बनेगा।</span>}
+              </div>
+              {gochar && <p className="rx-noprint mt-1 text-center text-[10px] text-ink/40">🔍 बड़ा देखने के लिए क्लिक करें</p>}
             </div>
           </div>
 
-          {/* ── Full Vimshottari Dasha Section (replaces ग्रह विवरण) ── */}
+          {/* Row 2: D2–D10 chart selector (screen only) */}
+          {chart && (
+            <div className="rx-noprint mt-4 rounded-xl border border-ink/10 bg-[#faf6ee] p-3">
+              <p className="mb-2 text-[11px] font-bold text-[#a01414]">अन्य विभाजन चार्ट</p>
+              <div className="flex flex-wrap gap-1.5">
+                {(["D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10"] as DivisionCode[]).map((div) => {
+                  const labels: Record<string, string> = {
+                    D2: "D2 होरा", D3: "D3 द्रेष्काण", D4: "D4 चतुर्थांश",
+                    D5: "D5 पंचमांश", D6: "D6 षष्ठांश", D7: "D7 सप्तमांश",
+                    D8: "D8 अष्टमांश", D9: "D9 नवांश", D10: "D10 दशमांश",
+                  };
+                  const isActive = selectedDiv === div;
+                  return (
+                    <button
+                      key={div}
+                      onClick={() => selectDiv(div)}
+                      disabled={divBusy}
+                      className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all ${
+                        isActive
+                          ? "bg-[#a01414] text-white shadow-sm"
+                          : "border border-ink/20 bg-white text-ink/65 hover:border-[#a01414]/40 hover:text-[#a01414]"
+                      }`}
+                    >
+                      {labels[div]}
+                    </button>
+                  );
+                })}
+                <button
+                  onClick={() => { setSelectedDiv("D1"); setDivChart(null); }}
+                  className="rounded-lg border border-ink/15 bg-white px-2.5 py-1 text-[11px] text-ink/45 hover:text-ink/70"
+                >
+                  बंद करें ✕
+                </button>
+              </div>
+              {divBusy && (
+                <div className="mt-3 flex h-8 items-center gap-2 text-sm text-ink/50">
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#a01414]/30 border-t-[#a01414]" />
+                  चार्ट बन रहा है…
+                </div>
+              )}
+              {!divBusy && divChart && selectedDiv !== "D1" && (
+                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="mb-1 text-[11px] font-semibold text-[#a01414]">{selectedDiv} चार्ट</p>
+                    <div className="aspect-square w-full rounded-xl border-2 border-[#8a2020]/40 bg-[#fffdf8] p-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={divChart} alt={selectedDiv} className="h-full w-full object-contain" />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Row 3: Dasha fields (editable) */}
+          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {([
+              ["mahadasha", L("label_mahadasha", "महादशा"), mahadasha, setMahadasha],
+              ["antardasha", L("label_antardasha", "अन्तर्दशा"), antardasha, setAntardasha],
+              ["pratyantar", L("label_pratyantar", "प्र० दशा"), pratyantar, setPratyantar],
+              ["dosha", L("label_dosha", "दोष"), dosha, setDosha],
+              ["yog", L("label_yog", "योग"), yog, setYog],
+            ] as [string, string, string, (v: string) => void][]).map(([key, label, val, set]) => (
+              <div key={key}>
+                <label className="mb-0.5 block text-[11px] font-bold text-[#a01414]">{label}</label>
+                <input className={inp} value={val} onChange={(e) => { markDasha(key); set(e.target.value); }} />
+              </div>
+            ))}
+          </div>
+
+          {/* ── Full Vimshottari Dasha Tree ── */}
           {fullDasha && (
-            <div className="rx-noprint mt-5 rounded-xl border border-ink/12 bg-[#faf6ee] p-4">
-              <p className="mb-3 font-serif text-lg font-bold text-[#a01414]">विम्शोत्तरी दशा</p>
-              <div className="space-y-2">
+            <div className="rx-noprint mt-5 overflow-hidden rounded-2xl border border-ink/10 bg-white shadow-sm">
+              {/* Header */}
+              <div className="flex items-center justify-between bg-gradient-to-r from-[#6d1414] to-[#a01414] px-4 py-3">
+                <p className="font-serif text-base font-bold text-white">विम्शोत्तरी दशा</p>
+                <div className="flex gap-2 text-[10px]">
+                  <span className="rounded-full bg-amber-400 px-2 py-0.5 font-bold text-white">वर्तमान</span>
+                  <span className="rounded-full bg-white/30 px-2 py-0.5 text-white">भूत</span>
+                  <span className="rounded-full bg-blue-400 px-2 py-0.5 font-bold text-white">भविष्य</span>
+                </div>
+              </div>
+
+              <div className="divide-y divide-ink/8">
                 {fullDasha.map((maha) => {
                   const mahaKey = maha.lord;
                   const isExpanded = !!expandedMaha[mahaKey];
-                  const statusColor = maha.status === "current"
-                    ? "bg-amber-50 border-amber-400"
-                    : maha.status === "past"
-                    ? "bg-white border-ink/15"
-                    : "bg-blue-50 border-blue-200";
-                  const labelColor = maha.status === "current"
-                    ? "text-amber-700"
-                    : maha.status === "past"
-                    ? "text-ink/50"
-                    : "text-blue-700";
+
+                  const isCurr = maha.status === "current";
+                  const isPast = maha.status === "past";
+                  const isFut  = maha.status === "future";
+
+                  const rowBg   = isCurr ? "bg-amber-50"  : isPast ? "bg-white" : "bg-blue-50/40";
+                  const dotColor= isCurr ? "bg-amber-500" : isPast ? "bg-ink/25" : "bg-blue-400";
+                  const titleCl = isCurr ? "text-amber-800 font-extrabold" : isPast ? "text-ink/45 font-semibold" : "text-blue-700 font-bold";
+
                   return (
-                    <div key={mahaKey} className={`rounded-lg border ${statusColor}`}>
+                    <div key={mahaKey} className={rowBg}>
+                      {/* Mahadasha row */}
                       <button
                         type="button"
-                        className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left"
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left active:bg-ink/5"
                         onClick={() => setExpandedMaha((p) => ({ ...p, [mahaKey]: !p[mahaKey] }))}
                       >
-                        <div className="flex items-center gap-2">
-                          <span className={`text-sm font-bold ${labelColor}`}>{maha.lord} महादशा</span>
-                          {maha.status === "current" && (
-                            <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold text-white">वर्तमान</span>
-                          )}
-                          {maha.status === "past" && (
-                            <span className="rounded-full bg-ink/25 px-2 py-0.5 text-[10px] text-white">भूत</span>
-                          )}
-                          {maha.status === "future" && (
-                            <span className="rounded-full bg-blue-400 px-2 py-0.5 text-[10px] font-bold text-white">भविष्य</span>
-                          )}
+                        {/* colour dot */}
+                        <span className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${dotColor}`} />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className={`text-sm ${titleCl}`}>{maha.lord} महादशा</span>
+                            {isCurr && <span className="rounded-full bg-amber-500 px-2 py-0.5 text-[9px] font-bold text-white">● अभी</span>}
+                            {isFut  && <span className="rounded-full bg-blue-400/20 px-2 py-0.5 text-[9px] font-semibold text-blue-600">आगामी</span>}
+                          </div>
+                          <p className="mt-0.5 text-[11px] text-ink/45">{fmtDate(maha.start)} → {fmtDate(maha.end)}</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[11px] text-ink/50">{fmtDate(maha.start)} – {fmtDate(maha.end)}</span>
-                          <span className="text-ink/50">{isExpanded ? "▲" : "▼"}</span>
-                        </div>
+                        <span className={`shrink-0 text-[13px] transition-transform ${isExpanded ? "rotate-90" : ""} text-ink/40`}>▶</span>
                       </button>
+
+                      {/* Antardashas */}
                       {isExpanded && (
-                        <div className="border-t border-ink/10 px-3 pb-3 pt-2 space-y-1">
+                        <div className="border-t border-ink/8 bg-white/60 pb-1">
                           {maha.antars.map((antar) => {
                             const antarKey = `${mahaKey}-${antar.lord}`;
                             const antarExpanded = !!expandedAntar[antarKey];
+                            const aCurr = antar.isCurrent;
                             return (
-                              <div key={antar.lord} className={`rounded-md border ${antar.isCurrent ? "border-amber-300 bg-amber-50/60" : "border-ink/10 bg-white"}`}>
+                              <div key={antar.lord} className={`mx-3 my-1 overflow-hidden rounded-lg border ${aCurr ? "border-amber-300 bg-amber-50" : "border-ink/8 bg-white"}`}>
                                 <button
                                   type="button"
-                                  className="flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left"
+                                  className="flex w-full items-center gap-2 px-3 py-2 text-left"
                                   onClick={() => setExpandedAntar((p) => ({ ...p, [antarKey]: !p[antarKey] }))}
                                 >
-                                  <div className="flex items-center gap-1.5">
-                                    <span className={`text-[12px] font-semibold ${antar.isCurrent ? "text-amber-700" : "text-ink/70"}`}>
-                                      {antar.lord} अन्तर्दशा
-                                    </span>
-                                    {antar.isCurrent && (
-                                      <span className="rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-bold text-white">अभी</span>
-                                    )}
+                                  <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${aCurr ? "bg-amber-500" : "bg-ink/20"}`} />
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-center gap-1">
+                                      <span className={`text-[12px] font-semibold ${aCurr ? "text-amber-800" : "text-ink/65"}`}>{antar.lord} अन्तर्दशा</span>
+                                      {aCurr && <span className="rounded bg-amber-500 px-1.5 py-px text-[9px] font-bold text-white">चल रही</span>}
+                                    </div>
+                                    <p className="text-[10px] text-ink/40">{fmtDate(antar.start)} → {fmtDate(antar.end)}</p>
                                   </div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span className="text-[10px] text-ink/45">{fmtDate(antar.start)} – {fmtDate(antar.end)}</span>
-                                    <span className="text-[10px] text-ink/40">{antarExpanded ? "▲" : "▼"}</span>
-                                  </div>
+                                  <span className={`shrink-0 text-[11px] transition-transform ${antarExpanded ? "rotate-90" : ""} text-ink/30`}>▶</span>
                                 </button>
+
+                                {/* Pratyantardashas */}
                                 {antarExpanded && (
-                                  <div className="border-t border-ink/8 px-2.5 pb-2 pt-1.5 space-y-0.5">
+                                  <div className="border-t border-ink/8 px-3 pb-2 pt-1">
                                     {antar.pratyantars.map((prat) => (
                                       <div
                                         key={prat.lord}
-                                        className={`flex items-center justify-between rounded px-2 py-1 text-[11px] ${prat.isCurrent ? "bg-amber-100 font-semibold text-amber-800" : "text-ink/60"}`}
+                                        className={`flex items-center justify-between rounded-md px-2.5 py-1.5 text-[11px] ${
+                                          prat.isCurrent
+                                            ? "my-0.5 bg-amber-100 font-bold text-amber-900 ring-1 ring-amber-400/50"
+                                            : "text-ink/55"
+                                        }`}
                                       >
-                                        <span>{prat.lord} प्र०दशा{prat.isCurrent ? " ◀ अभी" : ""}</span>
-                                        <span className="text-[10px] text-ink/45">{fmtDate(prat.start)} – {fmtDate(prat.end)}</span>
+                                        <div className="flex items-center gap-1.5">
+                                          {prat.isCurrent && <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />}
+                                          <span>{prat.lord} प्र०दशा</span>
+                                          {prat.isCurrent && <span className="rounded bg-amber-500 px-1 py-px text-[8px] font-bold text-white">अभी</span>}
+                                        </div>
+                                        <span className="text-[10px] text-ink/35">{fmtDate(prat.start)} → {fmtDate(prat.end)}</span>
                                       </div>
                                     ))}
                                   </div>
