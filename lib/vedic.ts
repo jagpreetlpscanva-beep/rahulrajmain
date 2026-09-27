@@ -382,3 +382,237 @@ export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "
   </svg>`;
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 }
+
+/* ================================================================
+ * DIVISIONAL CHART SUPPORT — D2 through D10
+ * Each returns the sign index (0-11) for a given sidereal longitude.
+ * ================================================================ */
+
+/** D2 Hora: odd signs → 0 (Simha), even signs → 3 (Karka) for first 15°;
+ *  reversed for second half. Standard Parashari method. */
+function horaSign(lon: number): number {
+  const sign = Math.floor(lon / 30) % 12;
+  const half = lon % 30 >= 15 ? 1 : 0;
+  const isOdd = sign % 2 === 0; // 0-indexed: 0=Aries(odd), 1=Taurus(even)…
+  // First half of odd sign → Simha(4), second → Karka(3); first of even → Karka, second → Simha
+  if (isOdd) return half === 0 ? 4 : 3;
+  return half === 0 ? 3 : 4;
+}
+
+/** D3 Drekkana: three 10° sections per sign → 3 signs per rashi */
+function drekkanaSign(lon: number): number {
+  const sign = Math.floor(lon / 30) % 12;
+  const part = Math.floor((lon % 30) / 10); // 0,1,2
+  return (sign + part * 4) % 12;
+}
+
+/** D4 Chaturthamsha: four 7°30' per sign */
+function chaturthamshaSign(lon: number): number {
+  const sign = Math.floor(lon / 30) % 12;
+  const part = Math.floor((lon % 30) / 7.5); // 0-3
+  return (sign + part * 3) % 12;
+}
+
+/** D5 Panchamamsha: five 6° per sign, starting from sign itself */
+function panchamamshaSign(lon: number): number {
+  const sign = Math.floor(lon / 30) % 12;
+  const part = Math.floor((lon % 30) / 6); // 0-4
+  return (sign * 5 + part) % 12;
+}
+
+/** D6 Shashthamsha: six 5° per sign */
+function shashthamshaSign(lon: number): number {
+  const sign = Math.floor(lon / 30) % 12;
+  const part = Math.floor((lon % 30) / 5); // 0-5
+  return (sign + part * 2) % 12;
+}
+
+/** D7 Saptamamsha: seven 4°17'8.57" per sign */
+function saptamamshaSign(lon: number): number {
+  const sign = Math.floor(lon / 30) % 12;
+  const part = Math.floor((lon % 30) / (30 / 7)); // 0-6
+  const isOdd = sign % 2 === 0;
+  return isOdd ? (sign + part) % 12 : (sign + 6 + part) % 12;
+}
+
+/** D8 Ashtamamsha: eight 3°45' per sign */
+function ashtamamshaSign(lon: number): number {
+  const sign = Math.floor(lon / 30) % 12;
+  const part = Math.floor((lon % 30) / 3.75); // 0-7
+  return (sign + part) % 12;
+}
+
+/** D10 Dasamsha: ten 3° per sign */
+function dasamshaSign(lon: number): number {
+  const sign = Math.floor(lon / 30) % 12;
+  const part = Math.floor((lon % 30) / 3); // 0-9
+  const isOdd = sign % 2 === 0;
+  return isOdd ? (sign + part) % 12 : (sign + 9 + part) % 12;
+}
+
+export type DivisionCode = "D1" | "D2" | "D3" | "D4" | "D5" | "D6" | "D7" | "D8" | "D9" | "D10" | "Gochar";
+
+/** Map a sidereal longitude to its divisional sign index for the given division */
+export function divisionalSign(lon: number, div: DivisionCode): number {
+  switch (div) {
+    case "D1":  return Math.floor(lon / 30) % 12;
+    case "D2":  return horaSign(lon);
+    case "D3":  return drekkanaSign(lon);
+    case "D4":  return chaturthamshaSign(lon);
+    case "D5":  return panchamamshaSign(lon);
+    case "D6":  return shashthamshaSign(lon);
+    case "D7":  return saptamamshaSign(lon);
+    case "D8":  return ashtamamshaSign(lon);
+    case "D9":  return navamsaSign(lon);
+    case "D10": return dasamshaSign(lon);
+    default:    return Math.floor(lon / 30) % 12;
+  }
+}
+
+/**
+ * Extended version of chartSvgDataUri supporting all divisional charts.
+ * For "Gochar", pass the gocharKundali separately.
+ */
+export function divisionalChartSvgDataUri(
+  k: ReturnType<typeof computeKundli>,
+  division: DivisionCode,
+  color = "#c8902c",
+): string {
+  if (division === "Gochar") return chartSvgDataUri(k, "D1", color);
+  // Ascendant sign for this division
+  const ascSign = division === "D1"
+    ? k.asc_rashi
+    : divisionalSign(k.ascendant_lon, division);
+  const byHouse: Record<number, { label: string; color: string }[]> = {};
+  for (const pl of k.planets) {
+    const sign = divisionalSign(pl.lon, division);
+    const house = ((sign - ascSign + 12) % 12) + 1;
+    const deg = division === "D1" ? ` ${Math.floor(((pl.lon % 30) + 30) % 30)}°` : "";
+    (byHouse[house] ||= []).push({ label: `${pl.abbr}${deg}`, color: (pl as { color?: string }).color || "#2a1b0e" });
+  }
+
+  const S = 400;
+  const c: Record<number, [number, number]> = {
+    1: [200, 90], 2: [100, 40], 3: [40, 100], 4: [100, 200], 5: [40, 300],
+    6: [100, 360], 7: [200, 310], 8: [300, 360], 9: [360, 300], 10: [300, 200],
+    11: [360, 100], 12: [300, 40],
+  };
+  const lines = [
+    `M0 0 H${S} V${S} H0 Z`,
+    `M0 0 L${S / 2} ${S / 2} L0 ${S} M${S} 0 L${S / 2} ${S / 2} L${S} ${S}`,
+    `M${S / 2} 0 L0 ${S / 2} L${S / 2} ${S} L${S} ${S / 2} Z`,
+  ];
+  let inner = "";
+  for (let h = 1; h <= 12; h++) {
+    const [x, y] = c[h];
+    const rashiNum = ((ascSign + (h - 1)) % 12) + 1;
+    inner += `<text x="${x}" y="${y - 12}" font-size="12" fill="${color}" opacity="0.65" text-anchor="middle">${rashiNum}</text>`;
+    const ps = byHouse[h] || [];
+    ps.forEach((p, n) => {
+      inner += `<text x="${x - 7}" y="${y + 6 + n * 17}" font-size="16" font-weight="bold" fill="${p.color}" text-anchor="middle">${p.label}</text>`;
+    });
+  }
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}">
+    <rect width="${S}" height="${S}" fill="none"/>
+    <g fill="none" stroke="${color}" stroke-width="1.5">${lines.map((d) => `<path d="${d}"/>`).join("")}</g>
+    ${inner}
+  </svg>`;
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+/* ================================================================
+ * FULL VIMSHOTTARI DASHA TIMELINE
+ * Returns past, present and future Mahadashas with nested
+ * Antardashas and Pratyantardashas.
+ * ================================================================ */
+
+export interface PratyantarDasha {
+  lord: string;
+  start: Date;
+  end: Date;
+  isCurrent: boolean;
+}
+
+export interface AntarDasha {
+  lord: string;
+  start: Date;
+  end: Date;
+  isCurrent: boolean;
+  pratyantars: PratyantarDasha[];
+}
+
+export interface MahaDasha {
+  lord: string;
+  start: Date;
+  end: Date;
+  status: "past" | "current" | "future";
+  antars: AntarDasha[];
+}
+
+/**
+ * Compute the full 120-year Vimshottari Dasha tree with start/end dates for
+ * every Mahadasha → Antardasha → Pratyantardasha.
+ */
+export function computeFullDasha(moonSid: number, birth: Date, now = new Date()): MahaDasha[] {
+  const span = 360 / 27;
+  const nak = Math.floor(moonSid / span) % 27;
+  const startIdx = nak % 9;
+  const fraction = (moonSid % span) / span;
+
+  const yrs = (lord: string) => DASHA_YEARS[lord];
+
+  // Absolute elapsed years at birth within the first Mahadasha
+  const birthOffset = fraction * yrs(DASHA_LORDS[startIdx]);
+  // The "zero-point" of the dasha clock: when the very first lord's period began
+  const zeroMs = birth.getTime() - birthOffset * YEAR_MS;
+
+  const result: MahaDasha[] = [];
+
+  let mahaStartMs = zeroMs;
+  for (let mi = 0; mi < 9; mi++) {
+    const mahaLord = DASHA_LORDS[(startIdx + mi) % 9];
+    const mahaYrs = yrs(mahaLord);
+    const mahaEndMs = mahaStartMs + mahaYrs * YEAR_MS;
+    const mahaStart = new Date(mahaStartMs);
+    const mahaEnd = new Date(mahaEndMs);
+
+    const status: "past" | "current" | "future" =
+      now >= mahaEnd ? "past" : now < mahaStart ? "future" : "current";
+
+    // Antardashas within this Mahadasha
+    const antars: AntarDasha[] = [];
+    let antarStartMs = mahaStartMs;
+    for (let ai = 0; ai < 9; ai++) {
+      const antarLord = DASHA_LORDS[(startIdx + mi + ai) % 9];
+      const antarYrs = (mahaYrs * yrs(antarLord)) / 120;
+      const antarEndMs = antarStartMs + antarYrs * YEAR_MS;
+      const antarStart = new Date(antarStartMs);
+      const antarEnd = new Date(antarEndMs);
+      const antarCurrent = now >= antarStart && now < antarEnd;
+
+      // Pratyantardashas within this Antardasha
+      const pratyantars: PratyantarDasha[] = [];
+      let pratStartMs = antarStartMs;
+      for (let pi = 0; pi < 9; pi++) {
+        const pratLord = DASHA_LORDS[(startIdx + mi + ai + pi) % 9];
+        const pratYrs = (antarYrs * yrs(pratLord)) / 120;
+        const pratEndMs = pratStartMs + pratYrs * YEAR_MS;
+        pratyantars.push({
+          lord: pratLord,
+          start: new Date(pratStartMs),
+          end: new Date(pratEndMs),
+          isCurrent: now >= new Date(pratStartMs) && now < new Date(pratEndMs),
+        });
+        pratStartMs = pratEndMs;
+      }
+
+      antars.push({ lord: antarLord, start: antarStart, end: antarEnd, isCurrent: antarCurrent, pratyantars });
+      antarStartMs = antarEndMs;
+    }
+
+    result.push({ lord: mahaLord, start: mahaStart, end: mahaEnd, status, antars });
+    mahaStartMs = mahaEndMs;
+  }
+
+  return result;
+}
