@@ -227,6 +227,21 @@ function planetSiderealLon(p: { body?: A.Body; node?: "rahu" | "ketu" }, date: D
 
 const nakLord = (nakIdx: number) => NAK_LORD_CYCLE[nakIdx % 9];
 
+/** Check if a planet (by Body) is retrograde at a given date.
+ *  Rahu/Ketu nodes are always retrograde. Sun/Moon never retrograde.
+ *  For other planets: compare longitude change over 24h — if decreasing, retrograde. */
+export function isPlanetRetrograde(body: A.Body | null, isNode: "rahu" | "ketu" | null, date: Date): boolean {
+  if (isNode === "rahu" || isNode === "ketu") return true;
+  if (!body) return false;
+  if (body === A.Body.Sun || body === A.Body.Moon) return false;
+  const lon1 = sidereal(tropLon(body, date), date);
+  const date2 = new Date(date.getTime() + 24 * 3600 * 1000);
+  const lon2 = sidereal(tropLon(body, date2), date2);
+  // retrograde if longitude decreased (accounting for 0/360 wrap)
+  const diff = norm360(lon2 - lon1 + 180) - 180;
+  return diff < 0;
+}
+
 /* ---------------- Vimshottari Dasha ---------------- */
 const DASHA_LORDS = ["केतु", "शुक्र", "सूर्य", "चंद्र", "मंगल", "राहु", "गुरु", "शनि", "बुध"];
 const DASHA_YEARS: Record<string, number> = { "केतु": 7, "शुक्र": 20, "सूर्य": 6, "चंद्र": 10, "मंगल": 7, "राहु": 18, "गुरु": 16, "शनि": 19, "बुध": 17 };
