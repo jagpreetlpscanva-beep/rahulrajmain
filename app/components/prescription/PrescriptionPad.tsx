@@ -123,13 +123,15 @@ export function PrescriptionPad() {
   const [dosha, setDosha] = useState("");
   const [yog, setYog] = useState("");
 
+  const [placeCoords, setPlaceCoords] = useState<{ lat: number; lon: number; tzone: number } | null>(null);
   const [chart, setChart] = useState<string | null>(null);
   const [gochar, setGochar] = useState<string | null>(null);
+  const [gocharPlanets, setGocharPlanets] = useState<{ name: string; rashi: string; house: number; degree: string; nakshatra: string; retrograde: boolean; color: string }[] | null>(null);
   const [kundali, setKundali] = useState<unknown>(null);
   const [kundaliState, setKundaliState] = useState<"idle" | "loading" | "done" | "error">("idle");
   const [zoom, setZoom] = useState(false);
   const [gocharZoom, setGocharZoom] = useState(false);
-  const [selectedDiv, setSelectedDiv] = useState<DivisionCode>("D1");
+  const [selectedDiv, setSelectedDiv] = useState<"D1" | "D9">("D1");
   const [divChart, setDivChart] = useState<string | null>(null);
   const [divBusy, setDivBusy] = useState(false);
   const [fullDasha, setFullDasha] = useState<MahaDasha[] | null>(null);
@@ -185,14 +187,15 @@ export function PrescriptionPad() {
       setChart(null); setGochar(null); setKundali(null); setKundaliState("idle");
       return;
     }
-    const c = CITIES.find((x) => x.name.toLowerCase() === place.toLowerCase());
+    const city = CITIES.find((x) => x.name.toLowerCase() === place.toLowerCase());
+    const coords = placeCoords || (city ? { lat: city.lat, lon: city.lon, tzone: city.tzone } : null);
     setKundaliState("loading");
     const t = setTimeout(() => {
-      fetch("/api/kundli", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ dob, tob, place, lat: c?.lat, lon: c?.lon, tzone: c?.tzone }) })
+      fetch("/api/kundli", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ dob, tob, place, lat: coords?.lat, lon: coords?.lon, tzone: coords?.tzone }) })
         .then((r) => r.json())
         .then((j) => {
           if (j.ok) {
-            setChart(j.chart); setGochar(j.gochar || null); setKundali(j.kundali); setKundaliState("done");
+            setChart(j.chart); setGochar(j.gochar || null); setGocharPlanets(j.gocharPlanets || null); setKundali(j.kundali); setKundaliState("done");
             setDivChart(j.chart); setSelectedDiv("D1"); // reset chart selector to D1
             // Compute full Vimshottari dasha tree (client-side, no extra API call)
             const kk2 = j.kundali as { planets?: { name: string; lon: number }[] };
@@ -219,7 +222,7 @@ export function PrescriptionPad() {
         .catch(() => setKundaliState("error"));
     }, 350);
     return () => clearTimeout(t);
-  }, [dob, tob, place]);
+  }, [dob, tob, place, placeCoords]);
 
   /** Birth date field: mask keystrokes as DD/MM/YYYY, commit to ISO `dob` only once complete & valid. */
   const onDobChange = (raw: string) => {
@@ -292,24 +295,19 @@ export function PrescriptionPad() {
     return n > 0 ? `₹${n.toLocaleString("en-IN")}` : "";
   }, [calcGemPriceNumber]);
 
-  /** Switch to a different divisional chart (or Gochar). All computed client-side. */
-  const selectDiv = (div: DivisionCode) => {
+  /** Switch between D1 and D9 chart. All computed client-side. */
+  const selectDiv = (div: "D1" | "D9") => {
     setSelectedDiv(div);
     if (!kundali) return;
     const k = kundali as Parameters<typeof divisionalChartSvgDataUri>[0];
-    if (div === "Gochar") {
-      setDivChart(gochar);
+    if (div === "D1") {
+      setDivChart(chart);
       return;
     }
-    const colors: Record<DivisionCode, string> = {
-      D1: "#a01414", D2: "#5a2d82", D3: "#1a5276", D4: "#145a32", D5: "#6e2f0b",
-      D6: "#7b241c", D7: "#1a3550", D8: "#4a235a", D9: "#1f4e79", D10: "#1b4f72", Gochar: "#1a5276",
-    };
     setDivBusy(true);
-    // compute on next tick to allow spinner to render
     setTimeout(() => {
       try {
-        const uri = divisionalChartSvgDataUri(k, div, colors[div]);
+        const uri = divisionalChartSvgDataUri(k, "D9", "#1f4e79");
         setDivChart(uri);
       } finally {
         setDivBusy(false);
@@ -369,10 +367,10 @@ export function PrescriptionPad() {
   };
 
   const resetAll = () => {
-    setPatientName(""); setMobile(""); setGender(""); setDob(""); setDobText(""); setTob(""); setPlace("Lucknow");
+    setPatientName(""); setMobile(""); setGender(""); setDob(""); setDobText(""); setTob(""); setPlace("Lucknow"); setPlaceCoords(null);
     setMahadasha(""); setAntardasha(""); setPratyantar(""); setDosha(""); setYog("");
     manualDasha.current = {}; // new patient → auto-fill is free to populate again
-    setChart(null); setGochar(null); setKundali(null); setKundaliState("idle");
+    setChart(null); setGochar(null); setGocharPlanets(null); setKundali(null); setKundaliState("idle");
     setRows([emptyRow()]); setGems([blankGem()]); setAnushthanRows([]); setAnuQuery(""); setNotes(""); setSavedId(null);
   };
 
@@ -383,11 +381,11 @@ export function PrescriptionPad() {
     // by setDob/setTob/setPlace above) can't overwrite what was saved.
     manualDasha.current = { mahadasha: true, antardasha: true, pratyantar: true, dosha: true, yog: true };
     setKundali(c.kundali); setRows(c.rows?.length ? c.rows : [emptyRow()]); setGems(c.gemstones?.length ? c.gemstones : [blankGem()]); setAnushthanRows(Array.isArray(c.anushthan) ? c.anushthan : []); setNotes(c.notes);
-    setSavedId(c.id); setChart(null); setGochar(null); setKundaliState("idle"); setResults(null); setFullDasha(null); setDivChart(null); setSelectedDiv("D1");
+    setSavedId(c.id); setChart(null); setGochar(null); setGocharPlanets(null); setKundaliState("idle"); setResults(null); setFullDasha(null); setDivChart(null); setSelectedDiv("D1");
   };
 
   const doSave = async (): Promise<string | null> => {
-    if (!patientName.trim() || !mobile.trim()) { alert("ग्राहक का नाम और मोबाइल ज़रूरी है।"); return null; }
+    if (!patientName.trim()) { alert("ग्राहक का नाम ज़रूरी है।"); return null; }
     setSaving(true);
     try {
       const body = JSON.stringify({ patientName, mobile, gender, dob, tob, place, astrologer, mahadasha, antardasha, pratyantar, dosha, yog, kundali, rows, gemstones: gems.filter((g) => g.stone), anushthan: anushthanRows, notes });
@@ -534,6 +532,19 @@ export function PrescriptionPad() {
     window.location.href = `mailto:?subject=${encodeURIComponent(`ज्योतिष परामर्श — ${patientName || "ग्राहक"}`)}&body=${encodeURIComponent(shareText(link))}`;
   };
 
+  /** Geocode a place name using Nominatim (free, no key needed), fallback for cities not in CITIES list */
+  const geocodePlace = async (placeName: string) => {
+    const city = CITIES.find((x) => x.name.toLowerCase() === placeName.toLowerCase());
+    if (city) { setPlaceCoords({ lat: city.lat, lon: city.lon, tzone: 5.5 }); return; }
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(placeName + " India")}&format=json&limit=1&countrycodes=in`, { headers: { "Accept-Language": "en" } });
+      const j = await r.json();
+      if (Array.isArray(j) && j.length > 0) {
+        setPlaceCoords({ lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon), tzone: 5.5 });
+      }
+    } catch { /* ignore geocode failure — server will fall back to Lucknow */ }
+  };
+
   const inp = "w-full rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-[#8a2020] focus:ring-2 focus:ring-[#8a2020]/15";
   const lbl = "mb-1 block text-xs font-semibold text-ink/60";
   const btn = "rounded-lg px-4 py-2 text-sm font-bold shadow-sm transition-transform hover:-translate-y-0.5";
@@ -615,13 +626,23 @@ export function PrescriptionPad() {
           {/* client + auto */}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <div><label className={lbl}>ग्राहक का नाम</label><input className={inp} value={patientName} onChange={(e) => setPatientName(e.target.value)} /></div>
-            <div><label className={lbl}>मोबाइल नंबर</label><input className={inp} value={mobile} onChange={(e) => setMobile(e.target.value)} /></div>
+            <div><label className={lbl}>मोबाइल नंबर <span className="font-normal text-ink/40">(वैकल्पिक)</span></label><input className={inp} value={mobile} onChange={(e) => setMobile(e.target.value)} /></div>
             <div><label className={lbl}>लिंग</label><select className={inp} value={gender} onChange={(e) => setGender(e.target.value)}><option value="">—</option><option>पुरुष</option><option>स्त्री</option><option>अन्य</option></select></div>
             <div><label className={lbl}>जन्म तिथि</label><input type="text" inputMode="numeric" placeholder="DD/MM/YYYY" maxLength={10} className={inp} value={dobText} onChange={(e) => onDobChange(e.target.value)} /></div>
             <div><label className={lbl}>जन्म समय</label><input type="time" className={inp} value={tob} onChange={(e) => setTob(e.target.value)} /></div>
-            <div><label className={lbl}>जन्म स्थान</label><input list="rx-cities" className={inp} value={place} onChange={(e) => setPlace(e.target.value)} /><datalist id="rx-cities">{CITIES.map((c) => <option key={c.name} value={c.name} />)}</datalist></div>
+            <div>
+              <label className={lbl}>जन्म स्थान</label>
+              <input
+                list="rx-cities"
+                className={inp}
+                value={place}
+                onChange={(e) => { setPlace(e.target.value); setPlaceCoords(null); }}
+                onBlur={(e) => { if (e.target.value.trim().length >= 2) geocodePlace(e.target.value.trim()); }}
+              />
+              <datalist id="rx-cities">{CITIES.map((c) => <option key={c.name} value={c.name} />)}</datalist>
+            </div>
           </div>
-          <p className="mt-2 text-[11px] text-ink/50">दिनांक: {fmtDMY(now.toISOString().slice(0, 10))} · समय: {now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })} · ज्योतिषी: <b>{astrologer}</b></p>
+          <p className="mt-2 text-[11px] text-ink/50">दिनांक: {fmtDMY(now.toISOString().slice(0, 10))} · समय: {String(now.getHours()).padStart(2,"0")}:{String(now.getMinutes()).padStart(2,"0")} · ज्योतिषी: <b>{astrologer}</b></p>
 
           {/* ══ KUNDALI + GOCHAR side by side, then chart selector, then dasha fields ══ */}
 
@@ -660,57 +681,73 @@ export function PrescriptionPad() {
             </div>
           </div>
 
-          {/* Row 2: D2–D10 chart selector (screen only) */}
+          {/* Row 2: D9 Navamsha toggle (screen only) */}
           {chart && (
             <div className="rx-noprint mt-4 rounded-xl border border-ink/10 bg-[#faf6ee] p-3">
-              <p className="mb-2 text-[11px] font-bold text-[#a01414]">अन्य विभाजन चार्ट</p>
-              <div className="flex flex-wrap gap-1.5">
-                {(["D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9", "D10"] as DivisionCode[]).map((div) => {
-                  const labels: Record<string, string> = {
-                    D2: "D2 होरा", D3: "D3 द्रेष्काण", D4: "D4 चतुर्थांश",
-                    D5: "D5 पंचमांश", D6: "D6 षष्ठांश", D7: "D7 सप्तमांश",
-                    D8: "D8 अष्टमांश", D9: "D9 नवांश", D10: "D10 दशमांश",
-                  };
-                  const isActive = selectedDiv === div;
-                  return (
-                    <button
-                      key={div}
-                      onClick={() => selectDiv(div)}
-                      disabled={divBusy}
-                      className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition-all ${
-                        isActive
-                          ? "bg-[#a01414] text-white shadow-sm"
-                          : "border border-ink/20 bg-white text-ink/65 hover:border-[#a01414]/40 hover:text-[#a01414]"
-                      }`}
-                    >
-                      {labels[div]}
-                    </button>
-                  );
-                })}
+              <div className="flex flex-wrap gap-2 items-center">
                 <button
-                  onClick={() => { setSelectedDiv("D1"); setDivChart(null); }}
-                  className="rounded-lg border border-ink/15 bg-white px-2.5 py-1 text-[11px] text-ink/45 hover:text-ink/70"
+                  onClick={() => { selectDiv("D9"); }}
+                  disabled={divBusy}
+                  className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all ${
+                    selectedDiv === "D9"
+                      ? "bg-[#1f4e79] text-white shadow-sm"
+                      : "border border-ink/20 bg-white text-ink/65 hover:border-[#1f4e79]/40 hover:text-[#1f4e79]"
+                  }`}
                 >
-                  बंद करें ✕
+                  D9 नवांश कुंडली
                 </button>
+                {selectedDiv === "D9" && (
+                  <button
+                    onClick={() => { setSelectedDiv("D1"); setDivChart(chart); }}
+                    className="rounded-lg border border-ink/15 bg-white px-2.5 py-1 text-[11px] text-ink/45 hover:text-ink/70"
+                  >
+                    बंद करें ✕
+                  </button>
+                )}
               </div>
               {divBusy && (
                 <div className="mt-3 flex h-8 items-center gap-2 text-sm text-ink/50">
-                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#a01414]/30 border-t-[#a01414]" />
-                  चार्ट बन रहा है…
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#1f4e79]/30 border-t-[#1f4e79]" />
+                  नवांश चार्ट बन रहा है…
                 </div>
               )}
-              {!divBusy && divChart && selectedDiv !== "D1" && (
-                <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <div>
-                    <p className="mb-1 text-[11px] font-semibold text-[#a01414]">{selectedDiv} चार्ट</p>
-                    <div className="aspect-square w-full rounded-xl border-2 border-[#8a2020]/40 bg-[#fffdf8] p-2">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={divChart} alt={selectedDiv} className="h-full w-full object-contain" />
-                    </div>
+              {!divBusy && divChart && selectedDiv === "D9" && (
+                <div className="mt-3">
+                  <p className="mb-1 text-[11px] font-semibold text-[#1f4e79]">नवांश कुंडली (D9)</p>
+                  <div className="aspect-square w-full max-w-[280px] rounded-xl border-2 border-[#1f4e79]/40 bg-[#f0f7ff] p-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={divChart} alt="D9 नवांश" className="h-full w-full object-contain" />
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Gochar planet table — current transit positions */}
+          {gocharPlanets && gocharPlanets.length > 0 && (
+            <div className="rx-noprint mt-4 overflow-x-auto rounded-xl border border-[#1a5276]/30 bg-[#f0f7ff] p-3">
+              <p className="mb-2 text-sm font-bold text-[#1a5276]">गोचर ग्रह स्थिति (वर्तमान)</p>
+              <table className="w-full border-collapse text-xs">
+                <thead>
+                  <tr className="bg-[#1a5276]/10 text-left">
+                    {["ग्रह", "राशि", "भाव (नाताल लग्न से)", "अंश", "नक्षत्र", ""].map((h) => (
+                      <th key={h} className="border border-[#1a5276]/20 px-2 py-1.5 font-semibold text-[#1a5276]">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {gocharPlanets.map((p) => (
+                    <tr key={p.name} className="hover:bg-[#1a5276]/5">
+                      <td className="border border-[#1a5276]/15 px-2 py-1.5 font-bold" style={{ color: p.color }}>{p.name}</td>
+                      <td className="border border-[#1a5276]/15 px-2 py-1.5">{p.rashi}</td>
+                      <td className="border border-[#1a5276]/15 px-2 py-1.5">{p.house}</td>
+                      <td className="border border-[#1a5276]/15 px-2 py-1.5 font-mono">{p.degree}</td>
+                      <td className="border border-[#1a5276]/15 px-2 py-1.5">{p.nakshatra}</td>
+                      <td className="border border-[#1a5276]/15 px-2 py-1.5 text-[10px] text-ink/50">{p.retrograde ? "वक्री (R)" : ""}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           )}
 
