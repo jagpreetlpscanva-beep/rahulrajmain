@@ -1,8 +1,30 @@
 import { NextResponse } from "next/server";
 import { CITIES } from "@/lib/calculators";
-import { computeKundli, chartSvgDataUri } from "@/lib/vedic";
+import { computeKundli, chartSvgDataUri, RASHIS, PLANET_COLORS, isPlanetRetrograde } from "@/lib/vedic";
+import * as A from "astronomy-engine";
 
 export const dynamic = "force-dynamic";
+
+const NAKSHATRAS = [
+  "Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra",
+  "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni",
+  "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha",
+  "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha",
+  "Purva Bhadrapada", "Uttara Bhadrapada", "Revati",
+];
+
+function degStr(lon: number): string {
+  const d = ((lon % 30) + 30) % 30;
+  const deg = Math.floor(d);
+  const min = Math.floor((d - deg) * 60);
+  return `${deg}°${String(min).padStart(2, "0")}'`;
+}
+
+const PLANET_BODY_MAP: Record<string, A.Body | null> = {
+  "सूर्य": A.Body.Sun, "चंद्र": A.Body.Moon, "मंगल": A.Body.Mars,
+  "बुध": A.Body.Mercury, "गुरु": A.Body.Jupiter, "शुक्र": A.Body.Venus,
+  "शनि": A.Body.Saturn, "राहु": null, "केतु": null,
+};
 
 /**
  * Generate an accurate Lagna Kundali for the prescription pad.
@@ -39,25 +61,42 @@ export async function POST(req: Request) {
 
   try {
     const k = computeKundli({ day: d, month: m, year: y, hour: hh || 0, min: mm || 0, lat, lon, tzone });
-    // Gochar (current transit) at the same place — astrologer reference only.
-    // IMPORTANT: build the "now" wall-clock in IST from the true UTC instant so it
-    // is correct no matter what timezone the server runs in (Vercel = UTC). Reading
-    // new Date().getHours() on a UTC server gave a gochar 5.5h in the past (wrong).
+
+    // Gochar (current transit) — use true UTC→IST conversion so server TZ doesn't matter
     const ist = new Date(Date.now() + 5.5 * 3600 * 1000);
     const g = computeKundli({
       day: ist.getUTCDate(), month: ist.getUTCMonth() + 1, year: ist.getUTCFullYear(),
       hour: ist.getUTCHours(), min: ist.getUTCMinutes(), lat, lon, tzone: 5.5,
     });
-    // Gochar chart must be framed on the NATAL lagna (house-1 = birth ascendant),
-    // with today's planets dropped into their houses relative to it — NOT on the
-    // current time-of-day ascendant (which changes every ~2 hrs and is meaningless).
-    const gocharChart = { ...g, asc_rashi: k.asc_rashi, ascendant_lon: k.ascendant_lon };
+
+    // Gochar chart framed on NATAL lagna (house-1 = birth ascendant)
+    const gocharForChart = { ...g, asc_rashi: k.asc_rashi, ascendant_lon: k.ascendant_lon };
+
+    // Build gochar planet table with correct transit positions
+    const gocharPlanets = g.planets.map((p) => {
+      const nakIdx = Math.floor(p.lon / (360 / 27)) % 27;
+      // House relative to natal lagna
+      const houseRelNatal = ((p.rashi - k.asc_rashi + 12) % 12) + 1;
+      const isNode = p.name === "राहु" ? "rahu" : p.name === "केतु" ? "ketu" : null;
+      const retro = isPlanetRetrograde(PLANET_BODY_MAP[p.name], isNode, ist);
+      return {
+        name: p.name,
+        rashi: RASHIS[p.rashi],
+        house: houseRelNatal,
+        degree: degStr(p.lon),
+        nakshatra: NAKSHATRAS[nakIdx],
+        retrograde: retro,
+        color: PLANET_COLORS[p.name] || "#2a1b0e",
+      };
+    });
+
     return NextResponse.json({
       ok: true,
       kundali: k,
       chart: chartSvgDataUri(k, "D1", "#a01414"),
       d9: chartSvgDataUri(k, "D9", "#a01414"),     // Navamsa — UI only
-      gochar: chartSvgDataUri(gocharChart, "D1", "#1a5276"), // Gochar over natal lagna
+      gochar: chartSvgDataUri(gocharForChart, "D1", "#1a5276"),
+      gocharPlanets,
     });
   } catch (e) {
     return NextResponse.json({ error: "calc_error", message: (e as Error).message }, { status: 500 });
