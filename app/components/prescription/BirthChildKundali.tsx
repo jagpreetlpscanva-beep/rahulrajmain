@@ -7,6 +7,7 @@ import { generateReportPdf, svgToPng, downloadBlob, shareOrDownloadPdf, type Rep
 
 type Child = { name: string; dob: string; tob: string; place: string; gender: string };
 type Planet = { name: string; rashi: string; house: number; degree: string; nakshatra: string; pada: number };
+type NavamsaPlanet = { name: string; rashi: string; house: number; degree: string; nakshatra: string; pada: number };
 type Data = {
   meta: { dob: string; tob: string; place: string; lat: number; lon: number; tzone: number; ayanamsa: string };
   panchang: { tithi: string; vaar: string; paksha: string; nakshatra: string; pada: number; nakshatra_lord: string; yoga: string; karana: string; sunrise: string; sunset: string };
@@ -14,6 +15,7 @@ type Data = {
   sun: { rashi: string; degree: string };
   lagna: { rashi: string; degree: string };
   planets: Planet[];
+  navamsaPlanets?: NavamsaPlanet[];
   houses: { house: number; rashi: string }[];
   dasha: { mahadasha: string; antardasha: string };
   dosha: string; yog: string;
@@ -32,6 +34,18 @@ export function BirthChildKundali({ onBack }: { onBack: () => void }) {
   const [error, setError] = useState("");
   const [remedies, setRemedies] = useState<string[]>([]);
 
+  const [placeCoords, setPlaceCoords] = useState<{ lat: number; lon: number; tzone: number } | null>(null);
+
+  const geocodePlace = async (placeName: string) => {
+    const city = CITIES.find((x) => x.name.toLowerCase() === placeName.toLowerCase());
+    if (city) { setPlaceCoords({ lat: city.lat, lon: city.lon, tzone: 5.5 }); return; }
+    try {
+      const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(placeName + " India")}&format=json&limit=1&countrycodes=in`, { headers: { "Accept-Language": "en" } });
+      const j = await r.json();
+      if (Array.isArray(j) && j.length > 0) setPlaceCoords({ lat: parseFloat(j[0].lat), lon: parseFloat(j[0].lon), tzone: 5.5 });
+    } catch { /* fallback to server default */ }
+  };
+
   const generate = async () => {
     setError("");
     if (!c.name.trim() || !c.dob || !c.tob) { setError("कृपया बच्चे का नाम, जन्म तिथि व समय भरें।"); return; }
@@ -39,7 +53,8 @@ export function BirthChildKundali({ onBack }: { onBack: () => void }) {
     setBusy(true);
     try {
       const city = CITIES.find((x) => x.name.toLowerCase() === c.place.toLowerCase());
-      const r = await fetch("/api/birth-kundali", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ dob: c.dob, tob: c.tob, place: c.place, lat: city?.lat, lon: city?.lon, tzone: city?.tzone }) });
+      const coords = placeCoords || (city ? { lat: city.lat, lon: city.lon, tzone: city.tzone } : null);
+      const r = await fetch("/api/birth-kundali", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ dob: c.dob, tob: c.tob, place: c.place, lat: coords?.lat, lon: coords?.lon, tzone: coords?.tzone }) });
       const j = await r.json();
       if (j.ok) setData(j); else setError(j.message || "कुंडली नहीं बन सकी।");
     } catch { setError("नेटवर्क त्रुटि — दोबारा प्रयास करें।"); }
@@ -131,7 +146,16 @@ export function BirthChildKundali({ onBack }: { onBack: () => void }) {
           <div className="sm:col-span-2"><label className={lbl}>बच्चे का नाम</label><input className={inp} value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} /></div>
           <div><label className={lbl}>जन्म तिथि</label><input type="date" className={inp} value={c.dob} onChange={(e) => setC({ ...c, dob: e.target.value })} /></div>
           <div><label className={lbl}>जन्म समय</label><input type="time" className={inp} value={c.tob} onChange={(e) => setC({ ...c, tob: e.target.value })} /></div>
-          <div><label className={lbl}>जन्म स्थान</label><input list="child-cities" className={inp} value={c.place} onChange={(e) => setC({ ...c, place: e.target.value })} /></div>
+          <div>
+            <label className={lbl}>जन्म स्थान</label>
+            <input
+              list="child-cities"
+              className={inp}
+              value={c.place}
+              onChange={(e) => { setC({ ...c, place: e.target.value }); setPlaceCoords(null); }}
+              onBlur={(e) => { if (e.target.value.trim().length >= 2) geocodePlace(e.target.value.trim()); }}
+            />
+          </div>
           <div><label className={lbl}>लिंग</label><select className={inp} value={c.gender} onChange={(e) => setC({ ...c, gender: e.target.value })}><option>पुरुष</option><option>स्त्री</option><option>अन्य</option></select></div>
         </div>
         {error && <p className="mt-3 text-sm font-semibold text-rose-600">{error}</p>}
@@ -173,12 +197,22 @@ export function BirthChildKundali({ onBack }: { onBack: () => void }) {
           </div>
 
           <div className="overflow-x-auto rounded-2xl border border-ink/12 bg-white p-4">
-            <p className="mb-2 font-serif text-lg font-bold text-[#a01414]">ग्रह स्थिति</p>
+            <p className="mb-2 font-serif text-lg font-bold text-[#a01414]">ग्रह स्थिति (D1 — लग्न)</p>
             <table className="w-full border-collapse text-sm">
               <thead><tr className="bg-[#f2e4d6] text-left">{["ग्रह", "राशि", "भाव", "अंश", "नक्षत्र", "पाद"].map((h) => <th key={h} className="border border-ink/15 px-2 py-1.5">{h}</th>)}</tr></thead>
               <tbody>{data.planets.map((p) => (<tr key={p.name}><td className="border border-ink/15 px-2 py-1.5 font-semibold">{p.name}</td><td className="border border-ink/15 px-2 py-1.5">{p.rashi}</td><td className="border border-ink/15 px-2 py-1.5">{p.house}</td><td className="border border-ink/15 px-2 py-1.5 font-mono">{p.degree}</td><td className="border border-ink/15 px-2 py-1.5">{p.nakshatra}</td><td className="border border-ink/15 px-2 py-1.5">{p.pada}</td></tr>))}</tbody>
             </table>
           </div>
+
+          {data.navamsaPlanets && data.navamsaPlanets.length > 0 && (
+            <div className="overflow-x-auto rounded-2xl border border-[#1f4e79]/30 bg-[#f0f7ff] p-4">
+              <p className="mb-2 font-serif text-lg font-bold text-[#1f4e79]">नवांश ग्रह स्थिति (D9)</p>
+              <table className="w-full border-collapse text-sm">
+                <thead><tr className="bg-[#dce9f5] text-left">{["ग्रह", "नवांश राशि", "भाव", "नवांश अंश", "नक्षत्र", "पाद"].map((h) => <th key={h} className="border border-[#1f4e79]/20 px-2 py-1.5 text-[#1f4e79]">{h}</th>)}</tr></thead>
+                <tbody>{data.navamsaPlanets.map((p) => (<tr key={p.name} className="hover:bg-[#1f4e79]/5"><td className="border border-[#1f4e79]/15 px-2 py-1.5 font-semibold text-[#1f4e79]">{p.name}</td><td className="border border-[#1f4e79]/15 px-2 py-1.5">{p.rashi}</td><td className="border border-[#1f4e79]/15 px-2 py-1.5">{p.house}</td><td className="border border-[#1f4e79]/15 px-2 py-1.5 font-mono">{p.degree}</td><td className="border border-[#1f4e79]/15 px-2 py-1.5">{p.nakshatra}</td><td className="border border-[#1f4e79]/15 px-2 py-1.5">{p.pada}</td></tr>))}</tbody>
+              </table>
+            </div>
+          )}
 
           <div className="rounded-2xl border border-ink/12 bg-white p-4">
             <p className="mb-2 font-serif text-lg font-bold text-[#a01414]">भाव व दशा</p>
