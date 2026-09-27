@@ -6,7 +6,7 @@ import { CITIES } from "@/lib/calculators";
 import { PLANETS, MISC_REMEDY_CATEGORY, DEFAULT_PAD_SECTIONS, DEFAULT_PAD_LABELS, resolveLabel, type PadSection, type PadLabel, type Anushthan, type GemGrade, type CaratOption } from "@/lib/cms";
 import { generatePrescriptionPdf, downloadPdf, type PrescriptionPdfData } from "@/lib/prescriptionPad/generatePdf";
 import { toHindi } from "@/lib/prescriptionPad/hindi";
-import { computeFullDasha, divisionalSign, RASHIS, type MahaDasha } from "@/lib/vedic";
+import { computeFullDasha, divisionalChartSvgDataUri, type DivisionCode, type MahaDasha } from "@/lib/vedic";
 
 /* ---------------- types ---------------- */
 type Rem = { id: string; planet: string; title: string; enabled?: boolean };
@@ -132,7 +132,8 @@ export function PrescriptionPad() {
   const [zoom, setZoom] = useState(false);
   const [gocharZoom, setGocharZoom] = useState(false);
   const [selectedDiv, setSelectedDiv] = useState<"D1" | "D9">("D1");
-  const [d9Planets, setD9Planets] = useState<{ name: string; rashi: string; degree: string; nakshatra: string }[] | null>(null);
+  const [divChart, setDivChart] = useState<string | null>(null);
+  const [divBusy, setDivBusy] = useState(false);
   const [fullDasha, setFullDasha] = useState<MahaDasha[] | null>(null);
   const [expandedMaha, setExpandedMaha] = useState<Record<string, boolean>>({});
   const [expandedAntar, setExpandedAntar] = useState<Record<string, boolean>>({});
@@ -195,7 +196,7 @@ export function PrescriptionPad() {
         .then((j) => {
           if (j.ok) {
             setChart(j.chart); setGochar(j.gochar || null); setGocharPlanets(j.gocharPlanets || null); setKundali(j.kundali); setKundaliState("done");
-            setSelectedDiv("D1"); // reset chart selector to D1
+            setDivChart(j.chart); setSelectedDiv("D1"); // reset chart selector to D1
             // Compute full Vimshottari dasha tree (client-side, no extra API call)
             const kk2 = j.kundali as { planets?: { name: string; lon: number }[] };
             const moonLon = kk2?.planets?.find((p: { name: string; lon: number }) => p.name === "चंद्र")?.lon ?? 0;
@@ -203,51 +204,19 @@ export function PrescriptionPad() {
               const [yy, mm2, dd] = dob.split("-").map(Number);
               const [hh2, mn2] = tob.split(":").map(Number);
               const birthDate = new Date(Date.UTC(yy, mm2 - 1, dd, hh2 || 0, mn2 || 0) - 5.5 * 3600000);
-              const fd = computeFullDasha(moonLon, birthDate);
-              setFullDasha(fd);
+              const dashaTree = computeFullDasha(moonLon, birthDate);
+              setFullDasha(dashaTree);
               setExpandedMaha({}); setExpandedAntar({});
-              // Auto-fill pratyantar from the computed dasha tree (not manual)
-              const m2 = manualDasha.current;
-              if (!m2.pratyantar) {
-                const currMaha = fd.find((x) => x.status === "current");
-                const currAntar = currMaha?.antars.find((x) => x.isCurrent);
-                const currPrat = currAntar?.pratyantars.find((x) => x.isCurrent);
+              // Auto-fill Pratyantar Dasha from the tree (same approach as Maha/Antar)
+              if (!manualDasha.current.pratyantar) {
+                const currMaha = dashaTree.find((md) => md.status === "current");
+                const currAntar = currMaha?.antars.find((a) => a.isCurrent);
+                const currPrat = currAntar?.pratyantars.find((p) => p.isCurrent);
                 if (currPrat) {
-                  const fmtD = (d: Date) => d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-                  setPratyantar(`${currPrat.lord} (till ${fmtD(currPrat.end)})`);
+                  const tillStr = currPrat.end.toLocaleDateString("en-IN", { month: "short", year: "numeric" });
+                  setPratyantar(`${currPrat.lord} (till ${tillStr})`);
                 }
               }
-            }
-            // Compute D9 planet table from the kundali data
-            const kk2raw = j.kundali as { planets?: { name: string; lon: number; nakshatra?: string; abbr?: string }[]; ascendant_lon?: number } | null;
-            if (kk2raw?.planets && typeof kk2raw.ascendant_lon === "number") {
-              const NAKSHATRAS_27 = [
-                "Ashwini","Bharani","Krittika","Rohini","Mrigashira","Ardra",
-                "Punarvasu","Pushya","Ashlesha","Magha","Purva Phalguni","Uttara Phalguni",
-                "Hasta","Chitra","Swati","Vishakha","Anuradha","Jyeshtha",
-                "Mula","Purva Ashadha","Uttara Ashadha","Shravana","Dhanishta","Shatabhisha",
-                "Purva Bhadrapada","Uttara Bhadrapada","Revati",
-              ];
-              const d9AscSign = divisionalSign(kk2raw.ascendant_lon, "D9");
-              const d9Table = kk2raw.planets.map((p) => {
-                const d9Sign = divisionalSign(p.lon, "D9");
-                // Degree within the navamsha segment scaled to 0-30
-                const segLen = 30 / 9;
-                const posInSeg = p.lon % segLen;
-                const d9LonInSign = posInSeg * (30 / segLen);
-                const d9Deg = Math.floor(d9LonInSign);
-                const d9Min = Math.floor((d9LonInSign - d9Deg) * 60);
-                const d9AbsLon = d9Sign * 30 + d9LonInSign;
-                const d9NakIdx = Math.floor(d9AbsLon / (360 / 27)) % 27;
-                return {
-                  name: p.name,
-                  rashi: RASHIS[d9Sign],
-                  degree: `${d9Deg}°${String(d9Min).padStart(2, "0")}'`,
-                  nakshatra: NAKSHATRAS_27[d9NakIdx],
-                };
-              });
-              void d9AscSign; // suppress unused var warning – stored only for ordering reference
-              setD9Planets(d9Table);
             }
             const kk = j.kundali as { dasha?: Dasha; doshaStr?: string; yogStr?: string };
             // Only auto-fill fields the astrologer hasn't edited/loaded — never
@@ -337,7 +306,25 @@ export function PrescriptionPad() {
     return n > 0 ? `₹${n.toLocaleString("en-IN")}` : "";
   }, [calcGemPriceNumber]);
 
-  // D9 chart is no longer rendered as an image — planets are shown in a table instead.
+  /** Switch between D1 and D9 chart. All computed client-side. */
+  const selectDiv = (div: "D1" | "D9") => {
+    setSelectedDiv(div);
+    if (!kundali) return;
+    const k = kundali as Parameters<typeof divisionalChartSvgDataUri>[0];
+    if (div === "D1") {
+      setDivChart(chart);
+      return;
+    }
+    setDivBusy(true);
+    setTimeout(() => {
+      try {
+        const uri = divisionalChartSvgDataUri(k, "D9", "#1f4e79");
+        setDivChart(uri);
+      } finally {
+        setDivBusy(false);
+      }
+    }, 10);
+  };
 
   const fmtDate = (d: Date) => d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
@@ -394,7 +381,7 @@ export function PrescriptionPad() {
     setPatientName(""); setMobile(""); setGender(""); setDob(""); setDobText(""); setTob(""); setPlace("Lucknow"); setPlaceCoords(null);
     setMahadasha(""); setAntardasha(""); setPratyantar(""); setDosha(""); setYog("");
     manualDasha.current = {}; // new patient → auto-fill is free to populate again
-    setChart(null); setGochar(null); setGocharPlanets(null); setKundali(null); setKundaliState("idle"); setD9Planets(null);
+    setChart(null); setGochar(null); setGocharPlanets(null); setKundali(null); setKundaliState("idle");
     setRows([emptyRow()]); setGems([blankGem()]); setAnushthanRows([]); setAnuQuery(""); setNotes(""); setSavedId(null);
   };
 
@@ -405,7 +392,7 @@ export function PrescriptionPad() {
     // by setDob/setTob/setPlace above) can't overwrite what was saved.
     manualDasha.current = { mahadasha: true, antardasha: true, pratyantar: true, dosha: true, yog: true };
     setKundali(c.kundali); setRows(c.rows?.length ? c.rows : [emptyRow()]); setGems(c.gemstones?.length ? c.gemstones : [blankGem()]); setAnushthanRows(Array.isArray(c.anushthan) ? c.anushthan : []); setNotes(c.notes);
-    setSavedId(c.id); setChart(null); setGochar(null); setGocharPlanets(null); setKundaliState("idle"); setResults(null); setFullDasha(null); setSelectedDiv("D1"); setD9Planets(null);
+    setSavedId(c.id); setChart(null); setGochar(null); setGocharPlanets(null); setKundaliState("idle"); setResults(null); setFullDasha(null); setDivChart(null); setSelectedDiv("D1");
   };
 
   const doSave = async (): Promise<string | null> => {
@@ -705,86 +692,49 @@ export function PrescriptionPad() {
             </div>
           </div>
 
-          {/* Row 2: D9 Navamsha — toggle shows planet table (no chart image) */}
+          {/* Row 2: D9 Navamsha toggle (screen only) */}
           {chart && (
             <div className="rx-noprint mt-4 rounded-xl border border-ink/10 bg-[#faf6ee] p-3">
               <div className="flex flex-wrap gap-2 items-center">
                 <button
-                  onClick={() => setSelectedDiv(selectedDiv === "D9" ? "D1" : "D9")}
+                  onClick={() => { selectDiv("D9"); }}
+                  disabled={divBusy}
                   className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all ${
                     selectedDiv === "D9"
                       ? "bg-[#1f4e79] text-white shadow-sm"
                       : "border border-ink/20 bg-white text-ink/65 hover:border-[#1f4e79]/40 hover:text-[#1f4e79]"
                   }`}
                 >
-                  D9 नवांश ग्रह स्थिति
+                  D9 नवांश कुंडली
                 </button>
                 {selectedDiv === "D9" && (
                   <button
-                    onClick={() => setSelectedDiv("D1")}
+                    onClick={() => { setSelectedDiv("D1"); setDivChart(chart); }}
                     className="rounded-lg border border-ink/15 bg-white px-2.5 py-1 text-[11px] text-ink/45 hover:text-ink/70"
                   >
                     बंद करें ✕
                   </button>
                 )}
               </div>
-              {selectedDiv === "D9" && d9Planets && d9Planets.length > 0 && (
-                <div className="mt-3 overflow-x-auto">
-                  <p className="mb-1.5 text-[11px] font-semibold text-[#1f4e79]">नवांश ग्रह स्थिति (D9)</p>
-                  <table className="w-full border-collapse text-xs">
-                    <thead>
-                      <tr className="bg-[#1f4e79]/10 text-left">
-                        {["ग्रह", "राशि", "अंश / मिनट", "नक्षत्र"].map((h) => (
-                          <th key={h} className="border border-[#1f4e79]/20 px-2 py-1.5 font-semibold text-[#1f4e79]">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {d9Planets.map((p) => (
-                        <tr key={p.name} className="hover:bg-[#1f4e79]/5">
-                          <td className="border border-[#1f4e79]/15 px-2 py-1.5 font-bold text-[#1f4e79]">{p.name}</td>
-                          <td className="border border-[#1f4e79]/15 px-2 py-1.5">{p.rashi}</td>
-                          <td className="border border-[#1f4e79]/15 px-2 py-1.5 font-mono">{p.degree}</td>
-                          <td className="border border-[#1f4e79]/15 px-2 py-1.5">{p.nakshatra}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              {divBusy && (
+                <div className="mt-3 flex h-8 items-center gap-2 text-sm text-ink/50">
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[#1f4e79]/30 border-t-[#1f4e79]" />
+                  नवांश चार्ट बन रहा है…
                 </div>
               )}
-              {selectedDiv === "D9" && !d9Planets && (
-                <p className="mt-2 text-xs text-ink/45">जन्म विवरण भरते ही D9 ग्रह स्थिति यहाँ आएगी।</p>
+              {!divBusy && divChart && selectedDiv === "D9" && (
+                <div className="mt-3">
+                  <p className="mb-1 text-[11px] font-semibold text-[#1f4e79]">नवांश कुंडली (D9)</p>
+                  <div className="aspect-square w-full max-w-[280px] rounded-xl border-2 border-[#1f4e79]/40 bg-[#f0f7ff] p-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={divChart} alt="D9 नवांश" className="h-full w-full object-contain" />
+                  </div>
+                </div>
               )}
             </div>
           )}
 
-          {/* Gochar planet table — current transit positions */}
-          {gocharPlanets && gocharPlanets.length > 0 && (
-            <div className="rx-noprint mt-4 overflow-x-auto rounded-xl border border-[#1a5276]/30 bg-[#f0f7ff] p-3">
-              <p className="mb-2 text-sm font-bold text-[#1a5276]">गोचर ग्रह स्थिति (वर्तमान)</p>
-              <table className="w-full border-collapse text-xs">
-                <thead>
-                  <tr className="bg-[#1a5276]/10 text-left">
-                    {["ग्रह", "राशि", "भाव (नाताल लग्न से)", "अंश", "नक्षत्र", ""].map((h) => (
-                      <th key={h} className="border border-[#1a5276]/20 px-2 py-1.5 font-semibold text-[#1a5276]">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {gocharPlanets.map((p) => (
-                    <tr key={p.name} className="hover:bg-[#1a5276]/5">
-                      <td className="border border-[#1a5276]/15 px-2 py-1.5 font-bold" style={{ color: p.color }}>{p.name}</td>
-                      <td className="border border-[#1a5276]/15 px-2 py-1.5">{p.rashi}</td>
-                      <td className="border border-[#1a5276]/15 px-2 py-1.5">{p.house}</td>
-                      <td className="border border-[#1a5276]/15 px-2 py-1.5 font-mono">{p.degree}</td>
-                      <td className="border border-[#1a5276]/15 px-2 py-1.5">{p.nakshatra}</td>
-                      <td className="border border-[#1a5276]/15 px-2 py-1.5 text-[10px] text-ink/50">{p.retrograde ? "वक्री (R)" : ""}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+
 
           {/* Row 3: Dasha fields (editable) */}
           <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -1113,37 +1063,6 @@ export function PrescriptionPad() {
                   <p><b>महादशा —</b> {mahadasha}</p><p><b>अन्तर्दशा —</b> {antardasha}</p><p><b>प्र० दशा —</b> {pratyantar}</p><p><b>दोष —</b> {dosha}</p><p><b>योग —</b> {yog}</p>
                 </div>
               </div>
-              {/* Dasha tree in print — Mahadasha → Antardasha → Pratyantar */}
-              {fullDasha && (() => {
-                const currMaha = fullDasha.find((x) => x.status === "current");
-                if (!currMaha) return null;
-                return (
-                  <div className="mt-3 text-[11px]">
-                    <p className="font-bold text-[#a01414] text-sm mb-1">विम्शोत्तरी दशा — विस्तार</p>
-                    <p className="font-semibold text-[#6d1414]">
-                      {currMaha.lord} महादशा ({fmtDate(currMaha.start)} → {fmtDate(currMaha.end)})
-                    </p>
-                    <div className="pl-3 mt-1 space-y-1">
-                      {currMaha.antars.map((antar) => (
-                        <div key={antar.lord}>
-                          <p className={`font-semibold ${antar.isCurrent ? "text-[#a01414]" : "text-ink/60"}`}>
-                            {antar.isCurrent ? "▶ " : "  "}{antar.lord} अन्तर्दशा ({fmtDate(antar.start)} → {fmtDate(antar.end)})
-                          </p>
-                          {antar.isCurrent && (
-                            <div className="pl-4 mt-0.5 space-y-0.5">
-                              {antar.pratyantars.map((prat) => (
-                                <p key={prat.lord} className={prat.isCurrent ? "font-bold text-[#6d1414]" : "text-ink/50"}>
-                                  {prat.isCurrent ? "● " : "  "}{prat.lord} प्र०दशा ({fmtDate(prat.start)} → {fmtDate(prat.end)})
-                                </p>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })()}
               {rows.some((r) => r.planet) && (
                 <table className="mt-3 w-full border-collapse text-[12px]">
                   <thead><tr className="bg-[#f2e4d6] text-left"><th className="border border-ink/20 px-2 py-1">ग्रह</th><th className="border border-ink/20 px-2 py-1">उपाय</th><th className="border border-ink/20 px-2 py-1">टिप्पणी</th></tr></thead>
