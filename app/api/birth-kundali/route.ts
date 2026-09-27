@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { CITIES } from "@/lib/calculators";
-import { computeKundli, computePanchang, chartSvgDataUri, RASHIS } from "@/lib/vedic";
+import { computeKundli, computePanchang, chartSvgDataUri, divisionalSign, RASHIS } from "@/lib/vedic";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +49,41 @@ export async function POST(req: Request) {
       pada: pada(p.lon),
     }));
 
+    // Navamsha (D9) planet positions — correct sign, degree-in-sign, nakshatra
+    const navamsaAscSign = divisionalSign(k.ascendant_lon, "D9");
+    const navamsaPlanets = k.planets.map((p) => {
+      const d9Sign = divisionalSign(p.lon, "D9");
+      const d9House = ((d9Sign - navamsaAscSign + 12) % 12) + 1;
+      // Navamsha degree: within the 3°20' (200') segment
+      const segLen = 30 / 9; // 3.333...°
+      const posInSeg = p.lon % segLen;
+      // Scale to full 30° for degree display
+      const d9LonInSign = posInSeg * (30 / segLen);
+      const d9Deg = Math.floor(d9LonInSign);
+      const d9Min = Math.floor((d9LonInSign - d9Deg) * 60);
+      const d9DegStr = `${d9Deg}°${String(d9Min).padStart(2, "0")}'`;
+      // Nakshatra based on the absolute navamsha longitude
+      const d9AbsLon = d9Sign * 30 + d9LonInSign;
+      const d9NakIdx = Math.floor(d9AbsLon / (360 / 27)) % 27;
+      const NAKSHATRAS_27 = [
+        "Ashwini","Bharani","Krittika","Rohini","Mrigashira","Ardra",
+        "Punarvasu","Pushya","Ashlesha","Magha","Purva Phalguni","Uttara Phalguni",
+        "Hasta","Chitra","Swati","Vishakha","Anuradha","Jyeshtha",
+        "Mula","Purva Ashadha","Uttara Ashadha","Shravana","Dhanishta","Shatabhisha",
+        "Purva Bhadrapada","Uttara Bhadrapada","Revati",
+      ];
+      const NAK_SPAN2 = 360 / 27;
+      const d9Pada = Math.floor((d9AbsLon % NAK_SPAN2) / (NAK_SPAN2 / 4)) + 1;
+      return {
+        name: p.name,
+        rashi: RASHIS[d9Sign],
+        house: d9House,
+        degree: d9DegStr,
+        nakshatra: NAKSHATRAS_27[d9NakIdx],
+        pada: d9Pada,
+      };
+    });
+
     const houses = Array.from({ length: 12 }, (_, i) => ({
       house: i + 1,
       rashi: RASHIS[(k.asc_rashi + i) % 12],
@@ -75,6 +110,7 @@ export async function POST(req: Request) {
       sun: { rashi: sun?.sign ?? "", degree: deg(sun?.lon ?? 0) },
       lagna: { rashi: k.ascendant, degree: deg(k.ascendant_lon) },
       planets,
+      navamsaPlanets,
       houses,
       dasha: k.dasha,
       dosha: k.doshaStr,
