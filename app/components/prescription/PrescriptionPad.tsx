@@ -204,8 +204,20 @@ export function PrescriptionPad() {
               const [yy, mm2, dd] = dob.split("-").map(Number);
               const [hh2, mn2] = tob.split(":").map(Number);
               const birthDate = new Date(Date.UTC(yy, mm2 - 1, dd, hh2 || 0, mn2 || 0) - 5.5 * 3600000);
-              setFullDasha(computeFullDasha(moonLon, birthDate));
+              const dashaTree = computeFullDasha(moonLon, birthDate);
+              setFullDasha(dashaTree);
               setExpandedMaha({}); setExpandedAntar({});
+
+              // Auto-fill the currently running Pratyantar Dasha exactly like
+              // Mahadasha/Antardasha. Respect a manually entered value.
+              if (!manualDasha.current.pratyantar) {
+                const currentMaha = dashaTree.find((m) => m.status === "current");
+                const currentAntar = currentMaha?.antars.find((a) => a.isCurrent);
+                const currentPrat = currentAntar?.pratyantars.find((p) => p.isCurrent);
+                if (currentPrat) {
+                  setPratyantar(`${currentPrat.lord} (till ${fmtDate(currentPrat.end)})`);
+                }
+              }
             }
             const kk = j.kundali as { dasha?: Dasha; doshaStr?: string; yogStr?: string };
             // Only auto-fill fields the astrologer hasn't edited/loaded — never
@@ -720,34 +732,6 @@ export function PrescriptionPad() {
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {/* Gochar planet table — current transit positions */}
-          {gocharPlanets && gocharPlanets.length > 0 && (
-            <div className="rx-noprint mt-4 overflow-x-auto rounded-xl border border-[#1a5276]/30 bg-[#f0f7ff] p-3">
-              <p className="mb-2 text-sm font-bold text-[#1a5276]">गोचर ग्रह स्थिति (वर्तमान)</p>
-              <table className="w-full border-collapse text-xs">
-                <thead>
-                  <tr className="bg-[#1a5276]/10 text-left">
-                    {["ग्रह", "राशि", "भाव (नाताल लग्न से)", "अंश", "नक्षत्र", ""].map((h) => (
-                      <th key={h} className="border border-[#1a5276]/20 px-2 py-1.5 font-semibold text-[#1a5276]">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {gocharPlanets.map((p) => (
-                    <tr key={p.name} className="hover:bg-[#1a5276]/5">
-                      <td className="border border-[#1a5276]/15 px-2 py-1.5 font-bold" style={{ color: p.color }}>{p.name}</td>
-                      <td className="border border-[#1a5276]/15 px-2 py-1.5">{p.rashi}</td>
-                      <td className="border border-[#1a5276]/15 px-2 py-1.5">{p.house}</td>
-                      <td className="border border-[#1a5276]/15 px-2 py-1.5 font-mono">{p.degree}</td>
-                      <td className="border border-[#1a5276]/15 px-2 py-1.5">{p.nakshatra}</td>
-                      <td className="border border-[#1a5276]/15 px-2 py-1.5 text-[10px] text-ink/50">{p.retrograde ? "वक्री (R)" : ""}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           )}
 
