@@ -198,20 +198,22 @@ export function PrescriptionPad() {
             setSelectedDiv("D1"); // reset chart selector to D1
             // Compute full Vimshottari dasha tree (client-side, no extra API call)
             const kk2 = j.kundali as { planets?: { name: string; lon: number }[] };
-            const moonLon = kk2?.planets?.find((p: { name: string; lon: number }) => p.name === "चंद्र")?.lon ?? 0;
-            if (moonLon) {
+            const moonPlanet = kk2?.planets?.find((p: { name: string; lon: number }) => p.name === "चंद्र");
+            const moonLon = moonPlanet?.lon ?? -1;
+            if (moonLon >= 0) {
               const [yy, mm2, dd] = dob.split("-").map(Number);
               const [hh2, mn2] = tob.split(":").map(Number);
               const birthDate = new Date(Date.UTC(yy, mm2 - 1, dd, hh2 || 0, mn2 || 0) - 5.5 * 3600000);
               const fd = computeFullDasha(moonLon, birthDate);
               setFullDasha(fd);
               setExpandedMaha({}); setExpandedAntar({});
-              // Auto-fill pratyantar from the computed dasha tree (not manual)
+              // Auto-fill pratyantar from the computed dasha tree
               const m2 = manualDasha.current;
               if (!m2.pratyantar) {
+                const nowMs = Date.now();
                 const currMaha = fd.find((x) => x.status === "current");
-                const currAntar = currMaha?.antars.find((x) => x.isCurrent);
-                const currPrat = currAntar?.pratyantars.find((x) => x.isCurrent);
+                const currAntar = currMaha?.antars.find((x) => nowMs >= x.start.getTime() && nowMs < x.end.getTime());
+                const currPrat = currAntar?.pratyantars.find((x) => nowMs >= x.start.getTime() && nowMs < x.end.getTime());
                 if (currPrat) {
                   const fmtD = (d: Date) => d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
                   setPratyantar(`${currPrat.lord} (till ${fmtD(currPrat.end)})`);
