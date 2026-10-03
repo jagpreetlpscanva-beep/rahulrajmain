@@ -119,8 +119,8 @@ export function KundaliMilan({ onBack }: { onBack: () => void }) {
       {!result && (
         <div className="rx-noprint">
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <PersonForm p={boy} set={(u) => setBoy((s) => ({ ...s, ...u }))} title="लड़के का विवरण" color="#1f4e79" />
-            <PersonForm p={girl} set={(u) => setGirl((s) => ({ ...s, ...u }))} title="लड़की का विवरण" color="#a01414" />
+            {PersonForm({ p: boy, set: (u) => setBoy((s) => ({ ...s, ...u })), title: "लड़के का विवरण", color: "#1f4e79" })}
+            {PersonForm({ p: girl, set: (u) => setGirl((s) => ({ ...s, ...u })), title: "लड़की का विवरण", color: "#a01414" })}
           </div>
           {error && <p className="mt-3 text-sm font-semibold text-rose-600">{error}</p>}
           <button onClick={generate} disabled={busy} className="mt-4 w-full rounded-xl bg-gold-gradient py-3 text-sm font-bold text-night shadow-gold-btn disabled:opacity-60 sm:w-auto sm:px-8">
