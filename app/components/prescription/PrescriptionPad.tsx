@@ -7,6 +7,8 @@ import { PLANETS, MISC_REMEDY_CATEGORY, DEFAULT_PAD_SECTIONS, DEFAULT_PAD_LABELS
 import { generatePrescriptionPdf, downloadPdf, type PrescriptionPdfData } from "@/lib/prescriptionPad/generatePdf";
 import { toHindi } from "@/lib/prescriptionPad/hindi";
 import { computeFullDasha, divisionalChartSvgDataUri, type DivisionCode, type MahaDasha } from "@/lib/vedic";
+import { KundaliMilan } from "./KundaliMilan";
+import { BirthChildKundali } from "./BirthChildKundali";
 
 /* ---------------- types ---------------- */
 type Rem = { id: string; planet: string; title: string; enabled?: boolean };
@@ -93,8 +95,8 @@ function Footer({ L }: { L: LabelFn }) {
   );
 }
 
-/* ---------------- main ---------------- */
-export function PrescriptionPad() {
+/* ---------------- main (Basic Kundali / Prescription Pad) ---------------- */
+function PrescriptionPadForm() {
   const [remedies, setRemedies] = useState<Rem[]>([]);
   const [miscRemedies, setMiscRemedies] = useState<MiscRem[]>([]);
   const [countOptions, setCountOptions] = useState<CountOpt[]>([]);
@@ -1052,6 +1054,61 @@ export function PrescriptionPad() {
         </div>,
         portal
       )}
+    </div>
+  );
+}
+
+/* ---------------- Prescription Module: 3-option hub ----------------
+   Basic Kundali / Prescription Pad · Kundali Milan · Birth Child Kundali.
+   Each option opens its existing component; "← वापस" returns to this menu. */
+type ModuleMode = "menu" | "pad" | "milan" | "child";
+
+const MODULE_OPTIONS: { mode: Exclude<ModuleMode, "menu">; icon: string; title: string; sub: string }[] = [
+  { mode: "pad", icon: "📜", title: "बेसिक कुंडली / प्रिस्क्रिप्शन पैड", sub: "Basic Kundali / Prescription Pad" },
+  { mode: "milan", icon: "💞", title: "कुंडली मिलान", sub: "Kundali Milan" },
+  { mode: "child", icon: "👶", title: "बाल जन्म कुंडली", sub: "Birth Child Kundali" },
+];
+
+export function PrescriptionPad() {
+  const [mode, setMode] = useState<ModuleMode>("menu");
+  const goMenu = useCallback(() => setMode("menu"), []);
+  const fallbackL: LabelFn = (_key, fallback) => fallback;
+
+  if (mode === "pad") {
+    return (
+      <div className="bg-[#f4eee3] print:bg-white">
+        <style>{`@media print { .rx-noprint { display:none !important; } }`}</style>
+        <div className="rx-noprint mx-auto w-full max-w-[1120px] px-3 pt-3">
+          <button onClick={goMenu} className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm font-semibold text-ink/70">← वापस</button>
+        </div>
+        <PrescriptionPadForm />
+      </div>
+    );
+  }
+  if (mode === "milan") return <div className="min-h-screen bg-[#f4eee3]"><KundaliMilan onBack={goMenu} /></div>;
+  if (mode === "child") return <div className="min-h-screen bg-[#f4eee3]"><BirthChildKundali onBack={goMenu} /></div>;
+
+  return (
+    <div className="flex min-h-screen flex-col bg-[#f4eee3]">
+      <header className="shadow-md"><Letterhead L={fallbackL} /></header>
+      <main className="mx-auto w-full max-w-[1120px] flex-1 px-3 py-8">
+        <h1 className="mb-6 text-center font-serif text-2xl font-bold text-[#a01414]">प्रिस्क्रिप्शन मॉड्यूल</h1>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {MODULE_OPTIONS.map((o) => (
+            <button
+              key={o.mode}
+              type="button"
+              onClick={() => setMode(o.mode)}
+              className="rounded-2xl border border-[#8a2020]/20 bg-white p-6 text-center shadow-sm transition-transform hover:-translate-y-0.5 hover:border-[#8a2020]/50 hover:shadow-md"
+            >
+              <span className="block text-4xl">{o.icon}</span>
+              <span className="mt-3 block font-serif text-lg font-bold text-[#a01414]">{o.title}</span>
+              <span className="mt-1 block text-xs font-semibold text-ink/50">{o.sub}</span>
+            </button>
+          ))}
+        </div>
+      </main>
+      <footer className="mt-2 shadow-inner"><Footer L={fallbackL} /></footer>
     </div>
   );
 }
