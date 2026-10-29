@@ -118,16 +118,22 @@ export async function consultationsByMobile(mobile: string): Promise<Consultatio
   return (await readConsultations()).filter((c) => c.mobile.replace(/\D/g, "").slice(-10) === digits);
 }
 
-/** Search by patient name (substring) OR mobile. */
+/** Search by patient name OR mobile — across ALL saved records (any age).
+ *  Name: case-insensitive, extra spaces ignored, every typed word must appear
+ *  somewhere in the name (so "rahul raj" finds "Raj Rahul Kumar").
+ *  Mobile: any 3+ digits typed match anywhere in the saved number. */
 export async function searchConsultations(q: string): Promise<Consultation[]> {
-  const s = q.trim().toLowerCase();
+  const norm = (t: string) => (t || "").normalize("NFC").toLowerCase().replace(/\s+/g, " ").trim();
+  const s = norm(q);
   if (!s) return [];
-  const digits = q.replace(/\D/g, "").slice(-10);
-  return (await readConsultations()).filter(
-    (c) =>
-      c.patientName.toLowerCase().includes(s) ||
-      (digits.length >= 4 && c.mobile.replace(/\D/g, "").includes(digits))
-  );
+  const words = s.split(" ").filter(Boolean);
+  const digits = q.replace(/\D/g, "");
+  return (await readConsultations()).filter((c) => {
+    const name = norm(c.patientName);
+    if (words.every((w) => name.includes(w))) return true;
+    const mob = String(c.mobile || "").replace(/\D/g, "");
+    return digits.length >= 3 && mob.includes(digits.slice(-10));
+  });
 }
 
 /** All consultations created today (newest first). */
