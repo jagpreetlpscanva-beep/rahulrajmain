@@ -95,7 +95,7 @@ export async function POST(req: Request) {
       kundali: k,
       chart: chartSvgDataUri(k, "D1", "#a01414"),
       d9: chartSvgDataUri(k, "D9", "#a01414"),     // Navamsa — UI only
-      gochar: chartSvgDataUri(gocharForChart, "D1", "#1a5276"),
+      gochar: chartSvgDataUri(gocharForChart, "D1", "#1a5276", new Set(gocharPlanets.filter((p) => p.retrograde && p.name !== "राहु" && p.name !== "केतु").map((p) => p.name))),
       gocharPlanets,
     });
   } catch (e) {
