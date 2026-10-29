@@ -489,12 +489,18 @@ function PrescriptionPadForm() {
     } finally { setPdfBusy(null); }
   };
 
-  const search = async () => {
-    if (!searchQ.trim()) return;
-    const r = await fetch(`/api/prescriptions?q=${encodeURIComponent(searchQ)}`);
+  const search = async (q: string = searchQ) => {
+    if (!q.trim()) { setResults(null); return; }
+    const r = await fetch(`/api/prescriptions?q=${encodeURIComponent(q)}`);
     const j = await r.json();
     setResults(Array.isArray(j.consultations) ? j.consultations : []);
   };
+  // live search: results update as the doctor types (debounced)
+  useEffect(() => {
+    const t = setTimeout(() => { search(searchQ); }, 300);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQ]);
   const loadByDate = async (date: string) => {
     setRecDate(date);
     if (!date) { setDateRecs(null); return; }
@@ -607,7 +613,7 @@ function PrescriptionPadForm() {
             <p className="mb-2 text-sm font-bold text-[#8a2020]">🔎 नाम या मोबाइल से खोजें</p>
             <div className="flex gap-2">
               <input value={searchQ} onChange={(e) => setSearchQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && search()} placeholder="नाम / मोबाइल…" className="w-full rounded-lg border border-ink/20 px-2.5 py-1.5 text-sm" />
-              <button onClick={search} className="rounded-lg bg-[#8a2020] px-3 text-sm font-semibold text-white">खोजें</button>
+              <button onClick={() => search()} className="rounded-lg bg-[#8a2020] px-3 text-sm font-semibold text-white">खोजें</button>
             </div>
             {results && (
               <ul className="mt-2 max-h-56 divide-y divide-ink/10 overflow-y-auto">
