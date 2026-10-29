@@ -353,16 +353,16 @@ function navamsaSign(lon: number): number {
  * North-Indian (diamond) chart as an SVG data URI. `division` D1 uses each
  * planet's rashi; D9 uses its navamsa sign. House 1 (top diamond) = ascendant.
  */
-export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "D1" | "D9", color = "#c8902c"): string {
+export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "D1" | "D9", color = "#c8902c", retroNames?: Set<string>): string {
   const ascSign = division === "D1" ? k.asc_rashi : navamsaSign(k.ascendant_lon);
   // planets grouped by house
-  const byHouse: Record<number, { label: string; color: string }[]> = {};
+  const byHouse: Record<number, { label: string; color: string; retro?: boolean }[]> = {};
   for (const pl of k.planets) {
     const sign = division === "D1" ? pl.rashi : navamsaSign(pl.lon);
     const house = ((sign - ascSign + 12) % 12) + 1;
     // planet (Hindi) + its degree-in-sign, e.g. "श 12°"
     const deg = division === "D1" ? ` ${Math.floor(((pl.lon % 30) + 30) % 30)}°` : "";
-    (byHouse[house] ||= []).push({ label: `${pl.abbr}${deg}`, color: (pl as { color?: string }).color || "#2a1b0e" });
+    (byHouse[house] ||= []).push({ label: `${pl.abbr}${deg}`, color: (pl as { color?: string }).color || "#2a1b0e", retro: !!retroNames?.has(pl.name) });
   }
 
   const S = 400;
@@ -387,7 +387,7 @@ export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "
     inner += `<text x="${x}" y="${y - 12}" font-size="12" fill="${color}" opacity="0.65" text-anchor="middle">${rashiNum}</text>`;
     const ps = byHouse[h] || [];
     ps.forEach((p, n) => {
-      inner += `<text x="${x - 7}" y="${y + 6 + n * 17}" font-size="16" font-weight="bold" fill="${p.color}" text-anchor="middle">${p.label}</text>`;
+      inner += `<text x="${x - 7}" y="${y + 6 + n * 17}" font-size="16" font-weight="bold" fill="${p.color}" text-anchor="middle">${p.label}${p.retro ? `<tspan font-size="8" font-weight="bold" dy="-7">वक्री</tspan>` : ""}</text>`;
     });
   }
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${S} ${S}">
