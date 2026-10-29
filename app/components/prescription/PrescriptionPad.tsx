@@ -6,9 +6,7 @@ import { CITIES } from "@/lib/calculators";
 import { PLANETS, MISC_REMEDY_CATEGORY, DEFAULT_PAD_SECTIONS, DEFAULT_PAD_LABELS, resolveLabel, type PadSection, type PadLabel, type Anushthan, type GemGrade, type CaratOption } from "@/lib/cms";
 import { generatePrescriptionPdf, downloadPdf, type PrescriptionPdfData } from "@/lib/prescriptionPad/generatePdf";
 import { toHindi } from "@/lib/prescriptionPad/hindi";
-import { computeFullDasha, divisionalChartSvgDataUri, type DivisionCode, type MahaDasha } from "@/lib/vedic";
-import { KundaliMilan } from "./KundaliMilan";
-import { BirthChildKundali } from "./BirthChildKundali";
+import { computeFullDasha, divisionalSign, RASHIS, type MahaDasha } from "@/lib/vedic";
 
 /* ---------------- types ---------------- */
 type Rem = { id: string; planet: string; title: string; enabled?: boolean };
@@ -95,8 +93,8 @@ function Footer({ L }: { L: LabelFn }) {
   );
 }
 
-/* ---------------- main (Basic Kundali / Prescription Pad) ---------------- */
-function PrescriptionPadForm() {
+/* ---------------- main ---------------- */
+export function PrescriptionPad() {
   const [remedies, setRemedies] = useState<Rem[]>([]);
   const [miscRemedies, setMiscRemedies] = useState<MiscRem[]>([]);
   const [countOptions, setCountOptions] = useState<CountOpt[]>([]);
@@ -134,8 +132,7 @@ function PrescriptionPadForm() {
   const [zoom, setZoom] = useState(false);
   const [gocharZoom, setGocharZoom] = useState(false);
   const [selectedDiv, setSelectedDiv] = useState<"D1" | "D9">("D1");
-  const [divChart, setDivChart] = useState<string | null>(null);
-  const [divBusy, setDivBusy] = useState(false);
+  const [d9Planets, setD9Planets] = useState<{ name: string; rashi: string; degree: string; nakshatra: string }[] | null>(null);
   const [fullDasha, setFullDasha] = useState<MahaDasha[] | null>(null);
   const [expandedMaha, setExpandedMaha] = useState<Record<string, boolean>>({});
   const [expandedAntar, setExpandedAntar] = useState<Record<string, boolean>>({});
@@ -198,10 +195,11 @@ function PrescriptionPadForm() {
         .then((j) => {
           if (j.ok) {
             setChart(j.chart); setGochar(j.gochar || null); setGocharPlanets(j.gocharPlanets || null); setKundali(j.kundali); setKundaliState("done");
-            setDivChart(j.chart); setSelectedDiv("D1"); // reset chart selector to D1
+            setSelectedDiv("D1"); // reset chart selector to D1
             // Compute full Vimshottari dasha tree (client-side, no extra API call)
             const kk2 = j.kundali as { planets?: { name: string; lon: number }[] };
-            const moonLon = kk2?.planets?.find((p: { name: string; lon: number }) => p.name === "चंद्र")?.lon ?? -1;
+            const moonPlanet = kk2?.planets?.find((p: { name: string; lon: number }) => p.name === "चंद्र");
+            const moonLon = moonPlanet?.lon ?? -1;
             if (moonLon >= 0) {
               const [yy, mm2, dd] = dob.split("-").map(Number);
               const [hh2, mn2] = tob.split(":").map(Number);
@@ -209,16 +207,49 @@ function PrescriptionPadForm() {
               const fd = computeFullDasha(moonLon, birthDate);
               setFullDasha(fd);
               setExpandedMaha({}); setExpandedAntar({});
-              const nowMs = Date.now();
-              const currMaha = fd.find((m) => nowMs >= m.start.getTime() && nowMs < m.end.getTime());
-              const currAntar = currMaha?.antars.find((a) => nowMs >= a.start.getTime() && nowMs < a.end.getTime());
-              const currPrat = currAntar?.pratyantars.find((p) => nowMs >= p.start.getTime() && nowMs < p.end.getTime());
-              if (currPrat) {
-                const fmtD = (d: Date) => d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
-                setPratyantar(`${currPrat.lord} (till ${fmtD(currPrat.end)})`);
-              } else {
-                setPratyantar("");
+              // Auto-fill pratyantar from the computed dasha tree
+              const m2 = manualDasha.current;
+              if (!m2.pratyantar) {
+                const nowMs = Date.now();
+                const currMaha = fd.find((x) => x.status === "current");
+                const currAntar = currMaha?.antars.find((x) => nowMs >= x.start.getTime() && nowMs < x.end.getTime());
+                const currPrat = currAntar?.pratyantars.find((x) => nowMs >= x.start.getTime() && nowMs < x.end.getTime());
+                if (currPrat) {
+                  const fmtD = (d: Date) => d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+                  setPratyantar(`${currPrat.lord} (till ${fmtD(currPrat.end)})`);
+                }
               }
+            }
+            // Compute D9 planet table from the kundali data
+            const kk2raw = j.kundali as { planets?: { name: string; lon: number; nakshatra?: string; abbr?: string }[]; ascendant_lon?: number } | null;
+            if (kk2raw?.planets && typeof kk2raw.ascendant_lon === "number") {
+              const NAKSHATRAS_27 = [
+                "Ashwini","Bharani","Krittika","Rohini","Mrigashira","Ardra",
+                "Punarvasu","Pushya","Ashlesha","Magha","Purva Phalguni","Uttara Phalguni",
+                "Hasta","Chitra","Swati","Vishakha","Anuradha","Jyeshtha",
+                "Mula","Purva Ashadha","Uttara Ashadha","Shravana","Dhanishta","Shatabhisha",
+                "Purva Bhadrapada","Uttara Bhadrapada","Revati",
+              ];
+              const d9AscSign = divisionalSign(kk2raw.ascendant_lon, "D9");
+              const d9Table = kk2raw.planets.map((p) => {
+                const d9Sign = divisionalSign(p.lon, "D9");
+                // Degree within the navamsha segment scaled to 0-30
+                const segLen = 30 / 9;
+                const posInSeg = p.lon % segLen;
+                const d9LonInSign = posInSeg * (30 / segLen);
+                const d9Deg = Math.floor(d9LonInSign);
+                const d9Min = Math.floor((d9LonInSign - d9Deg) * 60);
+                const d9AbsLon = d9Sign * 30 + d9LonInSign;
+                const d9NakIdx = Math.floor(d9AbsLon / (360 / 27)) % 27;
+                return {
+                  name: p.name,
+                  rashi: RASHIS[d9Sign],
+                  degree: `${d9Deg}°${String(d9Min).padStart(2, "0")}'`,
+                  nakshatra: NAKSHATRAS_27[d9NakIdx],
+                };
+              });
+              void d9AscSign; // suppress unused var warning – stored only for ordering reference
+              setD9Planets(d9Table);
             }
             const kk = j.kundali as { dasha?: Dasha; doshaStr?: string; yogStr?: string };
             // Only auto-fill fields the astrologer hasn't edited/loaded — never
@@ -236,19 +267,6 @@ function PrescriptionPadForm() {
     }, 350);
     return () => clearTimeout(t);
   }, [dob, tob, place, placeCoords]);
-
-  // Auto-fill the currently running Pratyantar Dasha from the full Vimshottari tree.
-  // Always derive it from the same timeline used by Mahadasha/Antardasha.
-  useEffect(() => {
-    if (!fullDasha) return;
-    const nowMs = Date.now();
-    const currentMaha = fullDasha.find((m) => nowMs >= m.start.getTime() && nowMs < m.end.getTime());
-    const currentAntar = currentMaha?.antars.find((a) => nowMs >= a.start.getTime() && nowMs < a.end.getTime());
-    const currentPrat = currentAntar?.pratyantars.find((p) => nowMs >= p.start.getTime() && nowMs < p.end.getTime());
-    if (currentPrat) {
-      setPratyantar(`${currentPrat.lord} (till ${fmtDate(currentPrat.end)})`);
-    }
-  }, [fullDasha, mahadasha, antardasha]);
 
   /** Birth date field: mask keystrokes as DD/MM/YYYY, commit to ISO `dob` only once complete & valid. */
   const onDobChange = (raw: string) => {
@@ -321,25 +339,7 @@ function PrescriptionPadForm() {
     return n > 0 ? `₹${n.toLocaleString("en-IN")}` : "";
   }, [calcGemPriceNumber]);
 
-  /** Switch between D1 and D9 chart. All computed client-side. */
-  const selectDiv = (div: "D1" | "D9") => {
-    setSelectedDiv(div);
-    if (!kundali) return;
-    const k = kundali as Parameters<typeof divisionalChartSvgDataUri>[0];
-    if (div === "D1") {
-      setDivChart(chart);
-      return;
-    }
-    setDivBusy(true);
-    setTimeout(() => {
-      try {
-        const uri = divisionalChartSvgDataUri(k, "D9", "#1f4e79");
-        setDivChart(uri);
-      } finally {
-        setDivBusy(false);
-      }
-    }, 10);
-  };
+  // D9 chart is no longer rendered as an image — planets are shown in a table instead.
 
   const fmtDate = (d: Date) => d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
@@ -396,7 +396,7 @@ function PrescriptionPadForm() {
     setPatientName(""); setMobile(""); setGender(""); setDob(""); setDobText(""); setTob(""); setPlace("Lucknow"); setPlaceCoords(null);
     setMahadasha(""); setAntardasha(""); setPratyantar(""); setDosha(""); setYog("");
     manualDasha.current = {}; // new patient → auto-fill is free to populate again
-    setChart(null); setGochar(null); setGocharPlanets(null); setKundali(null); setKundaliState("idle");
+    setChart(null); setGochar(null); setGocharPlanets(null); setKundali(null); setKundaliState("idle"); setD9Planets(null);
     setRows([emptyRow()]); setGems([blankGem()]); setAnushthanRows([]); setAnuQuery(""); setNotes(""); setSavedId(null);
   };
 
@@ -407,7 +407,7 @@ function PrescriptionPadForm() {
     // by setDob/setTob/setPlace above) can't overwrite what was saved.
     manualDasha.current = { mahadasha: true, antardasha: true, pratyantar: true, dosha: true, yog: true };
     setKundali(c.kundali); setRows(c.rows?.length ? c.rows : [emptyRow()]); setGems(c.gemstones?.length ? c.gemstones : [blankGem()]); setAnushthanRows(Array.isArray(c.anushthan) ? c.anushthan : []); setNotes(c.notes);
-    setSavedId(c.id); setChart(null); setGochar(null); setGocharPlanets(null); setKundaliState("idle"); setResults(null); setFullDasha(null); setDivChart(null); setSelectedDiv("D1");
+    setSavedId(c.id); setChart(null); setGochar(null); setGocharPlanets(null); setKundaliState("idle"); setResults(null); setFullDasha(null); setSelectedDiv("D1"); setD9Planets(null);
   };
 
   const doSave = async (): Promise<string | null> => {
@@ -713,6 +713,61 @@ function PrescriptionPadForm() {
             </div>
           </div>
 
+          {/* Row 2: D9 Navamsha — toggle shows planet table (no chart image) */}
+          {chart && (
+            <div className="rx-noprint mt-4 rounded-xl border border-ink/10 bg-[#faf6ee] p-3">
+              <div className="flex flex-wrap gap-2 items-center">
+                <button
+                  onClick={() => setSelectedDiv(selectedDiv === "D9" ? "D1" : "D9")}
+                  className={`rounded-lg px-3 py-1.5 text-[11px] font-semibold transition-all ${
+                    selectedDiv === "D9"
+                      ? "bg-[#1f4e79] text-white shadow-sm"
+                      : "border border-ink/20 bg-white text-ink/65 hover:border-[#1f4e79]/40 hover:text-[#1f4e79]"
+                  }`}
+                >
+                  D9 नवांश ग्रह स्थिति
+                </button>
+                {selectedDiv === "D9" && (
+                  <button
+                    onClick={() => setSelectedDiv("D1")}
+                    className="rounded-lg border border-ink/15 bg-white px-2.5 py-1 text-[11px] text-ink/45 hover:text-ink/70"
+                  >
+                    बंद करें ✕
+                  </button>
+                )}
+              </div>
+              {selectedDiv === "D9" && d9Planets && d9Planets.length > 0 && (
+                <div className="mt-3 overflow-x-auto">
+                  <p className="mb-1.5 text-[11px] font-semibold text-[#1f4e79]">नवांश ग्रह स्थिति (D9)</p>
+                  <table className="w-full border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-[#1f4e79]/10 text-left">
+                        {["ग्रह", "राशि", "अंश / मिनट", "नक्षत्र"].map((h) => (
+                          <th key={h} className="border border-[#1f4e79]/20 px-2 py-1.5 font-semibold text-[#1f4e79]">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {d9Planets.map((p) => (
+                        <tr key={p.name} className="hover:bg-[#1f4e79]/5">
+                          <td className="border border-[#1f4e79]/15 px-2 py-1.5 font-bold text-[#1f4e79]">{p.name}</td>
+                          <td className="border border-[#1f4e79]/15 px-2 py-1.5">{p.rashi}</td>
+                          <td className="border border-[#1f4e79]/15 px-2 py-1.5 font-mono">{p.degree}</td>
+                          <td className="border border-[#1f4e79]/15 px-2 py-1.5">{p.nakshatra}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              {selectedDiv === "D9" && !d9Planets && (
+                <p className="mt-2 text-xs text-ink/45">जन्म विवरण भरते ही D9 ग्रह स्थिति यहाँ आएगी।</p>
+              )}
+            </div>
+          )}
+
+
+
           {/* Row 3: Dasha fields (editable) */}
           <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {([
@@ -724,7 +779,7 @@ function PrescriptionPadForm() {
             ] as [string, string, string, (v: string) => void][]).map(([key, label, val, set]) => (
               <div key={key}>
                 <label className="mb-0.5 block text-[11px] font-bold text-[#a01414]">{label}</label>
-                <input className={inp} value={val} readOnly={key === "pratyantar"} onChange={(e) => { if (key !== "pratyantar") markDasha(key); set(e.target.value); }} />
+                <input className={inp} value={val} onChange={(e) => { markDasha(key); set(e.target.value); }} />
               </div>
             ))}
           </div>
@@ -1040,6 +1095,37 @@ function PrescriptionPadForm() {
                   <p><b>महादशा —</b> {mahadasha}</p><p><b>अन्तर्दशा —</b> {antardasha}</p><p><b>प्र० दशा —</b> {pratyantar}</p><p><b>दोष —</b> {dosha}</p><p><b>योग —</b> {yog}</p>
                 </div>
               </div>
+              {/* Dasha tree in print — Mahadasha → Antardasha → Pratyantar */}
+              {fullDasha && (() => {
+                const currMaha = fullDasha.find((x) => x.status === "current");
+                if (!currMaha) return null;
+                return (
+                  <div className="mt-3 text-[11px]">
+                    <p className="font-bold text-[#a01414] text-sm mb-1">विम्शोत्तरी दशा — विस्तार</p>
+                    <p className="font-semibold text-[#6d1414]">
+                      {currMaha.lord} महादशा ({fmtDate(currMaha.start)} → {fmtDate(currMaha.end)})
+                    </p>
+                    <div className="pl-3 mt-1 space-y-1">
+                      {currMaha.antars.map((antar) => (
+                        <div key={antar.lord}>
+                          <p className={`font-semibold ${antar.isCurrent ? "text-[#a01414]" : "text-ink/60"}`}>
+                            {antar.isCurrent ? "▶ " : "  "}{antar.lord} अन्तर्दशा ({fmtDate(antar.start)} → {fmtDate(antar.end)})
+                          </p>
+                          {antar.isCurrent && (
+                            <div className="pl-4 mt-0.5 space-y-0.5">
+                              {antar.pratyantars.map((prat) => (
+                                <p key={prat.lord} className={prat.isCurrent ? "font-bold text-[#6d1414]" : "text-ink/50"}>
+                                  {prat.isCurrent ? "● " : "  "}{prat.lord} प्र०दशा ({fmtDate(prat.start)} → {fmtDate(prat.end)})
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
               {rows.some((r) => r.planet) && (
                 <table className="mt-3 w-full border-collapse text-[12px]">
                   <thead><tr className="bg-[#f2e4d6] text-left"><th className="border border-ink/20 px-2 py-1">ग्रह</th><th className="border border-ink/20 px-2 py-1">उपाय</th><th className="border border-ink/20 px-2 py-1">टिप्पणी</th></tr></thead>
@@ -1060,61 +1146,6 @@ function PrescriptionPadForm() {
         </div>,
         portal
       )}
-    </div>
-  );
-}
-
-/* ---------------- Prescription Module: 3-option hub ----------------
-   Basic Kundali / Prescription Pad · Kundali Milan · Birth Child Kundali.
-   Each option opens its existing component; "← वापस" returns to this menu. */
-type ModuleMode = "menu" | "pad" | "milan" | "child";
-
-const MODULE_OPTIONS: { mode: Exclude<ModuleMode, "menu">; icon: string; title: string; sub: string }[] = [
-  { mode: "pad", icon: "📜", title: "बेसिक कुंडली / प्रिस्क्रिप्शन पैड", sub: "Basic Kundali / Prescription Pad" },
-  { mode: "milan", icon: "💞", title: "कुंडली मिलान", sub: "Kundali Milan" },
-  { mode: "child", icon: "👶", title: "बाल जन्म कुंडली", sub: "Birth Child Kundali" },
-];
-
-export function PrescriptionPad() {
-  const [mode, setMode] = useState<ModuleMode>("menu");
-  const goMenu = useCallback(() => setMode("menu"), []);
-  const fallbackL: LabelFn = (_key, fallback) => fallback;
-
-  if (mode === "pad") {
-    return (
-      <div className="bg-[#f4eee3] print:bg-white">
-        <style>{`@media print { .rx-noprint { display:none !important; } }`}</style>
-        <div className="rx-noprint mx-auto w-full max-w-[1120px] px-3 pt-3">
-          <button onClick={goMenu} className="rounded-lg border border-ink/20 bg-white px-3 py-2 text-sm font-semibold text-ink/70">← वापस</button>
-        </div>
-        <PrescriptionPadForm />
-      </div>
-    );
-  }
-  if (mode === "milan") return <div className="min-h-screen bg-[#f4eee3]"><KundaliMilan onBack={goMenu} /></div>;
-  if (mode === "child") return <div className="min-h-screen bg-[#f4eee3]"><BirthChildKundali onBack={goMenu} /></div>;
-
-  return (
-    <div className="flex min-h-screen flex-col bg-[#f4eee3]">
-      <header className="shadow-md"><Letterhead L={fallbackL} /></header>
-      <main className="mx-auto w-full max-w-[1120px] flex-1 px-3 py-8">
-        <h1 className="mb-6 text-center font-serif text-2xl font-bold text-[#a01414]">प्रिस्क्रिप्शन मॉड्यूल</h1>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {MODULE_OPTIONS.map((o) => (
-            <button
-              key={o.mode}
-              type="button"
-              onClick={() => setMode(o.mode)}
-              className="rounded-2xl border border-[#8a2020]/20 bg-white p-6 text-center shadow-sm transition-transform hover:-translate-y-0.5 hover:border-[#8a2020]/50 hover:shadow-md"
-            >
-              <span className="block text-4xl">{o.icon}</span>
-              <span className="mt-3 block font-serif text-lg font-bold text-[#a01414]">{o.title}</span>
-              <span className="mt-1 block text-xs font-semibold text-ink/50">{o.sub}</span>
-            </button>
-          ))}
-        </div>
-      </main>
-      <footer className="mt-2 shadow-inner"><Footer L={fallbackL} /></footer>
     </div>
   );
 }
