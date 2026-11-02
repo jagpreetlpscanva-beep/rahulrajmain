@@ -54,7 +54,7 @@ import {
 
 const mm = (v: number) => v * MM_TO_PT;
 
-export type PdfPlanet = { name: string; abbr: string; house: number; degree: number };
+export type PdfPlanet = { name: string; abbr: string; house: number; degree: number; retro?: boolean };
 export type PdfRemedyRow = { planet: string; remedyLines: string[]; notes: string };
 export type PdfGemRow = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; rudraksha?: string; price?: string };
 export type PdfSection = { id: string; title: string; enabled: boolean; col1?: string; col2?: string; col3?: string };
@@ -257,6 +257,11 @@ export async function generatePrescriptionPdf(data: PrescriptionPdfData, mode: P
       const wMm = font.widthOfTextAtSize(label, planetSize) / MM_TO_PT;
       const color = PLANET_COLORS[p.name] ?? DEFAULT_TEXT_COLOR;
       drawText(page, font, label, cxMm - wMm / 2 + planetShiftX, startYMm + i * KUNDALI_PLANET.lineMm, mode, { size: planetSize, color });
+      if (p.retro) {
+        // small "वक्री" tag raised to the right of the planet, like the on-screen chart
+        const vSize = planetSize * 0.5;
+        drawText(page, font, "वक्री", cxMm - wMm / 2 + planetShiftX + wMm + 0.3, startYMm + i * KUNDALI_PLANET.lineMm - 1.6, mode, { size: vSize, color });
+      }
     });
   }
 
