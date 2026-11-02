@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { PrescriptionPad } from "../components/prescription/PrescriptionPad";
+import { PrescriptionPad } from "../components/prescription/PrescriptionModule";
 
 export const metadata: Metadata = {
   title: "Prescription Pad — Dr. Rahul Raj",
