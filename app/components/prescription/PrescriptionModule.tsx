@@ -7,6 +7,8 @@ import { PLANETS, MISC_REMEDY_CATEGORY, DEFAULT_PAD_SECTIONS, DEFAULT_PAD_LABELS
 import { generatePrescriptionPdf, downloadPdf, type PrescriptionPdfData } from "@/lib/prescriptionPad/generatePdf";
 import { toHindi } from "@/lib/prescriptionPad/hindi";
 import { computeFullDasha, divisionalSign, RASHIS, type MahaDasha } from "@/lib/vedic";
+import { KundaliMilan } from "./KundaliMilan";
+import { BirthChildKundali } from "./BirthChildKundali";
 
 /* ---------------- types ---------------- */
 type Rem = { id: string; planet: string; title: string; enabled?: boolean };
@@ -16,7 +18,7 @@ type GemRate = { id: string; label: string; price: number };
 type Gem = { planet: string; stone: string; weight: string; metal: string; finger: string; day: string; rudraksha: string; carat?: string; grade?: string; rateA?: number; rateB?: number; rateC?: number; rates?: GemRate[]; rateLabel?: string; price?: number };
 type AnuRow = { title: string; purpose: string; dakshina: string };
 type Row = { planet: string; remedies: string[]; notes: string; remedyCounts?: Record<string, string> };
-type KPlanet = { name: string; color?: string; abbr: string; lon: number; rashi: number; house: number; sign: string; nakshatra: string; nakshatra_lord?: string };
+type KPlanet = { name: string; color?: string; retro?: boolean; abbr: string; lon: number; rashi: number; house: number; sign: string; nakshatra: string; nakshatra_lord?: string };
 type Dasha = { mahadasha: string; antardasha: string };
 type Consultation = {
   id: string; patientName: string; mobile: string; gender: string; dob: string; tob: string; place: string;
@@ -95,6 +97,7 @@ function Footer({ L }: { L: LabelFn }) {
 
 /* ---------------- main ---------------- */
 export function PrescriptionPad() {
+  const [view, setView] = useState<"rx" | "milan" | "birth">("rx");
   const [remedies, setRemedies] = useState<Rem[]>([]);
   const [miscRemedies, setMiscRemedies] = useState<MiscRem[]>([]);
   const [countOptions, setCountOptions] = useState<CountOpt[]>([]);
@@ -436,7 +439,7 @@ export function PrescriptionPad() {
       dob: fmtDMY(dob), tob, place,
       date: fmtDMY(now.toISOString().slice(0, 10)), astrologer,
       mahadasha, antardasha, pratyantar, dosha, yog,
-      planets: kPlanets.map((p) => ({ name: p.name, abbr: p.abbr, house: p.house, degree: Math.floor(((p.lon % 30) + 30) % 30) })),
+      planets: kPlanets.map((p) => ({ name: p.name, abbr: p.abbr, house: p.house, degree: Math.floor(((p.lon % 30) + 30) % 30), retro: !!p.retro })),
       // SAME asc_rashi as the on-screen chart (kundali is the single source of
       // truth) — the PDF's house-number labels must never be recalculated separately.
       ascRashi: (kundali as { asc_rashi?: number } | null)?.asc_rashi ?? 0,
@@ -489,9 +492,9 @@ export function PrescriptionPad() {
     } finally { setPdfBusy(null); }
   };
 
-  const search = async () => {
-    if (!searchQ.trim()) return;
-    const r = await fetch(`/api/prescriptions?q=${encodeURIComponent(searchQ)}`);
+  const search = async (q: string = searchQ) => {
+    if (!q.trim()) { setResults(null); return; }
+    const r = await fetch(`/api/prescriptions?q=${encodeURIComponent(q)}`);
     const j = await r.json();
     setResults(Array.isArray(j.consultations) ? j.consultations : []);
   };
@@ -588,6 +591,25 @@ export function PrescriptionPad() {
       {/* ===== PAGE HEADER (top) ===== */}
       <header className="rx-noprint shadow-md"><Letterhead L={L} /></header>
 
+      {/* ===== MENU: Prescription / Kundali Milan / Birth Kundali ===== */}
+      <nav className="rx-noprint mx-auto flex w-full max-w-[1120px] flex-wrap gap-2 px-3 pt-4">
+        {([
+          ["rx", "📝 प्रिस्क्रिप्शन"],
+          ["milan", "💞 कुंडली मिलान"],
+          ["birth", "👶 जन्म कुंडली (बाल)"],
+        ] as ["rx" | "milan" | "birth", string][]).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setView(key)}
+            className={`rounded-lg px-4 py-2 text-sm font-bold shadow-sm transition-colors ${view === key ? "bg-[#8a2020] text-white" : "border border-ink/20 bg-white text-ink/70 hover:border-[#8a2020]/50 hover:text-[#8a2020]"}`}
+          >{label}</button>
+        ))}
+      </nav>
+
+      {view === "milan" && <KundaliMilan onBack={() => setView("rx")} />}
+      {view === "birth" && <BirthChildKundali onBack={() => setView("rx")} />}
+
+      {view === "rx" && (<>
       {/* ===== controls ===== */}
       <div className="rx-noprint mx-auto flex max-w-[1120px] flex-wrap items-center gap-2 px-3 pt-4">
         <button onClick={downloadDigitalPdf} disabled={pdfBusy !== null} className={`${btn} bg-[#6d1414] text-white disabled:opacity-60`}>{pdfBusy === "digital" ? "बन रहा है…" : "📄 PDF सेव करें"}</button>
@@ -607,7 +629,7 @@ export function PrescriptionPad() {
             <p className="mb-2 text-sm font-bold text-[#8a2020]">🔎 नाम या मोबाइल से खोजें</p>
             <div className="flex gap-2">
               <input value={searchQ} onChange={(e) => setSearchQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && search()} placeholder="नाम / मोबाइल…" className="w-full rounded-lg border border-ink/20 px-2.5 py-1.5 text-sm" />
-              <button onClick={search} className="rounded-lg bg-[#8a2020] px-3 text-sm font-semibold text-white">खोजें</button>
+              <button onClick={() => search()} className="rounded-lg bg-[#8a2020] px-3 text-sm font-semibold text-white">खोजें</button>
             </div>
             {results && (
               <ul className="mt-2 max-h-56 divide-y divide-ink/10 overflow-y-auto">
@@ -1042,6 +1064,8 @@ export function PrescriptionPad() {
         </div>
       </div>
 
+      </>)}
+
       {/* ===== PAGE FOOTER (end) ===== */}
       <footer className="rx-noprint mt-2 shadow-inner"><Footer L={L} /></footer>
 
@@ -1070,7 +1094,7 @@ export function PrescriptionPad() {
       )}
 
       {/* print doc */}
-      {portal && createPortal(
+      {view === "rx" && portal && createPortal(
         <div className="hidden print:block">
           <div className="mx-auto w-[210mm] bg-white text-[#222]">
             <Letterhead L={L} />
