@@ -295,6 +295,8 @@ export function computeKundli(p: KundliInput) {
     const nak = Math.floor(lon / (360 / 27)) % 27;
     return {
       name: pl.key, abbr: pl.abbr, color: PLANET_COLORS[pl.key] || "#2a1b0e", lon, rashi,
+      // वक्री (retrograde) at birth — Rahu/Ketu are always so, not tagged on the chart
+      retro: pl.body ? isPlanetRetrograde(pl.body, null, at) : false,
       house: ((rashi - ascRashi + 12) % 12) + 1,
       sign: RASHIS[rashi], nakshatra: NAKSHATRAS[nak], nakshatra_lord: nakLord(nak),
     };
@@ -362,7 +364,7 @@ export function chartSvgDataUri(k: ReturnType<typeof computeKundli>, division: "
     const house = ((sign - ascSign + 12) % 12) + 1;
     // planet (Hindi) + its degree-in-sign, e.g. "श 12°"
     const deg = division === "D1" ? ` ${Math.floor(((pl.lon % 30) + 30) % 30)}°` : "";
-    (byHouse[house] ||= []).push({ label: `${pl.abbr}${deg}`, color: (pl as { color?: string }).color || "#2a1b0e", retro: !!retroNames?.has(pl.name) });
+    (byHouse[house] ||= []).push({ label: `${pl.abbr}${deg}`, color: (pl as { color?: string }).color || "#2a1b0e", retro: retroNames ? retroNames.has(pl.name) : !!(pl as { retro?: boolean }).retro });
   }
 
   const S = 400;
